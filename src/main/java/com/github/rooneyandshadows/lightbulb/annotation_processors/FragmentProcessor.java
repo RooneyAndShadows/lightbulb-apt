@@ -65,9 +65,11 @@ public class FragmentProcessor extends AbstractProcessor {
         List<MethodSpec> methods = new ArrayList<>();
         classInfoList.forEach(classInfo -> {
             methods.clear();
+            methods.add(generateFragmentCreatorMethod(classInfo));
             methods.add(generateFragmentConfigurationMethod(classInfo));
             methods.add(generateFragmentViewBindingsMethod(classInfo));
-            methods.add(generateFragmentParametersMethod(classInfo));
+            if (classInfo.canBeInstantiated)
+                methods.add(generateFragmentParametersMethod(classInfo));
             TypeSpec.Builder generatedClass = TypeSpec
                     .classBuilder(classInfo.simpleClassName.concat("Bindings"))
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -112,6 +114,7 @@ public class FragmentProcessor extends AbstractProcessor {
                     .orElse(null);
             if (classInfo == null) {
                 classInfo = new ClassInfo();
+                classInfo.canBeInstantiated = canBeInstantiated(classElement);
                 classInfo.classPackage = classPackage;
                 classInfo.type = classElement.asType();
                 classInfo.simpleClassName = classElement.getSimpleName().toString();
@@ -123,6 +126,10 @@ public class FragmentProcessor extends AbstractProcessor {
         return true;
     }
 
+    private boolean canBeInstantiated(Element classElement) {
+        return !classElement.getModifiers().contains(Modifier.ABSTRACT);
+    }
+
     private boolean obtainAnnotatedClassesWithFragmentConfiguration(RoundEnvironment roundEnvironment) {
         for (Element element : roundEnvironment.getElementsAnnotatedWith(FragmentConfiguration.class)) {
             if (element.getKind() != ElementKind.CLASS) {
@@ -130,6 +137,7 @@ public class FragmentProcessor extends AbstractProcessor {
                 return false;
             }
             ClassInfo classInfo = new ClassInfo();
+            classInfo.canBeInstantiated = canBeInstantiated(element);
             classInfo.type = element.asType();
             classInfo.simpleClassName = element.getSimpleName().toString();
             classInfo.classPackage = getPackage(elements, element);
@@ -155,6 +163,7 @@ public class FragmentProcessor extends AbstractProcessor {
                     .orElse(null);
             if (classInfo == null) {
                 classInfo = new ClassInfo();
+                classInfo.canBeInstantiated = canBeInstantiated(classElement);
                 classInfo.classPackage = classPackage;
                 classInfo.type = classElement.asType();
                 classInfo.simpleClassName = classElement.getSimpleName().toString();
@@ -202,37 +211,59 @@ public class FragmentProcessor extends AbstractProcessor {
         String bundleType = ClassName.get("android.os", "Bundle").toString();
         fragmentHandleParametersMethod.addStatement(bundleType + " arguments = fragment.getArguments()");
         classInfo.fragmentParameters.forEach(fragmentParameterInfo -> {
-            String type = fragmentParameterInfo.type;
+            TypeName type = fragmentParameterInfo.type;
             String name = fragmentParameterInfo.name;
             boolean optional = fragmentParameterInfo.optional;
-            fragmentHandleParametersMethod.addStatement(type + " " + name + " = " + resolveParameterExpression(type, name));
+            fragmentHandleParametersMethod.addStatement(type + " " + name + " = " + resolveParameterExpression(type, name, "get"));
             if (!optional) {
                 fragmentHandleParametersMethod.beginControlFlow("if(" + name + " == null)")
                         .addStatement("throw new java.lang.IllegalArgumentException(\"Argument " + name + " is not optional.\")")
                         .endControlFlow();
             }
-            fragmentHandleParametersMethod.addStatement("fragment.$L = " + resolveParameterExpression(type, name), name);
+            fragmentHandleParametersMethod.addStatement("fragment.$L = $L", name, name);
         });
         return fragmentHandleParametersMethod.build();
     }
 
-    private String resolveParameterExpression(String type, String parameterName) {
-        if (type.equals(stringType)) {
-            return "arguments.getString(\"" + parameterName + "\")";
-        } else if (type.equals(uuidType)) {
-            return uuidType + ".fromString(arguments.getString(\"" + parameterName + "\"))";
-        } else if (type.equals(intType) || type.equals(intPrimType)) {
-            return "arguments.getInt(\"" + parameterName + "\")";
-        } else if (type.equals(booleanType) || type.equals(booleanPrimType)) {
-            return "arguments.getBoolean(\"" + parameterName + "\")";
-        } else if (type.equals(floatType) || type.equals(floatPrimType)) {
-            return "arguments.getFloat(\"" + parameterName + "\")";
-        } else if (type.equals(longType) || type.equals(longPrimType)) {
-            return "arguments.getLong(\"" + parameterName + "\")";
-        } else if (type.equals(doubleType) || type.equals(doublePrimType)) {
-            return "arguments.getDouble(\"" + parameterName + "\")";
+    private MethodSpec generateFragmentCreatorMethod(ClassInfo classInfo) {
+        TypeName fragmentType = TypeName.get(classInfo.type);
+        ClassName bundleType = ClassName.get("android.os", "Bundle");
+        MethodSpec.Builder fragmentHandleParametersMethod = MethodSpec
+                .methodBuilder("newInstance");
+        classInfo.fragmentParameters.forEach(fragmentParameterInfo -> {
+            fragmentHandleParametersMethod.addParameter(fragmentParameterInfo.type, fragmentParameterInfo.name);
+        });
+        fragmentHandleParametersMethod
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(fragmentType)
+                .addStatement("$T  fragment = new $T()", fragmentType, fragmentType)
+                .addStatement("$T  arguments = new $T()", bundleType, bundleType);
+        classInfo.fragmentParameters.forEach(fragmentParameterInfo -> {
+            fragmentHandleParametersMethod.addStatement(resolveParameterExpression(fragmentParameterInfo.type, fragmentParameterInfo.name, "put"));
+        });
+        fragmentHandleParametersMethod.addStatement("fragment.setArguments(arguments)");
+        fragmentHandleParametersMethod.addStatement("return fragment");
+        return fragmentHandleParametersMethod.build();
+    }
+
+    private String resolveParameterExpression(TypeName type, String parameterName, String bundleAction) {
+        String typeString = type.toString();
+        if (typeString.equals(stringType)) {
+            return String.format("arguments.%sString(\"" + parameterName + "\")", bundleAction);
+        } else if (typeString.equals(uuidType)) {
+            return String.format(uuidType + ".fromString(arguments.%sString(\"" + parameterName + "\"))", bundleAction);
+        } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
+            return String.format("arguments.%sInt(\"" + parameterName + "\")", bundleAction);
+        } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
+            return String.format("arguments.%sBoolean(\"" + parameterName + "\")", bundleAction);
+        } else if (typeString.equals(floatType) || typeString.equals(floatPrimType)) {
+            return String.format("arguments.%sFloat(\"" + parameterName + "\")", bundleAction);
+        } else if (typeString.equals(longType) || typeString.equals(longPrimType)) {
+            return String.format("arguments.%sLong(\"" + parameterName + "\")", bundleAction);
+        } else if (typeString.equals(doubleType) || typeString.equals(doublePrimType)) {
+            return String.format("arguments.%sDouble(\"" + parameterName + "\")", bundleAction);
         } else {
-            return "arguments.getParcelable(\"" + parameterName + "\")";
+            return String.format("arguments.%sParcelable(\"" + parameterName + "\")", bundleAction);
         }
     }
 
@@ -248,10 +279,8 @@ public class FragmentProcessor extends AbstractProcessor {
         return classPackage.concat(".").concat(classSimpleName);
     }
 
-    private String getTypeOfFieldElement(Element element) {
-        TypeName className = ClassName.get(element.asType());
-        String name = className.toString();
-        return name;
+    private TypeName getTypeOfFieldElement(Element element) {
+        return ClassName.get(element.asType());
     }
 
     private static class ClassInfo {
@@ -259,6 +288,7 @@ public class FragmentProcessor extends AbstractProcessor {
         private String classPackage;
         private String simpleClassName;
         private String fullClassName;
+        private boolean canBeInstantiated;
         private FragmentConfiguration configAnnotation;
         private final Map<String, String> viewBindings = new HashMap<>();
         private final List<FragmentParameterInfo> fragmentParameters = new ArrayList<>();
@@ -266,10 +296,10 @@ public class FragmentProcessor extends AbstractProcessor {
 
     private static class FragmentParameterInfo {
         private final String name;
-        private final String type;
+        private final TypeName type;
         private final boolean optional;
 
-        public FragmentParameterInfo(String name, String type, boolean optional) {
+        public FragmentParameterInfo(String name, TypeName type, boolean optional) {
             this.name = name;
             this.type = type;
             this.optional = optional;
