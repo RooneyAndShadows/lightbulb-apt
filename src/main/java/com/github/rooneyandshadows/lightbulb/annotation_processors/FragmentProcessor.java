@@ -65,11 +65,11 @@ public class FragmentProcessor extends AbstractProcessor {
         List<MethodSpec> methods = new ArrayList<>();
         classInfoList.forEach(classInfo -> {
             methods.clear();
-            methods.add(generateFragmentCreatorMethod(classInfo));
+            if (classInfo.canBeInstantiated)
+                methods.add(generateFragmentCreatorMethod(classInfo));
             methods.add(generateFragmentConfigurationMethod(classInfo));
             methods.add(generateFragmentViewBindingsMethod(classInfo));
-            if (classInfo.canBeInstantiated)
-                methods.add(generateFragmentParametersMethod(classInfo));
+            methods.add(generateFragmentParametersMethod(classInfo));
             TypeSpec.Builder generatedClass = TypeSpec
                     .classBuilder(classInfo.simpleClassName.concat("Bindings"))
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
