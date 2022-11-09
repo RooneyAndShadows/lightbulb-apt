@@ -22,6 +22,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
+@SuppressWarnings("FieldCanBeLocal")
 @AutoService(Processor.class)
 public class FragmentProcessor extends AbstractProcessor {
     private Filer filer;
@@ -70,6 +71,8 @@ public class FragmentProcessor extends AbstractProcessor {
             methods.add(generateFragmentConfigurationMethod(classInfo));
             methods.add(generateFragmentViewBindingsMethod(classInfo));
             methods.add(generateFragmentParametersMethod(classInfo));
+            methods.add(generateSaveVariablesMethod(classInfo));
+            methods.add(generateRestoreVariablesMethod(classInfo));
             TypeSpec.Builder generatedClass = TypeSpec
                     .classBuilder(classInfo.simpleClassName.concat("Bindings"))
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -124,10 +127,6 @@ public class FragmentProcessor extends AbstractProcessor {
             classInfo.fragmentParameters.add(info);
         }
         return true;
-    }
-
-    private boolean canBeInstantiated(Element classElement) {
-        return !classElement.getModifiers().contains(Modifier.ABSTRACT);
     }
 
     private boolean obtainAnnotatedClassesWithFragmentConfiguration(RoundEnvironment roundEnvironment) {
@@ -191,100 +190,129 @@ public class FragmentProcessor extends AbstractProcessor {
     }
 
     private MethodSpec generateFragmentViewBindingsMethod(ClassInfo classInfo) {
-        MethodSpec.Builder fragViewBindingMethod = MethodSpec
+        MethodSpec.Builder method = MethodSpec
                 .methodBuilder("generate" + classInfo.simpleClassName + "ViewBindings")
                 .addParameter(TypeName.get(classInfo.type), "fragment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class);
         classInfo.viewBindings.forEach((fieldName, identifierName) -> {
-            fragViewBindingMethod.addStatement("fragment.$L = fragment.getView().findViewById(fragment.getResources().getIdentifier($S, \"id\", fragment.getActivity().getPackageName()))", fieldName, identifierName);
+            method.addStatement("fragment.$L = fragment.getView().findViewById(fragment.getResources().getIdentifier($S, \"id\", fragment.getActivity().getPackageName()))", fieldName, identifierName);
         });
-        return fragViewBindingMethod.build();
+        return method.build();
     }
 
     private MethodSpec generateFragmentParametersMethod(ClassInfo classInfo) {
-        MethodSpec.Builder fragmentHandleParametersMethod = MethodSpec
+        MethodSpec.Builder method = MethodSpec
                 .methodBuilder("generate" + classInfo.simpleClassName + "Parameters")
                 .addParameter(TypeName.get(classInfo.type), "fragment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class);
         String bundleType = ClassName.get("android.os", "Bundle").toString();
-        fragmentHandleParametersMethod.addStatement(bundleType + " arguments = fragment.getArguments()");
+        method.addStatement(bundleType + " arguments = fragment.getArguments()");
         classInfo.fragmentParameters.forEach(fragmentParameterInfo -> {
             TypeName type = fragmentParameterInfo.type;
             String name = fragmentParameterInfo.name;
             boolean optional = fragmentParameterInfo.optional;
-            fragmentHandleParametersMethod.addStatement(type + " " + name + " = " + resolveReadParamFromBundleExpression(type, name));
+            method.addStatement(type + " " + name + " = " + resolveReadParamFromBundleExpression(type, name, "arguments"));
             if (!optional) {
-                fragmentHandleParametersMethod.beginControlFlow("if(" + name + " == null)")
+                method.beginControlFlow("if(" + name + " == null)")
                         .addStatement("throw new java.lang.IllegalArgumentException(\"Argument " + name + " is not optional.\")")
                         .endControlFlow();
             }
-            fragmentHandleParametersMethod.addStatement("fragment.$L = $L", name, name);
+            method.addStatement("fragment.$L = $L", name, name);
         });
-        return fragmentHandleParametersMethod.build();
+        return method.build();
     }
 
     private MethodSpec generateFragmentCreatorMethod(ClassInfo classInfo) {
         TypeName fragmentType = TypeName.get(classInfo.type);
         ClassName bundleType = ClassName.get("android.os", "Bundle");
-        MethodSpec.Builder fragmentHandleParametersMethod = MethodSpec
+        MethodSpec.Builder method = MethodSpec
                 .methodBuilder("newInstance");
         classInfo.fragmentParameters.forEach(fragmentParameterInfo -> {
-            fragmentHandleParametersMethod.addParameter(fragmentParameterInfo.type, fragmentParameterInfo.name);
+            method.addParameter(fragmentParameterInfo.type, fragmentParameterInfo.name);
         });
-        fragmentHandleParametersMethod
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+        method.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(fragmentType)
                 .addStatement("$T  fragment = new $T()", fragmentType, fragmentType)
                 .addStatement("$T  arguments = new $T()", bundleType, bundleType);
         classInfo.fragmentParameters.forEach(fragmentParameterInfo -> {
-            fragmentHandleParametersMethod.addStatement(resolveWriteParamInBundleExpression(fragmentParameterInfo.type, fragmentParameterInfo.name));
+            method.addStatement(resolveWriteParamInBundleExpression(fragmentParameterInfo.type, fragmentParameterInfo.name, fragmentParameterInfo.name, "arguments"));
         });
-        fragmentHandleParametersMethod.addStatement("fragment.setArguments(arguments)");
-        fragmentHandleParametersMethod.addStatement("return fragment");
-        return fragmentHandleParametersMethod.build();
+        method.addStatement("fragment.setArguments(arguments)");
+        method.addStatement("return fragment");
+        return method.build();
     }
 
-    private String resolveReadParamFromBundleExpression(TypeName type, String parameterName) {
+    private MethodSpec generateSaveVariablesMethod(ClassInfo classInfo) {
+        ClassName bundleType = ClassName.get("android.os", "Bundle");
+        TypeName fragmentType = TypeName.get(classInfo.type);
+        MethodSpec.Builder method = MethodSpec
+                .methodBuilder("saveVariablesState")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(bundleType, "outState")
+                .addParameter(fragmentType, "fragment")
+                .returns(void.class);
+        classInfo.fragmentParameters.forEach(param -> {
+            method.addStatement(resolveWriteParamInBundleExpression(param.type, param.name, "fragment.".concat(param.name), "outState"));
+        });
+        return method.build();
+    }
+
+    private MethodSpec generateRestoreVariablesMethod(ClassInfo classInfo) {
+        ClassName bundleType = ClassName.get("android.os", "Bundle");
+        TypeName fragmentType = TypeName.get(classInfo.type);
+        MethodSpec.Builder method = MethodSpec
+                .methodBuilder("restoreVariablesState")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(bundleType, "fragmentSavedInstanceState")
+                .addParameter(fragmentType, "fragment")
+                .returns(void.class);
+        classInfo.fragmentParameters.forEach(param -> {
+            method.addStatement("fragment.$L = $L", param.name, resolveReadParamFromBundleExpression(param.type, param.name, "fragmentSavedInstanceState"));
+        });
+        return method.build();
+    }
+
+    private String resolveReadParamFromBundleExpression(TypeName type, String parameterName, String bundleVariableName) {
         String typeString = type.toString();
         if (typeString.equals(stringType)) {
-            return "arguments.getString(\"" + parameterName + "\")";
+            return String.format("%s.getString(\"" + parameterName + "\")", bundleVariableName);
         } else if (typeString.equals(uuidType)) {
-            return uuidType + ".fromString(arguments.getString(\"" + parameterName + "\"))";
+            return String.format(uuidType + ".fromString(%s.getString(\"" + parameterName + "\"))", bundleVariableName);
         } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
-            return "arguments.getInt(\"" + parameterName + "\")";
+            return String.format("%s.getInt(\"" + parameterName + "\")", bundleVariableName);
         } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
-            return "arguments.getBoolean(\"" + parameterName + "\")";
+            return String.format("%s.getBoolean(\"" + parameterName + "\")", bundleVariableName);
         } else if (typeString.equals(floatType) || typeString.equals(floatPrimType)) {
-            return "arguments.getFloat(\"" + parameterName + "\")";
+            return String.format("%s.getFloat(\"" + parameterName + "\")", bundleVariableName);
         } else if (typeString.equals(longType) || typeString.equals(longPrimType)) {
-            return "arguments.getLong(\"" + parameterName + "\")";
+            return String.format("%s.getLong(\"" + parameterName + "\")", bundleVariableName);
         } else if (typeString.equals(doubleType) || typeString.equals(doublePrimType)) {
-            return "arguments.getDouble(\"" + parameterName + "\")";
+            return String.format("%s.getDouble(\"" + parameterName + "\")", bundleVariableName);
         } else {
-            return "arguments.getParcelable(\"" + parameterName + "\")";
+            return String.format("%s.getParcelable(\"" + parameterName + "\")", bundleVariableName);
         }
     }
 
-    private String resolveWriteParamInBundleExpression(TypeName type, String parameterName) {
+    private String resolveWriteParamInBundleExpression(TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
         String typeString = type.toString();
         if (typeString.equals(stringType)) {
-            return "arguments.putString(\"" + parameterName + "\", " + parameterName + ")";
+            return String.format("%s.putString(\"" + parameterKey + "\", " + parameterName + ")", bundleVariableName);
         } else if (typeString.equals(uuidType)) {
-            return "arguments.putString(" + parameterName + "\", " + parameterName + ".toString())";
+            return String.format("%s.putString(\"" + parameterKey + "\", " + parameterName + ".toString())", bundleVariableName);
         } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
-            return "arguments.putInt(\"" + parameterName + "\", " + parameterName + ")";
+            return String.format("%s.putInt(\"" + parameterKey + "\", " + parameterName + ")", bundleVariableName);
         } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
-            return "arguments.putBoolean(\"" + parameterName + "\", " + parameterName + ")";
+            return String.format("%s.putBoolean(\"" + parameterKey + "\", " + parameterName + ")", bundleVariableName);
         } else if (typeString.equals(floatType) || typeString.equals(floatPrimType)) {
-            return "arguments.putFloat(\"" + parameterName + "\", " + parameterName + ")";
+            return String.format("%s.putFloat(\"" + parameterKey + "\", " + parameterName + ")", bundleVariableName);
         } else if (typeString.equals(longType) || typeString.equals(longPrimType)) {
-            return "arguments.putLong(\"" + parameterName + "\", " + parameterName + ")";
+            return String.format("%s.putLong(\"" + parameterKey + "\", " + parameterName + ")", bundleVariableName);
         } else if (typeString.equals(doubleType) || typeString.equals(doublePrimType)) {
-            return "arguments.putDouble(\"" + parameterName + "\", " + parameterName + ")";
+            return String.format("%s.putDouble(\"" + parameterKey + "\", " + parameterName + ")", bundleVariableName);
         } else {
-            return "arguments.putParcelable(\"" + parameterName + "\", " + parameterName + ")";
+            return String.format("%s.putParcelable(\"" + parameterKey + "\", " + parameterName + ")", bundleVariableName);
         }
     }
 
@@ -302,6 +330,10 @@ public class FragmentProcessor extends AbstractProcessor {
 
     private TypeName getTypeOfFieldElement(Element element) {
         return ClassName.get(element.asType());
+    }
+
+    private boolean canBeInstantiated(Element classElement) {
+        return !classElement.getModifiers().contains(Modifier.ABSTRACT);
     }
 
     private static class ClassInfo {
