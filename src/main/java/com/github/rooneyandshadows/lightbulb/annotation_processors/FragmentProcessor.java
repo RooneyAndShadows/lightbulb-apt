@@ -214,7 +214,7 @@ public class FragmentProcessor extends AbstractProcessor {
             TypeName type = fragmentParameterInfo.type;
             String name = fragmentParameterInfo.name;
             boolean optional = fragmentParameterInfo.optional;
-            fragmentHandleParametersMethod.addStatement(type + " " + name + " = " + resolveParameterExpression(type, name, "get"));
+            fragmentHandleParametersMethod.addStatement(type + " " + name + " = " + resolveReadParamFromBundleExpression(type, name));
             if (!optional) {
                 fragmentHandleParametersMethod.beginControlFlow("if(" + name + " == null)")
                         .addStatement("throw new java.lang.IllegalArgumentException(\"Argument " + name + " is not optional.\")")
@@ -239,31 +239,52 @@ public class FragmentProcessor extends AbstractProcessor {
                 .addStatement("$T  fragment = new $T()", fragmentType, fragmentType)
                 .addStatement("$T  arguments = new $T()", bundleType, bundleType);
         classInfo.fragmentParameters.forEach(fragmentParameterInfo -> {
-            fragmentHandleParametersMethod.addStatement(resolveParameterExpression(fragmentParameterInfo.type, fragmentParameterInfo.name, "put"));
+            fragmentHandleParametersMethod.addStatement(resolveWriteParamInBundleExpression(fragmentParameterInfo.type, fragmentParameterInfo.name));
         });
         fragmentHandleParametersMethod.addStatement("fragment.setArguments(arguments)");
         fragmentHandleParametersMethod.addStatement("return fragment");
         return fragmentHandleParametersMethod.build();
     }
 
-    private String resolveParameterExpression(TypeName type, String parameterName, String bundleAction) {
+    private String resolveReadParamFromBundleExpression(TypeName type, String parameterName) {
         String typeString = type.toString();
         if (typeString.equals(stringType)) {
-            return String.format("arguments.%sString(\"" + parameterName + "\")", bundleAction);
+            return "arguments.getString(\"" + parameterName + "\")";
         } else if (typeString.equals(uuidType)) {
-            return String.format(uuidType + ".fromString(arguments.%sString(\"" + parameterName + "\"))", bundleAction);
+            return uuidType + ".fromString(arguments.getString(\"" + parameterName + "\"))";
         } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
-            return String.format("arguments.%sInt(\"" + parameterName + "\")", bundleAction);
+            return "arguments.getInt(\"" + parameterName + "\")";
         } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
-            return String.format("arguments.%sBoolean(\"" + parameterName + "\")", bundleAction);
+            return "arguments.getBoolean(\"" + parameterName + "\")";
         } else if (typeString.equals(floatType) || typeString.equals(floatPrimType)) {
-            return String.format("arguments.%sFloat(\"" + parameterName + "\")", bundleAction);
+            return "arguments.getFloat(\"" + parameterName + "\")";
         } else if (typeString.equals(longType) || typeString.equals(longPrimType)) {
-            return String.format("arguments.%sLong(\"" + parameterName + "\")", bundleAction);
+            return "arguments.getLong(\"" + parameterName + "\")";
         } else if (typeString.equals(doubleType) || typeString.equals(doublePrimType)) {
-            return String.format("arguments.%sDouble(\"" + parameterName + "\")", bundleAction);
+            return "arguments.getDouble(\"" + parameterName + "\")";
         } else {
-            return String.format("arguments.%sParcelable(\"" + parameterName + "\")", bundleAction);
+            return "arguments.getParcelable(\"" + parameterName + "\")";
+        }
+    }
+
+    private String resolveWriteParamInBundleExpression(TypeName type, String parameterName) {
+        String typeString = type.toString();
+        if (typeString.equals(stringType)) {
+            return "arguments.putString(\"" + parameterName + "\", " + parameterName + ")";
+        } else if (typeString.equals(uuidType)) {
+            return "arguments.putString(" + parameterName + "\", " + parameterName + ".toString())";
+        } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
+            return "arguments.putInt(\"" + parameterName + "\", " + parameterName + ")";
+        } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
+            return "arguments.putBoolean(\"" + parameterName + "\", " + parameterName + ")";
+        } else if (typeString.equals(floatType) || typeString.equals(floatPrimType)) {
+            return "arguments.putFloat(\"" + parameterName + "\", " + parameterName + ")";
+        } else if (typeString.equals(longType) || typeString.equals(longPrimType)) {
+            return "arguments.putLong(\"" + parameterName + "\", " + parameterName + ")";
+        } else if (typeString.equals(doubleType) || typeString.equals(doublePrimType)) {
+            return "arguments.putDouble(\"" + parameterName + "\", " + parameterName + ")";
+        } else {
+            return "arguments.putParcelable(\"" + parameterName + "\", " + parameterName + ")";
         }
     }
 
