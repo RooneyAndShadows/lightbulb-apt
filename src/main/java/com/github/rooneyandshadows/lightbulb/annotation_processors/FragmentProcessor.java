@@ -199,15 +199,18 @@ public class FragmentProcessor extends AbstractProcessor {
                 .addParameter(TypeName.get(classInfo.type), "fragment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class);
+        String bundleType = ClassName.get("android.os", "Bundle").toString();
+        fragmentHandleParametersMethod.addStatement(bundleType + " arguments = fragment.getArguments()");
         classInfo.fragmentParameters.forEach(fragmentParameterInfo -> {
             String type = fragmentParameterInfo.type;
             String name = fragmentParameterInfo.name;
             boolean optional = fragmentParameterInfo.optional;
-            String bundleType = ClassName.get("android.os", "Bundle").toString();
-            fragmentHandleParametersMethod.addStatement(bundleType + " arguments = fragment.getArguments()");
             fragmentHandleParametersMethod.addStatement(type + " " + name + " = " + resolveParameterExpression(type, name));
-            if (optional)
-                fragmentHandleParametersMethod.addStatement("if(" + name + " == null) throw new java.lang.IllegalArgumentException(\"Argument is not optional. You must specify value.\")");
+            if (!optional) {
+                fragmentHandleParametersMethod.beginControlFlow("if(" + name + " == null)")
+                        .addStatement("throw new java.lang.IllegalArgumentException(\"Argument " + name + " is not optional.\")")
+                        .endControlFlow();
+            }
             fragmentHandleParametersMethod.addStatement("fragment.$L = " + resolveParameterExpression(type, name), name);
         });
         return fragmentHandleParametersMethod.build();
