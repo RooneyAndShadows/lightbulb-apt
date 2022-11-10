@@ -114,7 +114,7 @@ public class FragmentProcessor extends AbstractProcessor {
 
     private boolean obtainAnnotatedClassesWithFragmentScreen(RoundEnvironment roundEnvironment) {
         for (Element classElement : roundEnvironment.getElementsAnnotatedWith(FragmentScreen.class)) {
-            if (classElement.getKind() != ElementKind.FIELD) {
+            if (classElement.getKind() != ElementKind.CLASS) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentScreen should be on top of fragment classes.");
                 return false;
             }
