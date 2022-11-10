@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.*;
 
@@ -57,32 +58,15 @@ public class FragmentProcessor extends AbstractProcessor {
         //Get annotated targets
         boolean processResult;
         processResult = obtainAnnotatedClassesWithFragmentConfiguration(roundEnvironment);
+        processResult &= obtainAnnotatedClassesWithFragmentScreen(roundEnvironment);
         processResult &= obtainAnnotatedFieldsWithBindView(roundEnvironment);
         processResult &= obtainAnnotatedFieldsWithFragmentParameter(roundEnvironment);
         if (!processResult) {
             return false;
         }
+        generateFragmentBindingClasses();
+
         //Generate methods
-        List<MethodSpec> methods = new ArrayList<>();
-        classInfoList.forEach(classInfo -> {
-            methods.clear();
-            if (classInfo.canBeInstantiated)
-                methods.add(generateFragmentCreatorMethod(classInfo));
-            methods.add(generateFragmentConfigurationMethod(classInfo));
-            methods.add(generateFragmentViewBindingsMethod(classInfo));
-            methods.add(generateFragmentParametersMethod(classInfo));
-            methods.add(generateSaveVariablesMethod(classInfo));
-            methods.add(generateRestoreVariablesMethod(classInfo));
-            TypeSpec.Builder generatedClass = TypeSpec
-                    .classBuilder(classInfo.simpleClassName.concat("Bindings"))
-                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                    .addMethods(methods);
-            try {
-                JavaFile.builder(classInfo.classPackage, generatedClass.build()).build().writeTo(filer);
-            } catch (IOException e) {
-                //e.printStackTrace();
-            }
-        });
         return true;
     }
 
@@ -93,6 +77,7 @@ public class FragmentProcessor extends AbstractProcessor {
                 add(BindView.class.getCanonicalName());
                 add(FragmentConfiguration.class.getCanonicalName());
                 add(FragmentParameter.class.getCanonicalName());
+                add(FragmentScreen.class.getCanonicalName());
             }
         };
     }
@@ -102,27 +87,79 @@ public class FragmentProcessor extends AbstractProcessor {
         return SourceVersion.latestSupported();
     }
 
+    private void generateRoutingScreens() {
+        String packageName = "com.github.rooneyandshadows.lightbulb.screens";
+        ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
+        ClassName fragmentScreenClass = baseRouterClass.nestedClass("FragmentScreen");
+        List<TypeSpec> screens = new ArrayList<>();
+        classInfoList.forEach(classInfo -> {
+            if (!classInfo.canBeInstantiated) return;
+            TypeSpec.Builder generatedClass = TypeSpec
+                    .classBuilder("Screens")
+                    .superclass()
+                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+        });
+
+        TypeSpec.Builder rootClass = TypeSpec
+                .classBuilder("Screens")
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addMethods(methods);
+        try {
+            JavaFile.builder(packageName, rootClass.build()).build().writeTo(filer);
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
+    }
+
+    private void generateFragmentBindingClasses() {
+        List<MethodSpec> methods = new ArrayList<>();
+        classInfoList.forEach(classInfo -> {
+            methods.clear();
+            String className = classInfo.simpleClassName.concat("Bindings");
+            if (classInfo.canBeInstantiated)
+                methods.add(generateFragmentCreatorMethod(classInfo));
+            methods.add(generateFragmentConfigurationMethod(classInfo));
+            methods.add(generateFragmentViewBindingsMethod(classInfo));
+            methods.add(generateFragmentParametersMethod(classInfo));
+            methods.add(generateSaveVariablesMethod(classInfo));
+            methods.add(generateRestoreVariablesMethod(classInfo));
+            TypeSpec.Builder generatedClass = TypeSpec
+                    .classBuilder(className)
+                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                    .addMethods(methods);
+            classInfo.mappedBindingType = ClassName.get(classInfo.classPackage, className);
+            try {
+                JavaFile.builder(classInfo.classPackage, generatedClass.build()).build().writeTo(filer);
+            } catch (IOException e) {
+                //e.printStackTrace();
+            }
+        });
+    }
+
+    private boolean obtainAnnotatedClassesWithFragmentScreen(RoundEnvironment roundEnvironment) {
+        for (Element classElement : roundEnvironment.getElementsAnnotatedWith(FragmentScreen.class)) {
+            if (classElement.getKind() != ElementKind.FIELD) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentScreen should be on top of fragment classes.");
+                return false;
+            }
+            FragmentScreen annotation = classElement.getAnnotation(FragmentScreen.class);
+            ClassInfo classInfo = getOrCreateClassInfoForElement(classElement);
+            classInfo.screenName = annotation.screenName();
+            
+        }
+        return true;
+    }
+
+
     private boolean obtainAnnotatedFieldsWithFragmentParameter(RoundEnvironment roundEnvironment) {
         for (Element element : roundEnvironment.getElementsAnnotatedWith(FragmentParameter.class)) {
             if (element.getKind() != ElementKind.FIELD) {
-                messager.printMessage(Diagnostic.Kind.ERROR, "@BindView should be on top of fragment field.");
+                messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentParameter should be on top of fragment field.");
                 return false;
             }
             FragmentParameter annotation = element.getAnnotation(FragmentParameter.class);
             Element classElement = element.getEnclosingElement();
-            String classPackage = getPackage(elements, element);
-            String fullClassName = getFullClassName(elements, classElement);
-            ClassInfo classInfo = classInfoList.stream().filter(info -> info.fullClassName.equals(fullClassName))
-                    .findFirst()
-                    .orElse(null);
-            if (classInfo == null) {
-                classInfo = new ClassInfo();
-                classInfo.canBeInstantiated = canBeInstantiated(classElement);
-                classInfo.classPackage = classPackage;
-                classInfo.type = classElement.asType();
-                classInfo.simpleClassName = classElement.getSimpleName().toString();
-                classInfoList.add(classInfo);
-            }
+            ClassInfo classInfo = getOrCreateClassInfoForElement(classElement);
             FragmentParameterInfo info = new FragmentParameterInfo(element.getSimpleName().toString(), getTypeOfFieldElement(element), annotation.optional());
             classInfo.fragmentParameters.add(info);
         }
@@ -130,19 +167,13 @@ public class FragmentProcessor extends AbstractProcessor {
     }
 
     private boolean obtainAnnotatedClassesWithFragmentConfiguration(RoundEnvironment roundEnvironment) {
-        for (Element element : roundEnvironment.getElementsAnnotatedWith(FragmentConfiguration.class)) {
-            if (element.getKind() != ElementKind.CLASS) {
+        for (Element classElement : roundEnvironment.getElementsAnnotatedWith(FragmentConfiguration.class)) {
+            if (classElement.getKind() != ElementKind.CLASS) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentConfiguration should be on top of fragment classes.");
                 return false;
             }
-            ClassInfo classInfo = new ClassInfo();
-            classInfo.canBeInstantiated = canBeInstantiated(element);
-            classInfo.type = element.asType();
-            classInfo.simpleClassName = element.getSimpleName().toString();
-            classInfo.classPackage = getPackage(elements, element);
-            classInfo.fullClassName = getFullClassName(elements, element);
-            classInfo.configAnnotation = element.getAnnotation(FragmentConfiguration.class);
-            classInfoList.add(classInfo);
+            ClassInfo classInfo = getOrCreateClassInfoForElement(classElement);
+            classInfo.configAnnotation = classElement.getAnnotation(FragmentConfiguration.class);
         }
         return true;
     }
@@ -153,21 +184,9 @@ public class FragmentProcessor extends AbstractProcessor {
                 messager.printMessage(Diagnostic.Kind.ERROR, "@BindView should be on top of fragment field.");
                 return false;
             }
-            BindView annotation = element.getAnnotation(BindView.class);
             Element classElement = element.getEnclosingElement();
-            String classPackage = getPackage(elements, element);
-            String fullClassName = getFullClassName(elements, classElement);
-            ClassInfo classInfo = classInfoList.stream().filter(info -> info.fullClassName.equals(fullClassName))
-                    .findFirst()
-                    .orElse(null);
-            if (classInfo == null) {
-                classInfo = new ClassInfo();
-                classInfo.canBeInstantiated = canBeInstantiated(classElement);
-                classInfo.classPackage = classPackage;
-                classInfo.type = classElement.asType();
-                classInfo.simpleClassName = classElement.getSimpleName().toString();
-                classInfoList.add(classInfo);
-            }
+            ClassInfo classInfo = getOrCreateClassInfoForElement(classElement);
+            BindView annotation = element.getAnnotation(BindView.class);
             classInfo.viewBindings.put(element.getSimpleName().toString(), annotation.name());
         }
         return true;
@@ -316,6 +335,27 @@ public class FragmentProcessor extends AbstractProcessor {
         }
     }
 
+    private ClassInfo getOrCreateClassInfoForElement(Element classElement) {
+        String classPackage = getPackage(elements, classElement);
+        String fullClassName = getFullClassName(elements, classElement);
+        ClassInfo existingClassInfo = classInfoList.stream().filter(info -> info.fullClassName.equals(fullClassName))
+                .findFirst()
+                .orElse(null);
+        ClassInfo classInfo;
+        if (existingClassInfo == null) {
+            classInfo = new ClassInfo();
+            classInfo.canBeInstantiated = canBeInstantiated(classElement);
+            classInfo.type = classElement.asType();
+            classInfo.simpleClassName = classElement.getSimpleName().toString();
+            classInfo.classPackage = classPackage;
+            classInfo.fullClassName = fullClassName;
+            classInfoList.add(classInfo);
+        } else {
+            classInfo = existingClassInfo;
+        }
+        return classInfo;
+    }
+
     private String getPackage(Elements elements, Element element) {
         return elements.getPackageOf(element)
                 .getQualifiedName()
@@ -341,10 +381,64 @@ public class FragmentProcessor extends AbstractProcessor {
         private String classPackage;
         private String simpleClassName;
         private String fullClassName;
+        private String screenName;
+        private ClassName mappedBindingType;
         private boolean canBeInstantiated;
         private FragmentConfiguration configAnnotation;
         private final Map<String, String> viewBindings = new HashMap<>();
         private final List<FragmentParameterInfo> fragmentParameters = new ArrayList<>();
+    }
+
+    private static class FragmentScreenGroup {
+        private final String screenGroupName;
+        private final ArrayList<ClassInfo> screens = new ArrayList<>();
+
+        public FragmentScreenGroup(String screenGroupName) {
+            this.screenGroupName = screenGroupName;
+        }
+
+        private void addScreen(ClassInfo classInfo) {
+            screens.add(classInfo);
+        }
+
+        private TypeSpec build() {
+            ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
+            ClassName fragmentScreenClass = baseRouterClass.nestedClass("FragmentScreen");
+            TypeSpec.Builder groupClass = TypeSpec
+                    .classBuilder(screenGroupName)
+                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
+            screens.forEach(classInfo -> {
+                TypeName currentFragmentClass = ClassName.get(classInfo.type);
+                TypeSpec.Builder screenClass = TypeSpec
+                        .classBuilder(classInfo.screenName)
+                        .superclass(fragmentScreenClass)
+                        .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
+
+                MethodSpec.Builder getFragmentMethod = MethodSpec
+                        .methodBuilder("getFragment")
+                        .addModifiers(Modifier.PUBLIC)
+                        .addAnnotation(Override.class)
+                        .returns(currentFragmentClass);
+                String paramsString = "";
+                for (FragmentParameterInfo paramInfo : classInfo.fragmentParameters) {
+                    paramsString = paramsString.concat(paramInfo.type.toString())
+                            .concat(" ")
+                            .concat(paramInfo.name);
+                }
+                getFragmentMethod.addStatement("return = $T.newInstance(" + paramsString + ")", classInfo.mappedBindingType);
+                screenClass.addMethod(getFragmentMethod.build());
+                groupClass.addType(screenClass.build());
+            });
+            return groupClass.build();
+        }
+    }
+
+    private static class FragmentScreenInfo {
+        private final String screenName;
+
+        public FragmentScreenInfo(String screenName, String screenGroup) {
+            this.screenName = screenName;
+        }
     }
 
     private static class FragmentParameterInfo {
