@@ -30,7 +30,8 @@ public class FragmentProcessor extends AbstractProcessor {
     private Messager messager;
     private Elements elements;
     private Types types;
-    private List<ClassInfo> classInfoList;
+    private final List<ClassInfo> classInfoList = new ArrayList<>();
+    private final List<FragmentScreenGroup> screenGroups = new ArrayList<>();
     private final String stringType = String.class.getCanonicalName();
     private final String intType = Integer.class.getCanonicalName();
     private final String intPrimType = int.class.getCanonicalName();
@@ -50,7 +51,6 @@ public class FragmentProcessor extends AbstractProcessor {
         this.messager = processingEnvironment.getMessager();
         this.elements = processingEnvironment.getElementUtils();
         this.types = processingEnvironment.getTypeUtils();
-        this.classInfoList = new ArrayList<>();
     }
 
     @Override
@@ -65,7 +65,7 @@ public class FragmentProcessor extends AbstractProcessor {
             return false;
         }
         generateFragmentBindingClasses();
-
+        generateRoutingScreens();
         //Generate methods
         return true;
     }
@@ -85,30 +85,6 @@ public class FragmentProcessor extends AbstractProcessor {
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
-    }
-
-    private void generateRoutingScreens() {
-        String packageName = "com.github.rooneyandshadows.lightbulb.screens";
-        ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
-        ClassName fragmentScreenClass = baseRouterClass.nestedClass("FragmentScreen");
-        List<TypeSpec> screens = new ArrayList<>();
-        classInfoList.forEach(classInfo -> {
-            if (!classInfo.canBeInstantiated) return;
-            TypeSpec.Builder generatedClass = TypeSpec
-                    .classBuilder("Screens")
-                    .superclass()
-                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-        });
-
-        TypeSpec.Builder rootClass = TypeSpec
-                .classBuilder("Screens")
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addMethods(methods);
-        try {
-            JavaFile.builder(packageName, rootClass.build()).build().writeTo(filer);
-        } catch (IOException e) {
-            //e.printStackTrace();
-        }
     }
 
     private void generateFragmentBindingClasses() {
@@ -145,7 +121,7 @@ public class FragmentProcessor extends AbstractProcessor {
             FragmentScreen annotation = classElement.getAnnotation(FragmentScreen.class);
             ClassInfo classInfo = getOrCreateClassInfoForElement(classElement);
             classInfo.screenName = annotation.screenName();
-            
+            CreateOrUpdateScreenGroup(classInfo, annotation.screenGroup());
         }
         return true;
     }
@@ -176,6 +152,22 @@ public class FragmentProcessor extends AbstractProcessor {
             classInfo.configAnnotation = classElement.getAnnotation(FragmentConfiguration.class);
         }
         return true;
+    }
+
+    private void generateRoutingScreens() {
+        String packageName = "com.github.rooneyandshadows.lightbulb.screens";
+        ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
+        TypeSpec.Builder rootClass = TypeSpec
+                .classBuilder("Screens")
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
+        screenGroups.forEach(group -> {
+            rootClass.addType(group.build());
+        });
+        try {
+            JavaFile.builder(packageName, rootClass.build()).build().writeTo(filer);
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
     }
 
     private boolean obtainAnnotatedFieldsWithBindView(RoundEnvironment roundEnvironment) {
@@ -335,6 +327,14 @@ public class FragmentProcessor extends AbstractProcessor {
         }
     }
 
+    private void CreateOrUpdateScreenGroup(ClassInfo classInfo, String screenGroup) {
+        FragmentScreenGroup group = screenGroups.stream().filter(info -> info.screenGroupName.equals(screenGroup))
+                .findFirst()
+                .orElse(new FragmentScreenGroup(screenGroup));
+        group.addScreen(classInfo);
+        screenGroups.add(group);
+    }
+
     private ClassInfo getOrCreateClassInfoForElement(Element classElement) {
         String classPackage = getPackage(elements, classElement);
         String fullClassName = getFullClassName(elements, classElement);
@@ -430,14 +430,6 @@ public class FragmentProcessor extends AbstractProcessor {
                 groupClass.addType(screenClass.build());
             });
             return groupClass.build();
-        }
-    }
-
-    private static class FragmentScreenInfo {
-        private final String screenName;
-
-        public FragmentScreenInfo(String screenName, String screenGroup) {
-            this.screenName = screenName;
         }
     }
 
