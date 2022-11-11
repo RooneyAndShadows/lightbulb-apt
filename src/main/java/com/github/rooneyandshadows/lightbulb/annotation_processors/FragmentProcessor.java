@@ -66,6 +66,7 @@ public class FragmentProcessor extends AbstractProcessor {
         }
         generateFragmentBindingClasses();
         generateRoutingScreens();
+        generateRouter();
         //Generate methods
         return true;
     }
@@ -154,9 +155,51 @@ public class FragmentProcessor extends AbstractProcessor {
         return true;
     }
 
-    private void generateRoutingScreens() {
-        String packageName = "com.github.rooneyandshadows.lightbulb.screens";
+    private void generateRouter() {
+        String routerPackage = "com.github.rooneyandshadows.lightbulb.routing";
+        String screensPackage = "com.github.rooneyandshadows.lightbulb.routing.screens";
         ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
+        ClassName screensClass = ClassName.get(screensPackage, "Screens");
+        ClassName baseActivityClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity", "BaseActivity");
+        TypeSpec.Builder routerClass = TypeSpec
+                .classBuilder("AppRouter")
+                .superclass(baseRouterClass)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addMethod(
+                        MethodSpec.constructorBuilder()
+                                .addModifiers(Modifier.PUBLIC)
+                                .addParameter(baseActivityClass, "contextActivity")
+                                .addParameter(TypeName.INT, "fragmentContainerId")
+                                .addStatement("super(contextActivity,fragmentContainerId)")
+                                .build()
+                );
+        screenGroups.forEach(group -> {
+            String groupName = group.screenGroupName;
+            group.screens.forEach(classInfo -> {
+                ClassName groupClass = screensClass.nestedClass(groupName);
+                ClassName screenClass = groupClass.nestedClass(classInfo.screenName);
+                String methodName = "to" + classInfo.screenName + groupName;
+                String paramsString = "";
+                for (FragmentParameterInfo paramInfo : classInfo.fragmentParameters)
+                    paramsString = paramsString.concat(paramInfo.type.toString())
+                            .concat(", ")
+                            .concat(paramInfo.name);
+                MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(void.class)
+                        .addStatement("forward(new $T($L))", screenClass, paramsString);
+                routerClass.addMethod(methodBuilder.build());
+            });
+        });
+        try {
+            JavaFile.builder(routerPackage, routerClass.build()).build().writeTo(filer);
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
+    }
+
+    private void generateRoutingScreens() {
+        String packageName = "com.github.rooneyandshadows.lightbulb.routing.screens";
         TypeSpec.Builder rootClass = TypeSpec
                 .classBuilder("Screens")
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
@@ -330,9 +373,12 @@ public class FragmentProcessor extends AbstractProcessor {
     private void CreateOrUpdateScreenGroup(ClassInfo classInfo, String screenGroup) {
         FragmentScreenGroup group = screenGroups.stream().filter(info -> info.screenGroupName.equals(screenGroup))
                 .findFirst()
-                .orElse(new FragmentScreenGroup(screenGroup));
+                .orElse(null);
+        if (group == null) {
+            group = new FragmentScreenGroup(screenGroup);
+            screenGroups.add(group);
+        }
         group.addScreen(classInfo);
-        screenGroups.add(group);
     }
 
     private ClassInfo getOrCreateClassInfoForElement(Element classElement) {
@@ -394,6 +440,8 @@ public class FragmentProcessor extends AbstractProcessor {
         private final ArrayList<ClassInfo> screens = new ArrayList<>();
 
         public FragmentScreenGroup(String screenGroupName) {
+            if (screenGroupName == null || screenGroupName.equals(""))
+                screenGroupName = "Common";
             this.screenGroupName = screenGroupName;
         }
 
@@ -422,10 +470,10 @@ public class FragmentProcessor extends AbstractProcessor {
                 String paramsString = "";
                 for (FragmentParameterInfo paramInfo : classInfo.fragmentParameters) {
                     paramsString = paramsString.concat(paramInfo.type.toString())
-                            .concat(" ")
+                            .concat(", ")
                             .concat(paramInfo.name);
                 }
-                getFragmentMethod.addStatement("return = $T.newInstance(" + paramsString + ")", classInfo.mappedBindingType);
+                getFragmentMethod.addStatement("return $T.newInstance(" + paramsString + ")", classInfo.mappedBindingType);
                 screenClass.addMethod(getFragmentMethod.build());
                 groupClass.addType(screenClass.build());
             });
