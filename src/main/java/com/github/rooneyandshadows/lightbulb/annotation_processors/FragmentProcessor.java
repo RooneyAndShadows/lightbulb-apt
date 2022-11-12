@@ -179,15 +179,19 @@ public class FragmentProcessor extends AbstractProcessor {
                 ClassName groupClass = screensClass.nestedClass(groupName);
                 ClassName screenClass = groupClass.nestedClass(classInfo.screenName);
                 String methodName = "to" + classInfo.screenName + groupName;
-                String paramsString = "";
-                for (FragmentParameterInfo paramInfo : classInfo.fragmentParameters)
-                    paramsString = paramsString.concat(paramInfo.type.toString())
-                            .concat(", ")
-                            .concat(paramInfo.name);
                 MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                         .addModifiers(Modifier.PUBLIC)
-                        .returns(void.class)
-                        .addStatement("forward(new $T($L))", screenClass, paramsString);
+                        .returns(void.class);
+                String paramsString = "";
+                for (int i = 0; i < classInfo.fragmentParameters.size(); i++) {
+                    boolean isLast = i == classInfo.fragmentParameters.size() - 1;
+                    FragmentParameterInfo param = classInfo.fragmentParameters.get(i);
+                    TypeName paramType = param.type;
+                    String paramName = param.name;
+                    methodBuilder.addParameter(paramType, paramName);
+                    paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
+                }
+                methodBuilder.addStatement("forward(new $T($L))", screenClass, paramsString);
                 routerClass.addMethod(methodBuilder.build());
             });
         });
@@ -457,22 +461,31 @@ public class FragmentProcessor extends AbstractProcessor {
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
             screens.forEach(classInfo -> {
                 TypeName currentFragmentClass = ClassName.get(classInfo.type);
+                MethodSpec.Builder screenConstructor = MethodSpec
+                        .constructorBuilder()
+                        .addModifiers(Modifier.PUBLIC);
                 TypeSpec.Builder screenClass = TypeSpec
                         .classBuilder(classInfo.screenName)
                         .superclass(fragmentScreenClass)
                         .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
-
                 MethodSpec.Builder getFragmentMethod = MethodSpec
                         .methodBuilder("getFragment")
                         .addModifiers(Modifier.PUBLIC)
                         .addAnnotation(Override.class)
                         .returns(currentFragmentClass);
                 String paramsString = "";
-                for (FragmentParameterInfo paramInfo : classInfo.fragmentParameters) {
-                    paramsString = paramsString.concat(paramInfo.type.toString())
-                            .concat(", ")
-                            .concat(paramInfo.name);
+                for (int i = 0; i < classInfo.fragmentParameters.size(); i++) {
+                    boolean isLast = i == classInfo.fragmentParameters.size() - 1;
+                    FragmentParameterInfo paramInfo = classInfo.fragmentParameters.get(i);
+                    TypeName parameterType = paramInfo.type;
+                    String parameterName = paramInfo.name;
+                    screenConstructor.addParameter(parameterType, parameterName);
+                    screenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
+                    screenClass.addField(parameterType, parameterName, Modifier.PRIVATE);
+                    paramsString = paramsString.concat(isLast ? parameterName : parameterName.concat(", "));
                 }
+
+                screenClass.addMethod(screenConstructor.build());
                 getFragmentMethod.addStatement("return $T.newInstance(" + paramsString + ")", classInfo.mappedBindingType);
                 screenClass.addMethod(getFragmentMethod.build());
                 groupClass.addType(screenClass.build());
