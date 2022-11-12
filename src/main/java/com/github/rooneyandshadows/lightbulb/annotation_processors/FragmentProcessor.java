@@ -272,7 +272,7 @@ public class FragmentProcessor extends AbstractProcessor {
             String name = fragmentParameterInfo.name;
             boolean optional = fragmentParameterInfo.optional;
             method.addStatement(type + " " + name + " = " + resolveReadParamFromBundleExpression(type, name, "arguments"));
-            if (!optional) {
+            if (!optional && !type.isPrimitive()) {
                 method.beginControlFlow("if(" + name + " == null)")
                         .addStatement("throw new java.lang.IllegalArgumentException(\"Argument " + name + " is not optional.\")")
                         .endControlFlow();
