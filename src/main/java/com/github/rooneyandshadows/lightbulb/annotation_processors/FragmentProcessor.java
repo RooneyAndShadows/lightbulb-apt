@@ -52,7 +52,7 @@ public class FragmentProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return new HashSet<>() {
+        return new HashSet<String>() {
             {
                 add(BindView.class.getCanonicalName());
                 add(FragmentConfiguration.class.getCanonicalName());
