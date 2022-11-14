@@ -10,10 +10,7 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames.*;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.PackageNames.GENERATED_LB_SCREENS;
@@ -33,6 +30,8 @@ public class CodeGenerator {
     private static final String doublePrimType = double.class.getCanonicalName();
     private static final String dateType = Date.class.getCanonicalName();
     private static final String OffsetDateType = OffsetDateTime.class.getCanonicalName();
+    private static final List<String> simpleTypesList = Arrays.asList(stringType, intType, intPrimType, booleanType,
+            booleanPrimType, uuidType, floatType, floatPrimType, longType, longPrimType, doubleType, doublePrimType);
 
     public static void generateRouterClass(Filer filer, List<FragmentScreenGroup> screenGroups) {
         TypeSpec.Builder routerClass = TypeSpec
@@ -164,17 +163,17 @@ public class CodeGenerator {
 
     private static MethodSpec generateFragmentNewInstanceMethod(FragmentInfo fragmentInfo, boolean includeOptionalParams) {
         MethodSpec.Builder method = MethodSpec.methodBuilder("newInstance");
-        fragmentInfo.getFragmentParameters().forEach(param -> method.addParameter(
-                param.getType(),
-                param.getName()
-        ));
         method.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(fragmentInfo.getClassName())
-                .addStatement("$T  fragment = new $T()", fragmentInfo.getClassName(), fragmentInfo.getClassName())
-                .addStatement("$T  arguments = new $T()", BUNDLE, BUNDLE);
+                .addStatement("$T fragment = new $T()", fragmentInfo.getClassName(), fragmentInfo.getClassName())
+                .addStatement("$T arguments = new $T()", BUNDLE, BUNDLE);
         fragmentInfo.getFragmentParameters().forEach(param -> {
-            boolean acceptParam = !param.isOptional() || (param.isOptional() && includeOptionalParams);
+            boolean acceptParam = !param.isOptional() || includeOptionalParams;
             if (!acceptParam) return;
+            method.addParameter(
+                    param.getType(),
+                    param.getName()
+            );
             CodeBlock writeStatement = resolveWriteParamInBundleExpression(
                     "fragment",
                     param.getType(),
@@ -236,58 +235,58 @@ public class CodeGenerator {
     @SuppressWarnings("DuplicatedCode")
     private static CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, FragmentParamInfo param, String bundleVariableName) {
         String typeString = param.getType().toString();
+        TypeName paramType = param.getType();
         String parameterName = param.getName();
-        String paramToSetName = parameterName;
         boolean optional = param.isOptional();
         boolean needsValidation = !optional || !param.getType().isPrimitive();
         CodeBlock.Builder codeBlock = CodeBlock.builder();
-        String expression;
-        if (optional || param.getType().isPrimitive()) expression = "$L.$L = ";
-        else expression = "$T $L = ";
-        if (typeString.equals(stringType)) {
-            expression = expression.concat(String.format("%s.getString($S)", bundleVariableName));
-        } else if (typeString.equals(uuidType)) {
-            expression = expression.concat(String.format("$T.fromString(%s.getString($S))", bundleVariableName));
-        } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
-            expression = expression.concat(String.format("%s.getInt($S)", bundleVariableName));
-        } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
-            expression = expression.concat(String.format("%s.getBoolean($S)", bundleVariableName));
-        } else if (typeString.equals(floatType) || typeString.equals(floatPrimType)) {
-            expression = expression.concat(String.format("%s.getFloat($S)", bundleVariableName));
-        } else if (typeString.equals(longType) || typeString.equals(longPrimType)) {
-            expression = expression.concat(String.format("%s.getLong($S)", bundleVariableName));
-        } else if (typeString.equals(doubleType) || typeString.equals(doublePrimType)) {
-            expression = expression.concat(String.format("%s.getDouble($S)", bundleVariableName));
-        } else if (typeString.equals(dateType)) {
-            paramToSetName = parameterName.concat("Date");
+        if (simpleTypesList.contains(typeString)) {
+            if (typeString.equals(stringType)) {
+                String bundleExp = "$T $L = ".concat(String.format("%s.getString($S);\n", bundleVariableName));
+                codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+            } else if (typeString.equals(uuidType)) {
+                String bundleExp = "$T $L = ".concat(String.format("$T.fromString(%s.getString($S);\n)", bundleVariableName));
+                codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+            } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
+                String bundleExp = "$T $L = ".concat(String.format("%s.getInt($S);\n", bundleVariableName));
+                codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+            } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
+                String bundleExp = "$T $L = ".concat(String.format("%s.getBoolean($S);\n", bundleVariableName));
+                codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+            } else if (typeString.equals(floatType) || typeString.equals(floatPrimType)) {
+                String bundleExp = "$T $L = ".concat(String.format("%s.getFloat($S);\n", bundleVariableName));
+                codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+            } else if (typeString.equals(longType) || typeString.equals(longPrimType)) {
+                String bundleExp = "$T $L = ".concat(String.format("%s.getLong($S);\n", bundleVariableName));
+                codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+            } else if (typeString.equals(doubleType) || typeString.equals(doublePrimType)) {
+                String bundleExp = "$T $L = ".concat(String.format("%s.getDouble($S);\n", bundleVariableName));
+                codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+            }
+            if (needsValidation && !paramType.isPrimitive())
+                addValidationExpression(codeBlock, parameterName);
+        } else if (typeString.equals(dateType) || typeString.equals(OffsetDateType)) {
             String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
             codeBlock.add("$T $LDateString = ".concat(getDateStringExpression).concat(";\n"), STRING, parameterName, parameterName);
-            codeBlock.add("$T $LDate = $T.getDateFromStringInDefaultFormat($L);\n", DATE, parameterName, DATE_UTILS, parameterName.concat("DateString"));
-            expression = expression.concat("$L");
-            codeBlock.add(expression, fragmentVariableName, parameterName, paramToSetName);
-        } else if (typeString.equals(OffsetDateType)) {
-            String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
-            paramToSetName = parameterName.concat("Date");
-            codeBlock.add("$T $LDateString = ".concat(getDateStringExpression).concat(";\n"), STRING, parameterName, parameterName);
-            codeBlock.add("$T $LDate = $T.getDateFromStringInDefaultFormat($L);\n", OFFSET_DATE_TIME, parameterName, OFFSET_DATE_UTILS, parameterName.concat("DateString"));
-            expression = expression.concat("$L");
-            codeBlock.add(expression, fragmentVariableName, parameterName, paramToSetName);
+            if (needsValidation)
+                addValidationExpression(codeBlock, parameterName.concat("DateString"));
+            codeBlock.add("$T $L = $T.getDateFromStringInDefaultFormat($L);\n", typeString.equals(dateType) ? DATE : OFFSET_DATE_TIME, parameterName, typeString.equals(dateType) ? DATE_UTILS : OFFSET_DATE_UTILS, parameterName.concat("DateString"));
+            if (needsValidation)
+                addValidationExpression(codeBlock, parameterName);
         } else {
-            expression = expression.concat(String.format("%s.getParcelable($S)", bundleVariableName));
+            String bundleExp = "$T $L = ".concat(String.format("%s.getParcelable($S);\n", bundleVariableName));
+            codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+            if (needsValidation)
+                addValidationExpression(codeBlock, parameterName);
         }
-        if (needsValidation) {
-            codeBlock.add(";\n");
-            codeBlock.beginControlFlow("if(" + paramToSetName + " == null)")
-                    .add("throw new java.lang.IllegalArgumentException(\"Argument " + parameterName + " is not optional.\");\n")
-                    .endControlFlow();
-            codeBlock.add("fragment.$L = $L", parameterName, paramToSetName);
-        }else{
-
-        }
-        codeBlock.add(expression, fragmentVariableName, parameterName, parameterName);
-        //
-
+        codeBlock.add("$L.$L = $L", fragmentVariableName, parameterName, parameterName);
         return codeBlock.build();
+    }
+
+    private static void addValidationExpression(CodeBlock.Builder codeBlock, String paramName) {
+        codeBlock.beginControlFlow("if(" + paramName + " == null)")
+                .add("throw new java.lang.IllegalArgumentException(\"Argument " + paramName + " is not optional.\");\n")
+                .endControlFlow();
     }
 
     private static CodeBlock resolveWriteParamInBundleExpression(String fragmentVariableName, TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
