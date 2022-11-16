@@ -154,7 +154,8 @@ public class CodeGenerator {
             CodeBlock readStatement = resolveReadParamFromBundleExpression(
                     "fragment",
                     param,
-                    "arguments"
+                    "arguments",
+                    true
             );
             method.addStatement(readStatement);
         });
@@ -174,8 +175,7 @@ public class CodeGenerator {
                     param.getType(),
                     param.getName()
             );
-            CodeBlock writeStatement = resolveWriteParamInBundleExpression(
-                    "fragment",
+            CodeBlock writeStatement = generateNewInstanceBlockOfParam(
                     param.getType(),
                     param.getName(),
                     param.getName(),
@@ -196,7 +196,7 @@ public class CodeGenerator {
                 .addParameter(fragmentInfo.getClassName(), "fragment")
                 .returns(void.class);
         fragmentInfo.getFragmentParameters().forEach(param -> {
-            CodeBlock writeStatement = resolveWriteParamInBundleExpression(
+            CodeBlock writeStatement = generateSaveInstanceStateBlockOfParam(
                     "fragment",
                     param.getType(),
                     param.getName(),
@@ -219,7 +219,8 @@ public class CodeGenerator {
             CodeBlock readStatement = resolveReadParamFromBundleExpression(
                     "fragment",
                     param,
-                    "fragmentSavedInstanceState"
+                    "fragmentSavedInstanceState",
+                    false
             );
             method.addStatement(readStatement);
         });
@@ -233,20 +234,25 @@ public class CodeGenerator {
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private static CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, FragmentParamInfo param, String bundleVariableName) {
+    private static CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, FragmentParamInfo param, String bundleVariableName, boolean validateParameters) {
         String typeString = param.getType().toString();
         TypeName paramType = param.getType();
         String parameterName = param.getName();
         boolean optional = param.isOptional();
-        boolean needsValidation = !optional || !param.getType().isPrimitive();
+        boolean needsValidation = validateParameters && (!optional || !param.getType().isPrimitive());
         CodeBlock.Builder codeBlock = CodeBlock.builder();
         if (simpleTypesList.contains(typeString)) {
             if (typeString.equals(stringType)) {
                 String bundleExp = "$T $L = ".concat(String.format("%s.getString($S);\n", bundleVariableName));
                 codeBlock.add(bundleExp, paramType, parameterName, parameterName);
             } else if (typeString.equals(uuidType)) {
-                String bundleExp = "$T $L = ".concat(String.format("$T.fromString(%s.getString($S);\n)", bundleVariableName));
-                codeBlock.add(bundleExp, paramType, parameterName, parameterName);
+                String tmpVariableName = parameterName.concat("String");
+                String bundleExp = "$T $L = ".concat(String.format("%s.getString($S);\n", bundleVariableName));
+                codeBlock.add("$T $L = null;\n", UUID, parameterName);
+                codeBlock.add(bundleExp, STRING, tmpVariableName, parameterName);
+                codeBlock.beginControlFlow("if($L != null)", tmpVariableName)
+                        .add("$L = $T.fromString($L);\n", parameterName, UUID, tmpVariableName)
+                        .endControlFlow();
             } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
                 String bundleExp = "$T $L = ".concat(String.format("%s.getInt($S);\n", bundleVariableName));
                 codeBlock.add(bundleExp, paramType, parameterName, parameterName);
@@ -283,19 +289,17 @@ public class CodeGenerator {
         return codeBlock.build();
     }
 
-    private static void addValidationExpression(CodeBlock.Builder codeBlock, String paramName) {
-        codeBlock.beginControlFlow("if(" + paramName + " == null)")
-                .add("throw new java.lang.IllegalArgumentException(\"Argument " + paramName + " is not optional.\");\n")
-                .endControlFlow();
-    }
-
-    private static CodeBlock resolveWriteParamInBundleExpression(String fragmentVariableName, TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
+    private static CodeBlock generateSaveInstanceStateBlockOfParam(String fragmentVariableName, TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
         String typeString = type.toString();
         CodeBlock.Builder codeBlock = CodeBlock.builder();
         if (typeString.equals(stringType)) {
             codeBlock.add(String.format("%s.putString($S,$L.$L)", bundleVariableName), parameterKey, fragmentVariableName, parameterName);
         } else if (typeString.equals(uuidType)) {
-            codeBlock.add(String.format("%s.putString($S,$L.$LtoString())", bundleVariableName), parameterKey, fragmentVariableName, parameterName);
+            codeBlock.add("$T $L = $S;\n", STRING, parameterName, "");
+            codeBlock.beginControlFlow("if($L.$L != null)", fragmentVariableName, parameterName)
+                    .add("$L = $L.$L.toString();\n", parameterName, fragmentVariableName, parameterName)
+                    .endControlFlow();
+            codeBlock.add(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName);
         } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
             codeBlock.add(String.format("%s.putInt($S,$L.$L)", bundleVariableName), parameterKey, fragmentVariableName, parameterName);
         } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
@@ -310,11 +314,51 @@ public class CodeGenerator {
             codeBlock.add("$T $LDateString = $T.getDateStringInDefaultFormat($L.$L);\n", STRING, parameterName, DATE_UTILS, fragmentVariableName, parameterName);
             codeBlock.add(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName.concat("DateString"));
         } else if (typeString.equals(OffsetDateType)) {
-            codeBlock.add("$T $LDateString = $T.getDateStringInDefaultFormat($L,$L);\n", STRING, parameterName, OFFSET_DATE_UTILS, fragmentVariableName, parameterName);
+            codeBlock.add("$T $LDateString = $T.getDateStringInDefaultFormat($L.$L);\n", STRING, parameterName, OFFSET_DATE_UTILS, fragmentVariableName, parameterName);
             codeBlock.add(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName.concat("DateString"));
         } else {
             codeBlock.add(String.format("%s.putParcelable($S,$L.$L)", bundleVariableName), parameterKey, fragmentVariableName, parameterName);
         }
         return codeBlock.build();
+    }
+
+    private static CodeBlock generateNewInstanceBlockOfParam(TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
+        String typeString = type.toString();
+        CodeBlock.Builder codeBlock = CodeBlock.builder();
+        if (typeString.equals(stringType)) {
+            codeBlock.add(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName);
+        } else if (typeString.equals(uuidType)) {
+            String tmpVariableName = parameterName.concat("String");
+            codeBlock.add("$T $L = $S;\n", STRING, tmpVariableName, "");
+            codeBlock.beginControlFlow("if($L != null)", parameterName)
+                    .add("$L = $L.toString();\n", tmpVariableName, parameterName)
+                    .endControlFlow();
+            codeBlock.add(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, tmpVariableName);
+        } else if (typeString.equals(intType) || typeString.equals(intPrimType)) {
+            codeBlock.add(String.format("%s.putInt($S,$L)", bundleVariableName), parameterKey, parameterName);
+        } else if (typeString.equals(booleanType) || typeString.equals(booleanPrimType)) {
+            codeBlock.add(String.format("%s.putBoolean($S,$L)", bundleVariableName), parameterKey, parameterName);
+        } else if (typeString.equals(floatType) || typeString.equals(floatPrimType)) {
+            codeBlock.add(String.format("%s.putFloat($S,$L)", bundleVariableName), parameterKey, parameterName);
+        } else if (typeString.equals(longType) || typeString.equals(longPrimType)) {
+            codeBlock.add(String.format("%s.putLong($S,$L)", bundleVariableName), parameterKey, parameterName);
+        } else if (typeString.equals(doubleType) || typeString.equals(doublePrimType)) {
+            codeBlock.add(String.format("%s.putDouble($S,$L)", bundleVariableName), parameterKey, parameterName);
+        } else if (typeString.equals(dateType)) {
+            codeBlock.add("$T $LDateString = $T.getDateStringInDefaultFormat($L);\n", STRING, parameterName, DATE_UTILS, parameterName);
+            codeBlock.add(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName.concat("DateString"));
+        } else if (typeString.equals(OffsetDateType)) {
+            codeBlock.add("$T $LDateString = $T.getDateStringInDefaultFormat($L);\n", STRING, parameterName, OFFSET_DATE_UTILS, parameterName);
+            codeBlock.add(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName.concat("DateString"));
+        } else {
+            codeBlock.add(String.format("%s.putParcelable($S,$L)", bundleVariableName), parameterKey, parameterName);
+        }
+        return codeBlock.build();
+    }
+
+    private static void addValidationExpression(CodeBlock.Builder codeBlock, String paramName) {
+        codeBlock.beginControlFlow("if(" + paramName + " == null)")
+                .add("throw new java.lang.IllegalArgumentException(\"Argument " + paramName + " is not optional.\");\n")
+                .endControlFlow();
     }
 }
