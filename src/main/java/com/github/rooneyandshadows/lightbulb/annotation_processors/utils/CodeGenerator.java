@@ -55,6 +55,7 @@ public class CodeGenerator {
                 routerClass.addMethod(generateRouterForwardMethodForScreen(screenClass, fragment, groupName, screenName));
                 routerClass.addMethod(generateRouterReplaceMethodForScreen(screenClass, fragment, groupName, screenName));
                 routerClass.addMethod(generateRouterBackNTimesAndReplaceMethodForScreen(screenClass, fragment, groupName, screenName));
+                routerClass.addMethod(generateRouterToNewRootScreenMethodForScreen(screenClass, fragment, groupName, screenName));
             });
         });
         try {
@@ -62,6 +63,24 @@ public class CodeGenerator {
         } catch (IOException e) {
             //e.printStackTrace();
         }
+    }
+
+    private static MethodSpec generateRouterToNewRootScreenMethodForScreen(ClassName screenClass, FragmentInfo fragment, String groupName, String screenName) {
+        String methodName = "to" + groupName + screenName + "NewRootScreen";
+        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(void.class);
+        String paramsString = "";
+        for (int i = 0; i < fragment.getFragmentParameters().size(); i++) {
+            boolean isLast = i == fragment.getFragmentParameters().size() - 1;
+            FragmentParamInfo param = fragment.getFragmentParameters().get(i);
+            TypeName paramType = param.getType();
+            String paramName = param.getName();
+            methodBuilder.addParameter(paramType, paramName);
+            paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
+        }
+        methodBuilder.addStatement("newRootScreen(new $T($L))", screenClass, paramsString);
+        return methodBuilder.build();
     }
 
     private static MethodSpec generateRouterBackNTimesAndReplaceMethodForScreen(ClassName screenClass, FragmentInfo fragment, String groupName, String screenName) {
