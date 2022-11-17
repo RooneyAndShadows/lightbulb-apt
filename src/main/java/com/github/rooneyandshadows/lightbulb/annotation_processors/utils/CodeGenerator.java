@@ -34,8 +34,43 @@ public class CodeGenerator {
     private static final List<String> simpleTypesList = Arrays.asList(stringType, intType, intPrimType, booleanType,
             booleanPrimType, uuidType, floatType, floatPrimType, longType, longPrimType, doubleType, doublePrimType);
 
-    public static void generateRouterClass(Filer filer, List<FragmentScreenGroup> screenGroups) {
-        String routerClassName = "AppRouter";
+    private static void generateActivityNavigatorSingleton(Filer filer, ClassName activityClassName, ClassName routerClassName) {
+        ClassName navigatorClassName = ClassName.get("", activityClassName.simpleName().concat("Navigator"));
+        TypeSpec.Builder singletonClass = TypeSpec
+                .classBuilder(navigatorClassName)
+                .addModifiers(Modifier.PUBLIC)
+                .addField(navigatorClassName, "instance", Modifier.PRIVATE, Modifier.STATIC)
+                .addField(routerClassName, "router", Modifier.PRIVATE)
+                .addMethod(MethodSpec.methodBuilder("getInstance")
+                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.SYNCHRONIZED)
+                        .returns(navigatorClassName)
+                        .beginControlFlow("if(instance == null)")
+                        .addStatement("instance = new $T()", navigatorClassName)
+                        .endControlFlow()
+                        .addStatement("return instance")
+                        .build()
+                ).addMethod(MethodSpec.methodBuilder("getRouter")
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(routerClassName)
+                        .addStatement("return router")
+                        .build()
+                ).addMethod(MethodSpec.methodBuilder("setRouter")
+                        .addModifiers(Modifier.PUBLIC)
+                        .addParameter(routerClassName, "router")
+                        .returns(void.class)
+                        .addStatement("this.router = router")
+                        .build()
+                );
+
+        try {
+            JavaFile.builder(PackageNames.GENERATED_LB_ROUTING, singletonClass.build()).build().writeTo(filer);
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
+    }
+
+    public static void generateRouterClass(Filer filer, ClassName activityClassName, List<FragmentScreenGroup> screenGroups) {
+        ClassName routerClassName = ClassName.get(PackageNames.GENERATED_LB_ROUTING, activityClassName.simpleName().concat("Router"));
         TypeSpec.Builder routerClass = TypeSpec
                 .classBuilder(routerClassName)
                 .superclass(BASE_ROUTER)
@@ -56,10 +91,10 @@ public class CodeGenerator {
                 ClassName screenClass = groupClass.nestedClass(screenName);
                 TypeSpec.Builder innerScreenClass = TypeSpec.classBuilder(screenClassName)
                         .addModifiers(Modifier.FINAL)
-                        .addMethod(generateRouterForwardMethodForScreen(screenClass, fragment, routerClassName))
-                        .addMethod(generateRouterReplaceMethodForScreen(screenClass, fragment, routerClassName))
-                        .addMethod(generateRouterBackNTimesAndReplaceMethodForScreen(screenClass, fragment, routerClassName))
-                        .addMethod(generateRouterToNewRootScreenMethodForScreen(screenClass, fragment, routerClassName));
+                        .addMethod(generateRouterForwardMethodForScreen(screenClass, fragment, routerClassName.simpleName()))
+                        .addMethod(generateRouterReplaceMethodForScreen(screenClass, fragment, routerClassName.simpleName()))
+                        .addMethod(generateRouterBackNTimesAndReplaceMethodForScreen(screenClass, fragment, routerClassName.simpleName()))
+                        .addMethod(generateRouterToNewRootScreenMethodForScreen(screenClass, fragment, routerClassName.simpleName()));
                 ClassName innerType = ClassName.get("", screenClassName);
                 routerClass.addType(innerScreenClass.build());
                 routerClass.addField(innerType, screenClassName, Modifier.PUBLIC);
@@ -70,6 +105,7 @@ public class CodeGenerator {
         } catch (IOException e) {
             //e.printStackTrace();
         }
+        generateActivityNavigatorSingleton(filer, activityClassName, routerClassName);
     }
 
     private static MethodSpec generateRouterToNewRootScreenMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
