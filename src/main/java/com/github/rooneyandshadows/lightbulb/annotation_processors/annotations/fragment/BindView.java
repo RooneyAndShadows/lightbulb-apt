@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.annotations;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

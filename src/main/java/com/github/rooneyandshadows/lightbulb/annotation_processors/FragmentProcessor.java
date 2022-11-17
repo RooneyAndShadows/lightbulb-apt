@@ -1,9 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.BindView;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.AnnotationReader;
@@ -37,16 +39,22 @@ public class FragmentProcessor extends AbstractProcessor {
         //Get annotated targets
         boolean processResult;
         AnnotationReader reader = new AnnotationReader(messager, elements);
-        processResult = reader.obtainAnnotatedClassesWithFragmentConfiguration(roundEnvironment);
+        processResult = reader.obtainAnnotatedClassesWithActivityConfiguration(roundEnvironment);
+        processResult &= reader.obtainAnnotatedClassesWithFragmentConfiguration(roundEnvironment);
         processResult &= reader.obtainAnnotatedClassesWithFragmentScreen(roundEnvironment);
         processResult &= reader.obtainAnnotatedFieldsWithBindView(roundEnvironment);
         processResult &= reader.obtainAnnotatedFieldsWithFragmentParameter(roundEnvironment);
         if (!processResult) return false;
         List<FragmentInfo> fragmentInfoList = reader.getFragmentInfoList();
+        List<ActivityInfo> activityInfoList = reader.getActivityInfoList();
         List<FragmentScreenGroup> screenGroups = reader.getScreenGroups();
         CodeGenerator.generateFragmentBindingClasses(filer, fragmentInfoList);
-        CodeGenerator.generateRoutingScreens(filer, screenGroups);
-        CodeGenerator.generateRouterClass(filer, screenGroups);
+        activityInfoList.forEach(activityInfo -> {
+            if (!activityInfo.isRoutingEnabled())
+                return;
+            CodeGenerator.generateRoutingScreens(filer, screenGroups);
+            CodeGenerator.generateRouterClass(filer, screenGroups);
+        });
         return true;
     }
 
@@ -54,6 +62,7 @@ public class FragmentProcessor extends AbstractProcessor {
     public Set<String> getSupportedAnnotationTypes() {
         return new HashSet<String>() {
             {
+                add(ActivityConfiguration.class.getCanonicalName());
                 add(BindView.class.getCanonicalName());
                 add(FragmentConfiguration.class.getCanonicalName());
                 add(FragmentParameter.class.getCanonicalName());

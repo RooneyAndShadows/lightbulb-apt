@@ -35,8 +35,9 @@ public class CodeGenerator {
             booleanPrimType, uuidType, floatType, floatPrimType, longType, longPrimType, doubleType, doublePrimType);
 
     public static void generateRouterClass(Filer filer, List<FragmentScreenGroup> screenGroups) {
+        String routerClassName = "AppRouter";
         TypeSpec.Builder routerClass = TypeSpec
-                .classBuilder("AppRouter")
+                .classBuilder(routerClassName)
                 .superclass(BASE_ROUTER)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addMethod(MethodSpec.constructorBuilder()
@@ -50,12 +51,18 @@ public class CodeGenerator {
             String groupName = group.getScreenGroupName();
             group.getScreens().forEach(fragment -> {
                 String screenName = fragment.getScreenName();
+                String screenClassName = groupName.concat(screenName);
                 ClassName groupClass = GENERATED_SCREENS.nestedClass(groupName);
                 ClassName screenClass = groupClass.nestedClass(screenName);
-                routerClass.addMethod(generateRouterForwardMethodForScreen(screenClass, fragment, groupName, screenName));
-                routerClass.addMethod(generateRouterReplaceMethodForScreen(screenClass, fragment, groupName, screenName));
-                routerClass.addMethod(generateRouterBackNTimesAndReplaceMethodForScreen(screenClass, fragment, groupName, screenName));
-                routerClass.addMethod(generateRouterToNewRootScreenMethodForScreen(screenClass, fragment, groupName, screenName));
+                TypeSpec.Builder innerScreenClass = TypeSpec.classBuilder(screenClassName)
+                        .addModifiers(Modifier.FINAL)
+                        .addMethod(generateRouterForwardMethodForScreen(screenClass, fragment, routerClassName))
+                        .addMethod(generateRouterReplaceMethodForScreen(screenClass, fragment, routerClassName))
+                        .addMethod(generateRouterBackNTimesAndReplaceMethodForScreen(screenClass, fragment, routerClassName))
+                        .addMethod(generateRouterToNewRootScreenMethodForScreen(screenClass, fragment, routerClassName));
+                ClassName innerType = ClassName.get("", screenClassName);
+                routerClass.addType(innerScreenClass.build());
+                routerClass.addField(innerType, screenClassName, Modifier.PUBLIC);
             });
         });
         try {
@@ -65,8 +72,8 @@ public class CodeGenerator {
         }
     }
 
-    private static MethodSpec generateRouterToNewRootScreenMethodForScreen(ClassName screenClass, FragmentInfo fragment, String groupName, String screenName) {
-        String methodName = "to" + groupName + screenName + "NewRootScreen";
+    private static MethodSpec generateRouterToNewRootScreenMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
+        String methodName = "newRootScreen";
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class);
@@ -79,12 +86,12 @@ public class CodeGenerator {
             methodBuilder.addParameter(paramType, paramName);
             paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
         }
-        methodBuilder.addStatement("newRootScreen(new $T($L))", screenClass, paramsString);
+        methodBuilder.addStatement("$L.newRootScreen(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
         return methodBuilder.build();
     }
 
-    private static MethodSpec generateRouterBackNTimesAndReplaceMethodForScreen(ClassName screenClass, FragmentInfo fragment, String groupName, String screenName) {
-        String methodName = "to" + groupName + screenName + "BackAndReplace";
+    private static MethodSpec generateRouterBackNTimesAndReplaceMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
+        String methodName = "backAndReplace";
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class)
@@ -98,12 +105,12 @@ public class CodeGenerator {
             methodBuilder.addParameter(paramType, paramName);
             paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
         }
-        methodBuilder.addStatement("backNTimesAndReplace(backNTimes,new $T($L))", screenClass, paramsString);
+        methodBuilder.addStatement("$L.backNTimesAndReplace(backNTimes,new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
         return methodBuilder.build();
     }
 
-    private static MethodSpec generateRouterReplaceMethodForScreen(ClassName screenClass, FragmentInfo fragment, String groupName, String screenName) {
-        String methodName = "to" + groupName + screenName + "Replace";
+    private static MethodSpec generateRouterReplaceMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
+        String methodName = "replace";
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class);
@@ -116,12 +123,12 @@ public class CodeGenerator {
             methodBuilder.addParameter(paramType, paramName);
             paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
         }
-        methodBuilder.addStatement("replaceTop(new $T($L))", screenClass, paramsString);
+        methodBuilder.addStatement("$L.replaceTop(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
         return methodBuilder.build();
     }
 
-    private static MethodSpec generateRouterForwardMethodForScreen(ClassName screenClass, FragmentInfo fragment, String groupName, String screenName) {
-        String methodName = "to" + groupName + screenName + "Forward";
+    private static MethodSpec generateRouterForwardMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
+        String methodName = "forward";
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class);
@@ -134,7 +141,7 @@ public class CodeGenerator {
             methodBuilder.addParameter(paramType, paramName);
             paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
         }
-        methodBuilder.addStatement("forward(new $T($L))", screenClass, paramsString);
+        methodBuilder.addStatement("$L.forward(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
         return methodBuilder.build();
     }
 

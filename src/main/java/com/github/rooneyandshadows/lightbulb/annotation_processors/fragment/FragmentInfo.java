@@ -1,8 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;

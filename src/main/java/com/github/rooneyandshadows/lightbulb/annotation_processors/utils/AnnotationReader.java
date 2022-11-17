@@ -1,9 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.utils;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.BindView;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
@@ -24,12 +26,17 @@ import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.
 public class AnnotationReader {
     private final Messager messager;
     private final Elements elements;
+    private final List<ActivityInfo> activityInfoList = new ArrayList<>();
     private final List<FragmentInfo> fragmentInfoList = new ArrayList<>();
     private final List<FragmentScreenGroup> screenGroups = new ArrayList<>();
 
     public AnnotationReader(Messager messager, Elements elements) {
         this.messager = messager;
         this.elements = elements;
+    }
+
+    public List<ActivityInfo> getActivityInfoList() {
+        return activityInfoList;
     }
 
     public List<FragmentInfo> getFragmentInfoList() {
@@ -40,6 +47,19 @@ public class AnnotationReader {
         return screenGroups;
     }
 
+    public boolean obtainAnnotatedClassesWithActivityConfiguration(RoundEnvironment roundEnvironment) {
+        for (Element classElement : roundEnvironment.getElementsAnnotatedWith(ActivityConfiguration.class)) {
+            if (classElement.getKind() != ElementKind.CLASS) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "@ActivityConfiguration should be on top of activity classes.");
+                return false;
+            }
+            ActivityConfiguration annotation = classElement.getAnnotation(ActivityConfiguration.class);
+            ActivityInfo activityInfo = getOrCreateActivityInfo(classElement);
+            activityInfo.setRoutingEnabled(annotation.isRouterGenerationEnabled());
+        }
+        return true;
+    }
+
     public boolean obtainAnnotatedClassesWithFragmentScreen(RoundEnvironment roundEnvironment) {
         for (Element classElement : roundEnvironment.getElementsAnnotatedWith(FragmentScreen.class)) {
             if (classElement.getKind() != ElementKind.CLASS) {
@@ -47,7 +67,7 @@ public class AnnotationReader {
                 return false;
             }
             FragmentScreen annotation = classElement.getAnnotation(FragmentScreen.class);
-            FragmentInfo fragmentInfo = getOrCreateClassInfoForElement(classElement);
+            FragmentInfo fragmentInfo = getOrCreateFragmentInfo(classElement);
             fragmentInfo.setScreenName(annotation.screenName());
             CreateOrUpdateScreenGroup(fragmentInfo, annotation.screenGroup());
         }
@@ -62,7 +82,7 @@ public class AnnotationReader {
             }
             FragmentParameter annotation = element.getAnnotation(FragmentParameter.class);
             Element classElement = element.getEnclosingElement();
-            FragmentInfo fragmentInfo = getOrCreateClassInfoForElement(classElement);
+            FragmentInfo fragmentInfo = getOrCreateFragmentInfo(classElement);
             FragmentParamInfo info = new FragmentParamInfo(element.getSimpleName().toString(), getTypeOfFieldElement(element), annotation.optional());
             fragmentInfo.getFragmentParameters().add(info);
         }
@@ -75,7 +95,7 @@ public class AnnotationReader {
                 messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentConfiguration should be on top of fragment classes.");
                 return false;
             }
-            FragmentInfo fragmentInfo = getOrCreateClassInfoForElement(classElement);
+            FragmentInfo fragmentInfo = getOrCreateFragmentInfo(classElement);
             fragmentInfo.setConfigAnnotation(classElement.getAnnotation(FragmentConfiguration.class));
         }
         return true;
@@ -88,7 +108,7 @@ public class AnnotationReader {
                 return false;
             }
             Element classElement = element.getEnclosingElement();
-            FragmentInfo classInfo = getOrCreateClassInfoForElement(classElement);
+            FragmentInfo classInfo = getOrCreateFragmentInfo(classElement);
             BindView annotation = element.getAnnotation(BindView.class);
             classInfo.getViewBindings().put(element.getSimpleName().toString(), annotation.name());
         }
@@ -106,7 +126,7 @@ public class AnnotationReader {
         group.addScreen(fragmentInfo);
     }
 
-    private FragmentInfo getOrCreateClassInfoForElement(Element classElement) {
+    private FragmentInfo getOrCreateFragmentInfo(Element classElement) {
         String canonicalName = getFullClassName(elements, classElement);
         FragmentInfo existingClassInfo = fragmentInfoList.stream().filter(info -> info.getClassName().canonicalName().equals(canonicalName))
                 .findFirst()
@@ -122,5 +142,21 @@ public class AnnotationReader {
             fragmentInformation = existingClassInfo;
         }
         return fragmentInformation;
+    }
+
+    private ActivityInfo getOrCreateActivityInfo(Element classElement) {
+        String canonicalName = getFullClassName(elements, classElement);
+        ActivityInfo existingClassInfo = activityInfoList.stream().filter(info -> info.getClassName().canonicalName().equals(canonicalName))
+                .findFirst()
+                .orElse(null);
+        ActivityInfo activityInformation;
+        if (existingClassInfo == null) {
+            activityInformation = new ActivityInfo();
+            activityInformation.setClassName(generateFragmentClassName(classElement, elements));
+            activityInfoList.add(activityInformation);
+        } else {
+            activityInformation = existingClassInfo;
+        }
+        return activityInformation;
     }
 }
