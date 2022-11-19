@@ -3,38 +3,31 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.utils;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.names.PackageNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.PackageNames.GENERATED_LB_SCREENS;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.TypeUtils.*;
 
 @SuppressWarnings("DuplicatedCode")
 public class CodeGenerator {
-    private static final String stringType = String.class.getCanonicalName();
-    private static final String intType = Integer.class.getCanonicalName();
-    private static final String intPrimType = int.class.getCanonicalName();
-    private static final String booleanType = Boolean.class.getCanonicalName();
-    private static final String booleanPrimType = boolean.class.getCanonicalName();
-    private static final String uuidType = UUID.class.getCanonicalName();
-    private static final String floatType = Float.class.getCanonicalName();
-    private static final String floatPrimType = float.class.getCanonicalName();
-    private static final String longType = Long.class.getCanonicalName();
-    private static final String longPrimType = long.class.getCanonicalName();
-    private static final String doubleType = Double.class.getCanonicalName();
-    private static final String doublePrimType = double.class.getCanonicalName();
-    private static final String dateType = Date.class.getCanonicalName();
-    private static final String OffsetDateType = OffsetDateTime.class.getCanonicalName();
-    private static final List<String> simpleTypesList = Arrays.asList(stringType, intType, intPrimType, booleanType,
-            booleanPrimType, uuidType, floatType, floatPrimType, longType, longPrimType, doubleType, doublePrimType);
+    private final Filer filer;
+    private final String routingPackage;
+    private final String screensPackage;
+    private final ClassName screensClassName;
 
-    private static void generateActivityNavigatorSingleton(Filer filer, ClassName activityClassName, ClassName routerClassName) {
+    public CodeGenerator(String rootPackage, Filer filer) {
+        this.filer = filer;
+        routingPackage = rootPackage.concat(".routing");
+        screensPackage = routingPackage.concat(".screens");
+        screensClassName = ClassName.get(screensPackage, "Screens");
+    }
+
+    private void generateActivityNavigatorSingleton(ClassName activityClassName, ClassName routerClassName) {
         ClassName navigatorClassName = ClassName.get("", activityClassName.simpleName().concat("Navigator"));
         TypeSpec.Builder singletonClass = TypeSpec
                 .classBuilder(navigatorClassName)
@@ -61,16 +54,15 @@ public class CodeGenerator {
                         .addStatement("this.router = router")
                         .build()
                 );
-
         try {
-            JavaFile.builder(PackageNames.GENERATED_LB_ROUTING, singletonClass.build()).build().writeTo(filer);
+            JavaFile.builder(routingPackage, singletonClass.build()).build().writeTo(filer);
         } catch (IOException e) {
             //e.printStackTrace();
         }
     }
 
-    public static void generateRouterClass(Filer filer, ClassName activityClassName, List<FragmentScreenGroup> screenGroups) {
-        ClassName routerClassName = ClassName.get(PackageNames.GENERATED_LB_ROUTING, activityClassName.simpleName().concat("Router"));
+    public void generateRouterClass(ClassName activityClassName, List<FragmentScreenGroup> screenGroups) {
+        ClassName routerClassName = ClassName.get(routingPackage, activityClassName.simpleName().concat("Router"));
         TypeSpec.Builder routerClass = TypeSpec
                 .classBuilder(routerClassName)
                 .superclass(BASE_ROUTER)
@@ -83,117 +75,68 @@ public class CodeGenerator {
                         .build()
                 );
         screenGroups.forEach(group -> {
-            String groupName = group.getScreenGroupName();
             group.getScreens().forEach(fragment -> {
-                String screenName = fragment.getScreenName();
-                String screenClassName = groupName.concat(screenName);
-                ClassName groupClass = GENERATED_SCREENS.nestedClass(groupName);
-                ClassName screenClass = groupClass.nestedClass(screenName);
-                TypeSpec.Builder innerScreenClass = TypeSpec.classBuilder(screenClassName)
-                        .addModifiers(Modifier.FINAL)
-                        .addMethod(generateRouterForwardMethodForScreen(screenClass, fragment, routerClassName.simpleName()))
-                        .addMethod(generateRouterReplaceMethodForScreen(screenClass, fragment, routerClassName.simpleName()))
-                        .addMethod(generateRouterBackNTimesAndReplaceMethodForScreen(screenClass, fragment, routerClassName.simpleName()))
-                        .addMethod(generateRouterToNewRootScreenMethodForScreen(screenClass, fragment, routerClassName.simpleName()));
-                ClassName innerType = ClassName.get("", screenClassName);
-                routerClass.addType(innerScreenClass.build());
-                routerClass.addField(innerType, screenClassName, Modifier.PUBLIC);
+                generateRouteClass(routerClass, fragment, group, routerClassName);
             });
         });
         try {
-            JavaFile.builder(PackageNames.GENERATED_LB_ROUTING, routerClass.build()).build().writeTo(filer);
+            JavaFile.builder(routingPackage, routerClass.build()).build().writeTo(filer);
         } catch (IOException e) {
             //e.printStackTrace();
         }
-        generateActivityNavigatorSingleton(filer, activityClassName, routerClassName);
+        generateActivityNavigatorSingleton(activityClassName, routerClassName);
     }
 
-    private static MethodSpec generateRouterToNewRootScreenMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
-        String methodName = "newRootScreen";
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
+    private void generateRouteClass(TypeSpec.Builder routerClass, FragmentInfo fragment, FragmentScreenGroup fragmentGroup, ClassName routerClassName) {
+        String groupName = fragmentGroup.getScreenGroupName();
+        String screenName = fragment.getScreenName();
+        String screenClassName = groupName.concat(screenName);
+        ClassName groupClass = screensClassName.nestedClass(groupName);
+        ClassName screenClass = groupClass.nestedClass(screenName);
+        ClassName routeClassName = ClassName.get("", screenClassName);
+        TypeSpec.Builder routeClassBuilder = TypeSpec.classBuilder(screenClassName)
+                .addModifiers(Modifier.FINAL, Modifier.PUBLIC);
+        MethodSpec.Builder routeClassConstructor = MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PUBLIC);
+        MethodSpec.Builder routeMethod = MethodSpec.methodBuilder("to".concat(routeClassName.simpleName()))
                 .addModifiers(Modifier.PUBLIC)
-                .returns(void.class);
+                .returns(routeClassName);
         String paramsString = "";
         for (int i = 0; i < fragment.getFragmentParameters().size(); i++) {
-            boolean isLast = i == fragment.getFragmentParameters().size() - 1;
-            FragmentParamInfo param = fragment.getFragmentParameters().get(i);
-            TypeName paramType = param.getType();
-            String paramName = param.getName();
-            methodBuilder.addParameter(paramType, paramName);
-            paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
+            boolean isLastParameter = i == fragment.getFragmentParameters().size() - 1;
+            FragmentParamInfo parameter = fragment.getFragmentParameters().get(i);
+            TypeName paramType = parameter.getType();
+            String paramName = parameter.getName();
+            routeClassConstructor.addParameter(paramType, paramName);
+            routeClassConstructor.addStatement("this.$L = $L", paramName, paramName);
+            routeClassBuilder.addField(paramType, paramName);
+            routeMethod.addParameter(paramType, paramName);
+            paramsString = paramsString.concat(isLastParameter ? paramName : paramName.concat(", "));
         }
-        methodBuilder.addStatement("$L.newRootScreen(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
-        return methodBuilder.build();
+        routeClassBuilder.addMethod(routeClassConstructor.build())
+                .addMethod(generateRouteForwardMethodForScreen(screenClass, routerClassName.simpleName(), paramsString))
+                .addMethod(generateRouteReplaceMethodForScreen(screenClass, routerClassName.simpleName(), paramsString))
+                .addMethod(generateRouteBackNTimesAndReplaceMethodForScreen(screenClass, routerClassName.simpleName(), paramsString))
+                .addMethod(generateRouteToNewRootScreenMethodForScreen(screenClass, routerClassName.simpleName(), paramsString));
+        routeMethod.addStatement("return new $T($L)", routeClassName, paramsString);
+        routerClass.addMethod(routeMethod.build());
+        routerClass.addType(routeClassBuilder.build());
     }
 
-    private static MethodSpec generateRouterBackNTimesAndReplaceMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
-        String methodName = "backAndReplace";
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(void.class)
-                .addParameter(TypeName.INT, "backNTimes");
-        String paramsString = "";
-        for (int i = 0; i < fragment.getFragmentParameters().size(); i++) {
-            boolean isLast = i == fragment.getFragmentParameters().size() - 1;
-            FragmentParamInfo param = fragment.getFragmentParameters().get(i);
-            TypeName paramType = param.getType();
-            String paramName = param.getName();
-            methodBuilder.addParameter(paramType, paramName);
-            paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
-        }
-        methodBuilder.addStatement("$L.backNTimesAndReplace(backNTimes,new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
-        return methodBuilder.build();
-    }
 
-    private static MethodSpec generateRouterReplaceMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
-        String methodName = "replace";
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(void.class);
-        String paramsString = "";
-        for (int i = 0; i < fragment.getFragmentParameters().size(); i++) {
-            boolean isLast = i == fragment.getFragmentParameters().size() - 1;
-            FragmentParamInfo param = fragment.getFragmentParameters().get(i);
-            TypeName paramType = param.getType();
-            String paramName = param.getName();
-            methodBuilder.addParameter(paramType, paramName);
-            paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
-        }
-        methodBuilder.addStatement("$L.replaceTop(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
-        return methodBuilder.build();
-    }
-
-    private static MethodSpec generateRouterForwardMethodForScreen(ClassName screenClass, FragmentInfo fragment, String routerClassName) {
-        String methodName = "forward";
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(void.class);
-        String paramsString = "";
-        for (int i = 0; i < fragment.getFragmentParameters().size(); i++) {
-            boolean isLast = i == fragment.getFragmentParameters().size() - 1;
-            FragmentParamInfo param = fragment.getFragmentParameters().get(i);
-            TypeName paramType = param.getType();
-            String paramName = param.getName();
-            methodBuilder.addParameter(paramType, paramName);
-            paramsString = paramsString.concat(isLast ? paramName : paramName.concat(", "));
-        }
-        methodBuilder.addStatement("$L.forward(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
-        return methodBuilder.build();
-    }
-
-    public static void generateRoutingScreens(Filer filer, List<FragmentScreenGroup> screenGroups) {
+    public void generateRoutingScreens(List<FragmentScreenGroup> screenGroups) {
         TypeSpec.Builder rootClass = TypeSpec
                 .classBuilder("Screens")
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
         screenGroups.forEach(group -> rootClass.addType(group.build()));
         try {
-            JavaFile.builder(GENERATED_LB_SCREENS, rootClass.build()).build().writeTo(filer);
+            JavaFile.builder(screensPackage, rootClass.build()).build().writeTo(filer);
         } catch (IOException e) {
             //e.printStackTrace();
         }
     }
 
-    public static void generateFragmentBindingClasses(Filer filer, List<FragmentInfo> fragmentInfoList) {
+    public void generateFragmentBindingClasses(List<FragmentInfo> fragmentInfoList) {
         List<MethodSpec> methods = new ArrayList<>();
         fragmentInfoList.forEach(fragmentInfo -> {
             methods.clear();
@@ -221,7 +164,44 @@ public class CodeGenerator {
         });
     }
 
-    private static MethodSpec generateFragmentConfigurationMethod(FragmentInfo fragment) {
+    private MethodSpec generateRouteToNewRootScreenMethodForScreen(ClassName screenClass, String routerClassName, String paramsString) {
+        String methodName = "newRootScreen";
+        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(void.class);
+        methodBuilder.addStatement("$L.newRootScreen(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
+        return methodBuilder.build();
+    }
+
+    private MethodSpec generateRouteBackNTimesAndReplaceMethodForScreen(ClassName screenClass, String routerClassName, String paramsString) {
+        String methodName = "backAndReplace";
+        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(void.class)
+                .addParameter(TypeName.INT, "backNTimes");
+        methodBuilder.addStatement("$L.backNTimesAndReplace(backNTimes,new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
+        return methodBuilder.build();
+    }
+
+    private MethodSpec generateRouteReplaceMethodForScreen(ClassName screenClass, String routerClassName, String paramsString) {
+        String methodName = "replace";
+        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(void.class);
+        methodBuilder.addStatement("$L.replaceTop(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
+        return methodBuilder.build();
+    }
+
+    private MethodSpec generateRouteForwardMethodForScreen(ClassName screenClass, String routerClassName, String paramsString) {
+        String methodName = "forward";
+        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(void.class);
+        methodBuilder.addStatement("$L.forward(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
+        return methodBuilder.build();
+    }
+
+    private MethodSpec generateFragmentConfigurationMethod(FragmentInfo fragment) {
         boolean hasFragmentConfigAnnotation = fragment.getConfigAnnotation() != null;
         if (!hasFragmentConfigAnnotation)
             return null;
@@ -238,7 +218,7 @@ public class CodeGenerator {
                 .build();
     }
 
-    private static MethodSpec generateFragmentViewBindingsMethod(FragmentInfo fragment) {
+    private MethodSpec generateFragmentViewBindingsMethod(FragmentInfo fragment) {
         MethodSpec.Builder method = MethodSpec.methodBuilder("generateViewBindings")
                 .addParameter(fragment.getClassName(), "fragment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -250,7 +230,7 @@ public class CodeGenerator {
         return method.build();
     }
 
-    private static MethodSpec generateFragmentParametersMethod(FragmentInfo fragment) {
+    private MethodSpec generateFragmentParametersMethod(FragmentInfo fragment) {
         MethodSpec.Builder method = MethodSpec.methodBuilder("generateParameters")
                 .addParameter(fragment.getClassName(), "fragment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -268,7 +248,7 @@ public class CodeGenerator {
         return method.build();
     }
 
-    private static MethodSpec generateFragmentNewInstanceMethod(FragmentInfo fragmentInfo, boolean includeOptionalParams) {
+    private MethodSpec generateFragmentNewInstanceMethod(FragmentInfo fragmentInfo, boolean includeOptionalParams) {
         MethodSpec.Builder method = MethodSpec.methodBuilder("newInstance");
         method.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(fragmentInfo.getClassName())
@@ -294,7 +274,7 @@ public class CodeGenerator {
         return method.build();
     }
 
-    private static MethodSpec generateSaveVariablesMethod(FragmentInfo fragmentInfo) {
+    private MethodSpec generateSaveVariablesMethod(FragmentInfo fragmentInfo) {
         MethodSpec.Builder method = MethodSpec
                 .methodBuilder("saveVariablesState")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -314,7 +294,7 @@ public class CodeGenerator {
         return method.build();
     }
 
-    private static MethodSpec generateRestoreVariablesMethod(FragmentInfo fragmentInfo) {
+    private MethodSpec generateRestoreVariablesMethod(FragmentInfo fragmentInfo) {
         MethodSpec.Builder method = MethodSpec
                 .methodBuilder("restoreVariablesState")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -333,21 +313,21 @@ public class CodeGenerator {
         return method.build();
     }
 
-    private static boolean hasOptionalParameters(FragmentInfo fragment) {
+    private boolean hasOptionalParameters(FragmentInfo fragment) {
         for (FragmentParamInfo param : fragment.getFragmentParameters())
             if (param.isOptional()) return true;
         return false;
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private static CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, FragmentParamInfo param, String bundleVariableName, boolean validateParameters) {
+    private CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, FragmentParamInfo param, String bundleVariableName, boolean validateParameters) {
         String typeString = param.getType().toString();
         TypeName paramType = param.getType();
         String parameterName = param.getName();
         boolean optional = param.isOptional();
         boolean needsValidation = validateParameters && (!optional || !param.getType().isPrimitive());
         CodeBlock.Builder codeBlock = CodeBlock.builder();
-        if (simpleTypesList.contains(typeString)) {
+        if (isSimpleType(typeString)) {
             if (typeString.equals(stringType)) {
                 String bundleExp = "$T $L = ".concat(String.format("%s.getString($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
@@ -393,7 +373,7 @@ public class CodeGenerator {
         return codeBlock.build();
     }
 
-    private static CodeBlock generateSaveInstanceStateBlockOfParam(String fragmentVariableName, TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
+    private CodeBlock generateSaveInstanceStateBlockOfParam(String fragmentVariableName, TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
         String typeString = type.toString();
         CodeBlock.Builder codeBlock = CodeBlock.builder();
         if (typeString.equals(stringType)) {
@@ -426,7 +406,7 @@ public class CodeGenerator {
         return codeBlock.build();
     }
 
-    private static CodeBlock generateNewInstanceBlockOfParam(TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
+    private CodeBlock generateNewInstanceBlockOfParam(TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
         String typeString = type.toString();
         CodeBlock.Builder codeBlock = CodeBlock.builder();
         if (typeString.equals(stringType)) {
@@ -460,7 +440,7 @@ public class CodeGenerator {
         return codeBlock.build();
     }
 
-    private static void addValidationExpression(CodeBlock.Builder codeBlock, String paramName) {
+    private void addValidationExpression(CodeBlock.Builder codeBlock, String paramName) {
         codeBlock.beginControlFlow("if(" + paramName + " == null)")
                 .addStatement("throw new java.lang.IllegalArgumentException(\"Argument " + paramName + " is not optional.\")")
                 .endControlFlow();

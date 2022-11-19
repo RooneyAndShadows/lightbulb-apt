@@ -17,11 +17,11 @@ public class ClassNames {
     public static final ClassName DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_DATE, "DateUtils");
     public static final ClassName OFFSET_DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_DATE, "DateUtilsOffsetDate");
     public static final ClassName BUNDLE = ClassName.get(ANDROID_OS, "Bundle");
-    public static final ClassName GENERATED_SCREENS = ClassName.get(GENERATED_LB_SCREENS, "Screens");
     public static final ClassName UUID = ClassName.get(JAVA_UTIL, "UUID");
     public static final ClassName DATE = ClassName.get(JAVA_UTIL, "Date");
     public static final ClassName OFFSET_DATE_TIME = ClassName.get(JAVA_TIME, "OffsetDateTime");
     public static final ClassName STRING = ClassName.get(JAVA_LANG, "String");
+
 
     public static ClassName generateMappedFragmentBindingClassName(FragmentInfo fragmentInfo, String className) {
         return ClassName.get(fragmentInfo.getClassName().packageName(), className);

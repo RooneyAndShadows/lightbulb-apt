@@ -1,11 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.ActivityConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.AnnotationReader;
@@ -22,13 +18,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ProcessorOptionNames.ROOT_PACKAGE;
+
 @SuppressWarnings("FieldCanBeLocal")
 @AutoService(Processor.class)
-public class FragmentProcessor extends AbstractProcessor {
+public class LightBulbProcessor extends AbstractProcessor {
     private Filer filer;
     private Messager messager;
     private Elements elements;
     private Map<String, String> options;
+    private String rootPackage;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -36,12 +35,11 @@ public class FragmentProcessor extends AbstractProcessor {
         this.messager = processingEnvironment.getMessager();
         this.elements = processingEnvironment.getElementUtils();
         this.options = processingEnvironment.getOptions();
-
+        rootPackage = getRootPackage();
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        //Get annotated targets
         boolean processResult;
         AnnotationReader reader = new AnnotationReader(messager, elements);
         processResult = reader.obtainAnnotatedClassesWithActivityConfiguration(roundEnvironment);
@@ -50,18 +48,16 @@ public class FragmentProcessor extends AbstractProcessor {
         processResult &= reader.obtainAnnotatedFieldsWithBindView(roundEnvironment);
         processResult &= reader.obtainAnnotatedFieldsWithFragmentParameter(roundEnvironment);
         if (!processResult) return false;
-        options.forEach((s, s2) -> {
-            messager.printMessage(Diagnostic.Kind.WARNING, s.concat(":").concat(s2));
-        });
         List<FragmentInfo> fragmentInfoList = reader.getFragmentInfoList();
         List<ActivityInfo> activityInfoList = reader.getActivityInfoList();
         List<FragmentScreenGroup> screenGroups = reader.getScreenGroups();
-        CodeGenerator.generateFragmentBindingClasses(filer, fragmentInfoList);
+        CodeGenerator generator = new CodeGenerator(rootPackage, filer);
+        generator.generateFragmentBindingClasses(fragmentInfoList);
         activityInfoList.forEach(activityInfo -> {
             if (!activityInfo.isRoutingEnabled())
                 return;
-            CodeGenerator.generateRoutingScreens(filer, screenGroups);
-            CodeGenerator.generateRouterClass(filer, activityInfo.getClassName(), screenGroups);
+            generator.generateRoutingScreens(screenGroups);
+            generator.generateRouterClass(activityInfo.getClassName(), screenGroups);
         });
         return true;
     }
@@ -83,8 +79,7 @@ public class FragmentProcessor extends AbstractProcessor {
     public Set<String> getSupportedOptions() {
         return new HashSet<String>() {
             {
-                add("key1");
-                add("key2");
+                add(ROOT_PACKAGE);
             }
         };
     }
@@ -92,5 +87,19 @@ public class FragmentProcessor extends AbstractProcessor {
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
+    }
+
+    private String getRootPackage() {
+        String rootPackage = options.get(ROOT_PACKAGE);
+        if (rootPackage == null || rootPackage.equals("")) {
+            String className = getClass().getSimpleName();
+            String message = className.concat(": ")
+                    .concat("Failed to generate sources.")
+                    .concat("Please provide \"")
+                    .concat(ROOT_PACKAGE)
+                    .concat("\" argument in annotationProcessorOptions.");
+            messager.printMessage(Diagnostic.Kind.ERROR, message);
+        }
+        return rootPackage;
     }
 }
