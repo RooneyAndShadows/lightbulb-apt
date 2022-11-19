@@ -97,7 +97,7 @@ public class CodeGenerator {
         TypeSpec.Builder routeClassBuilder = TypeSpec.classBuilder(screenClassName)
                 .addModifiers(Modifier.FINAL, Modifier.PUBLIC);
         MethodSpec.Builder routeClassConstructor = MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PUBLIC);
+                .addModifiers(Modifier.PRIVATE);
         MethodSpec.Builder routeMethod = MethodSpec.methodBuilder("to".concat(routeClassName.simpleName()))
                 .addModifiers(Modifier.PUBLIC)
                 .returns(routeClassName);
@@ -109,7 +109,7 @@ public class CodeGenerator {
             String paramName = parameter.getName();
             routeClassConstructor.addParameter(paramType, paramName);
             routeClassConstructor.addStatement("this.$L = $L", paramName, paramName);
-            routeClassBuilder.addField(paramType, paramName);
+            routeClassBuilder.addField(paramType, paramName, Modifier.PRIVATE);
             routeMethod.addParameter(paramType, paramName);
             paramsString = paramsString.concat(isLastParameter ? paramName : paramName.concat(", "));
         }
