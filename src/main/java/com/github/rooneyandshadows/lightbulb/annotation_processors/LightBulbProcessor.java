@@ -35,11 +35,11 @@ public class LightBulbProcessor extends AbstractProcessor {
         this.messager = processingEnvironment.getMessager();
         this.elements = processingEnvironment.getElementUtils();
         this.options = processingEnvironment.getOptions();
-        rootPackage = getRootPackage();
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
+        rootPackage = getRootPackage();
         boolean processResult;
         AnnotationReader reader = new AnnotationReader(messager, elements);
         processResult = reader.obtainAnnotatedClassesWithActivityConfiguration(roundEnvironment);
