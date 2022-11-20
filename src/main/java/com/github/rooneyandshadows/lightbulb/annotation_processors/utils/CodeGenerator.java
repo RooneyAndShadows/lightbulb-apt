@@ -29,6 +29,7 @@ public class CodeGenerator {
 
     private void generateActivityNavigatorSingleton(ClassName activityClassName, ClassName routerClassName) {
         ClassName navigatorClassName = ClassName.get("", activityClassName.simpleName().concat("Navigator"));
+        String navigatorPackage = activityClassName.packageName();
         TypeSpec.Builder singletonClass = TypeSpec
                 .classBuilder(navigatorClassName)
                 .addModifiers(Modifier.PUBLIC)
@@ -47,8 +48,13 @@ public class CodeGenerator {
                         .returns(routerClassName)
                         .addStatement("return router")
                         .build()
+                )
+                .addMethod(MethodSpec.methodBuilder("route")
+                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                        .returns(routerClassName)
+                        .addStatement("return getInstance().getRouter()")
+                        .build()
                 ).addMethod(MethodSpec.methodBuilder("initializeRouter")
-                        .addModifiers(Modifier.PUBLIC)
                         .addParameter(BASE_ACTIVITY, "activity")
                         .addParameter(int.class, "fragmentContainerId")
                         .returns(routerClassName)
@@ -56,20 +62,20 @@ public class CodeGenerator {
                         .addStatement("return this.router")
                         .build()
                 ).addMethod(MethodSpec.methodBuilder("unBind")
-                        .addModifiers(Modifier.PUBLIC)
                         .returns(void.class)
                         .addStatement("this.router = null")
                         .build()
                 );
         try {
-            JavaFile.builder(routingPackage, singletonClass.build()).build().writeTo(filer);
+            JavaFile.builder(navigatorPackage, singletonClass.build()).build().writeTo(filer);
         } catch (IOException e) {
             //e.printStackTrace();
         }
     }
 
     public void generateRouterClass(ClassName activityClassName, List<FragmentScreenGroup> screenGroups) {
-        ClassName routerClassName = ClassName.get(routingPackage, activityClassName.simpleName().concat("Router"));
+        String routerPackage = activityClassName.packageName();
+        ClassName routerClassName = ClassName.get(routerPackage, activityClassName.simpleName().concat("Router"));
         TypeSpec.Builder routerClass = TypeSpec
                 .classBuilder(routerClassName)
                 .superclass(BASE_ROUTER)
@@ -81,13 +87,14 @@ public class CodeGenerator {
                         .addStatement("super(contextActivity,fragmentContainerId)")
                         .build()
                 );
+
         screenGroups.forEach(group -> {
             group.getScreens().forEach(fragment -> {
                 generateRouteClass(routerClass, fragment, group, routerClassName);
             });
         });
         try {
-            JavaFile.builder(routingPackage, routerClass.build()).build().writeTo(filer);
+            JavaFile.builder(routerPackage, routerClass.build()).build().writeTo(filer);
         } catch (IOException e) {
             //e.printStackTrace();
         }
