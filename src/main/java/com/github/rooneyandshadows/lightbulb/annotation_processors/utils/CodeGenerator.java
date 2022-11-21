@@ -224,7 +224,7 @@ public class CodeGenerator {
         String hasOptionsMenu = String.valueOf(fragment.getConfigAnnotation().hasOptionsMenu());
         return MethodSpec.methodBuilder("generateConfiguration")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(BASE_FRAGMENT, "fragment")
+                .addParameter(fragment.getClassName(), "fragment")
                 .returns(BASE_FRAGMENT_CONFIGURATION)
                 .addStatement("int layoutId = fragment.getResources().getIdentifier($S, $S, fragment.getActivity().getPackageName())", layoutName, "layout")
                 .addStatement("return new $T($L,$L,$L,$L)", BASE_FRAGMENT_CONFIGURATION, "layoutId", isMainScreenFragment, hasLeftDrawer, hasOptionsMenu)
