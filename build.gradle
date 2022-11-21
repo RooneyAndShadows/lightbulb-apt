@@ -2,16 +2,16 @@ buildscript {
     ext {
         group: 'com.github.rooneyandshadows'
         artifactId: 'lightbulb-annotation-processors'
-        version: '1.0.2'
+        version: '1.0.3'
     }
 }
+
 plugins {
     id 'java-library'
     id 'maven-publish'
 }
 group 'com.github.rooneyandshadows'
-version '1.0.2'
-
+version '1.0.3'
 
 repositories {
     mavenCentral()
