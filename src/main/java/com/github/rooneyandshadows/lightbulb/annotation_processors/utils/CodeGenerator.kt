@@ -1,7 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.utils
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.*
-import com.github.rooneyandshadows.lightbulb.annotation_processors.STRING
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup
@@ -301,7 +300,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             .addParameter("fragment", fragment.className!!)
             .addModifiers(KModifier.PUBLIC)
             .returns(Void.TYPE)
-        method.addStatement("%T arguments = fragment.getArguments()", BUNDLE)
+        method.addStatement("val arguments = fragment.requireArguments()")
         fragment.fragmentParameters.forEach(Consumer { param: FragmentParamInfo ->
             val readStatement = resolveReadParamFromBundleExpression(
                 "fragment",
@@ -363,10 +362,8 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         fragmentInfo.fragmentParameters.forEach(Consumer { param: FragmentParamInfo ->
             val writeStatement = generateSaveInstanceStateBlockOfParam(
                 "fragment",
-                param.type,
-                param.name,
-                param.name,
-                "outState"
+                "outState",
+                param
             )
             method.addCode(writeStatement)
         })
@@ -403,191 +400,171 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         bundleVariableName: String,
         validateParameters: Boolean
     ): CodeBlock {
-        val typeString = param.type.toString()
-        val paramType: TypeName = param.type
+        val typeString = param.type.copy(false).toString()
         val parameterName = param.name
-        val optional = param.isOptional
-        val needsValidation = validateParameters && (!optional)
+        val isNullable = param.type.isNullable || param.isOptional
+        val needsValidation = validateParameters && (!isNullable)
         val codeBlock = CodeBlock.builder()
+        if (needsValidation)
+            addBundleEntryValidationExpression(bundleVariableName, parameterName, codeBlock)
+        else
+            codeBlock.beginControlFlow("if($bundleVariableName.containsKey(%S))", parameterName)
         if (isSimpleType(typeString)) {
-            if (typeString == stringType) {
+            if (typeString == String::class.qualifiedName) {
                 codeBlock.addStatement(
-                    "%T %L = $bundleVariableName.getString(%S)",
-                    paramType,
+                    "val %L = $bundleVariableName.getString(%S)",
                     parameterName,
                     parameterName
                 )
             } else if (typeString == uuidType) {
-                val tmpVariableName = parameterName + "String"
-                codeBlock.addStatement("%T %L = null", UUID, parameterName)
                 codeBlock.addStatement(
-                    "%T %L = $bundleVariableName.getString(%S)",
-                    STRING,
-                    tmpVariableName,
+                    "val %L = %T.fromString($bundleVariableName.getString(%S)?:\"\")",
+                    parameterName,
+                    UUID,
                     parameterName
                 )
-                codeBlock.beginControlFlow("if(%L != null)", tmpVariableName)
-                    .addStatement("%L = %T.fromString(%L)", parameterName, UUID, tmpVariableName)
-                    .endControlFlow()
-            } else if (typeString == intType || typeString == intPrimType) {
+            } else if (typeString == Int::class.qualifiedName) {
                 codeBlock.addStatement(
-                    "%T %L = $bundleVariableName.getInt(%S)",
-                    paramType,
+                    "val %L = $bundleVariableName.getInt(%S)",
                     parameterName,
                     parameterName
                 )
-            } else if (typeString == booleanType || typeString == booleanPrimType) {
+            } else if (typeString == Boolean::class.qualifiedName) {
                 codeBlock.addStatement(
-                    "%T %L = $bundleVariableName.getBoolean(%S)",
-                    paramType,
+                    "val %L = $bundleVariableName.getBoolean(%S)",
                     parameterName,
                     parameterName
                 )
-            } else if (typeString == floatType || typeString == floatPrimType) {
+            } else if (typeString == Float::class.qualifiedName) {
                 codeBlock.addStatement(
-                    "%T %L = $bundleVariableName.getFloat(%S)",
-                    paramType,
+                    "val %L = $bundleVariableName.getFloat(%S)",
                     parameterName,
                     parameterName
                 )
-            } else if (typeString == longType || typeString == longPrimType) {
+            } else if (typeString == Long::class.qualifiedName) {
                 codeBlock.addStatement(
-                    "%T %L = $bundleVariableName.getLong(%S)",
-                    paramType,
+                    "val %L = $bundleVariableName.getLong(%S)",
                     parameterName,
                     parameterName
                 )
-            } else if (typeString == doubleType || typeString == doublePrimType) {
+            } else if (typeString == Double::class.qualifiedName) {
                 codeBlock.addStatement(
-                    "%T %L = $bundleVariableName.getDouble(%S)",
-                    paramType,
+                    "val %L = $bundleVariableName.getDouble(%S)",
                     parameterName,
                     parameterName
                 )
             }
-            if (needsValidation) addValidationExpression(codeBlock, parameterName)
+
         } else if (typeString == dateType || typeString == OffsetDateType) {
             codeBlock.addStatement(
-                "%T %LDateString = $bundleVariableName.getString(%S)",
-                STRING,
+                "val %LDateString = $bundleVariableName.getString(%S)",
                 parameterName,
                 parameterName
             )
-            if (needsValidation) addValidationExpression(codeBlock, parameterName + "DateString")
             codeBlock.addStatement(
-                "%T %L = %T.getDateFromStringInDefaultFormat(%L)",
-                if (typeString == dateType) DATE else OFFSET_DATE_TIME,
+                "val %L = %T.getDateFromStringInDefaultFormat(%L)",
                 parameterName,
                 if (typeString == dateType) DATE_UTILS else OFFSET_DATE_UTILS,
                 parameterName + "DateString"
             )
-            if (needsValidation) addValidationExpression(codeBlock, parameterName)
+            val errorString = "Argument $parameterName is provided but date could not be parsed."
+            codeBlock.beginControlFlow("if($parameterName == null)")
+                .addStatement("throw java.lang.IllegalArgumentException(%S)", errorString)
+                .endControlFlow()
         } else {
-            val bundleExp = "%T %L = $bundleVariableName.getParcelable(%S)"
-            codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName)
-            if (needsValidation) addValidationExpression(codeBlock, parameterName)
+            val bundleExp = "val %L = $bundleVariableName.getParcelable(%S)"
+            codeBlock.addStatement(bundleExp, parameterName, parameterName)
+            if (needsValidation) addBundleEntryValidationExpression(bundleVariableName, parameterName, codeBlock)
         }
         codeBlock.addStatement("%L.%L = %L", fragmentVariableName, parameterName, parameterName)
+        if (!needsValidation) codeBlock.endControlFlow()
         return codeBlock.build()
     }
 
     private fun generateSaveInstanceStateBlockOfParam(
         fragmentVariableName: String,
-        type: TypeName,
-        parameterKey: String,
-        parameterName: String,
-        bundleVariableName: String
+        bundleVariableName: String,
+        param: FragmentParamInfo
     ): CodeBlock {
-        val typeString = type.toString()
+        val paramName = fragmentVariableName.plus(".").plus(param.name)
+        val typeString = param.type.copy(false).toString()
         val codeBlock = CodeBlock.builder()
-        if (typeString == stringType) {
-            codeBlock.addStatement(
-                "$bundleVariableName.putString(%S,%L.%L)",
-                parameterKey,
-                fragmentVariableName,
-                parameterName
-            )
-        } else if (typeString == uuidType) {
-            codeBlock.addStatement("%T %L = %S", STRING, parameterName, "")
-            codeBlock.beginControlFlow("if(%L.%L != null)", fragmentVariableName, parameterName)
-                .addStatement("%L = %L.%L.toString()", parameterName, fragmentVariableName, parameterName)
-                .endControlFlow()
+        val isNullable = param.type.isNullable || param.isOptional
+        if (isNullable) codeBlock.beginControlFlow("if($paramName != null)")
+        if (typeString == String::class.qualifiedName) {
             codeBlock.addStatement(
                 "$bundleVariableName.putString(%S,%L)",
-                parameterKey,
-                parameterName
+                param.name,
+                paramName
             )
-        } else if (typeString == intType || typeString == intPrimType) {
+        } else if (typeString == uuidType) {
             codeBlock.addStatement(
-                "$bundleVariableName.putInt(%S,%L.%L)",
-                parameterKey,
-                fragmentVariableName,
-                parameterName
+                "$bundleVariableName.putString(%S,%L.toString())",
+                param.name,
+                paramName
             )
-        } else if (typeString == booleanType || typeString == booleanPrimType) {
+        } else if (typeString == Int::class.qualifiedName) {
             codeBlock.addStatement(
-                "$bundleVariableName.putBoolean(%S,%L.%L)",
-                parameterKey,
-                fragmentVariableName,
-                parameterName
+                "$bundleVariableName.putInt(%S,%L)",
+                param.name,
+                paramName
             )
-        } else if (typeString == floatType || typeString == floatPrimType) {
+        } else if (typeString == Boolean::class.qualifiedName) {
             codeBlock.addStatement(
-                "$bundleVariableName.putFloat(%S,%L.%L)",
-                parameterKey,
-                fragmentVariableName,
-                parameterName
+                "$bundleVariableName.putBoolean(%S,%L)",
+                param.name,
+                paramName
             )
-        } else if (typeString == longType || typeString == longPrimType) {
+        } else if (typeString == Float::class.qualifiedName) {
             codeBlock.addStatement(
-                "$bundleVariableName.putLong(%S,%L.%L)",
-                parameterKey,
-                fragmentVariableName,
-                parameterName
+                "$bundleVariableName.putFloat(%S,%L)",
+                param.name,
+                paramName
             )
-        } else if (typeString == doubleType || typeString == doublePrimType) {
+        } else if (typeString == Long::class.qualifiedName) {
             codeBlock.addStatement(
-                "$bundleVariableName.putDouble(%S,%L.%L)",
-                parameterKey,
-                fragmentVariableName,
-                parameterName
+                "$bundleVariableName.putLong(%S,%L)",
+                param.name,
+                paramName
+            )
+        } else if (typeString == Double::class.qualifiedName) {
+            codeBlock.addStatement(
+                "$bundleVariableName.putDouble(%S,%L)",
+                param.name,
+                paramName
             )
         } else if (typeString == dateType) {
             codeBlock.addStatement(
-                "%T %LDateString = %T.getDateStringInDefaultFormat(%L.%L);",
-                STRING,
-                parameterName,
+                "val %LDateString = %T.getDateStringInDefaultFormat(%L)",
+                param.name,
                 DATE_UTILS,
-                fragmentVariableName,
-                parameterName
+                paramName
             )
             codeBlock.addStatement(
                 "$bundleVariableName.putString(%S,%L)",
-                parameterKey,
-                parameterName + "DateString"
+                param.name,
+                param.name + "DateString"
             )
         } else if (typeString == OffsetDateType) {
             codeBlock.addStatement(
-                "%T %LDateString = %T.getDateStringInDefaultFormat(%L.%L);",
-                STRING,
-                parameterName,
+                "val %LDateString = %T.getDateStringInDefaultFormat(%L)",
+                param.name,
                 OFFSET_DATE_UTILS,
-                fragmentVariableName,
-                parameterName
+                paramName
             )
             codeBlock.addStatement(
                 "$bundleVariableName.putString(%S,%L)",
-                parameterKey,
-                parameterName + "DateString"
+                param.name,
+                param.name + "DateString"
             )
         } else {
             codeBlock.addStatement(
-                "$bundleVariableName.putParcelable(%S,%L.%L)",
-                parameterKey,
-                fragmentVariableName,
-                parameterName
+                "$bundleVariableName.putParcelable(%S,%L)",
+                param.name,
+                paramName
             )
         }
+        if (isNullable) codeBlock.endControlFlow()
         return codeBlock.build()
     }
 
@@ -598,11 +575,10 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val paramName = param.name
         val typeString = param.type.copy(false).toString()
         val codeBlock = CodeBlock.builder()
-        val isOptional = param.isOptional
         val isNullable = param.type.isNullable || param.isOptional
         if (isNullable)
             codeBlock.beginControlFlow("if($paramName != null)")
-        if (typeString == stringType) {
+        if (typeString == String::class.qualifiedName) {
             codeBlock.addStatement(
                 "$bundleVariableName.putString(%S,%L)",
                 paramName,
@@ -614,27 +590,27 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
                 paramName,
                 paramName
             )
-        } else if (typeString == intType || typeString == intPrimType) {
+        } else if (typeString == Int::class.qualifiedName) {
             codeBlock.addStatement("$bundleVariableName.putInt(%S,%L)", paramName, paramName)
-        } else if (typeString == booleanType || typeString == booleanPrimType) {
+        } else if (typeString == Boolean::class.qualifiedName) {
             codeBlock.addStatement(
                 "$bundleVariableName.putBoolean(%S,%L)",
                 paramName,
                 paramName
             )
-        } else if (typeString == floatType || typeString == floatPrimType) {
+        } else if (typeString == Float::class.qualifiedName) {
             codeBlock.addStatement(
                 "$bundleVariableName.putFloat(%S,%L)",
                 paramName,
                 paramName
             )
-        } else if (typeString == longType || typeString == longPrimType) {
+        } else if (typeString == Long::class.qualifiedName) {
             codeBlock.addStatement(
                 "$bundleVariableName.putLong(%S,%L)",
                 paramName,
                 paramName
             )
-        } else if (typeString == doubleType || typeString == doublePrimType) {
+        } else if (typeString == Double::class.qualifiedName) {
             codeBlock.addStatement(
                 "$bundleVariableName.putDouble(%S,%L)",
                 paramName,
@@ -676,9 +652,14 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         return codeBlock.build()
     }
 
-    private fun addValidationExpression(codeBlock: CodeBlock.Builder, paramName: String) {
-        codeBlock.beginControlFlow("if($paramName == null)")
-            .addStatement("throw java.lang.IllegalArgumentException(\"Argument $paramName is not optional.\")")
+    private fun addBundleEntryValidationExpression(
+        bundleVariableName: String,
+        paramName: String,
+        codeBlock: CodeBlock.Builder
+    ) {
+        val errorMessage = "Argument $paramName is not optional."
+        codeBlock.beginControlFlow("if(!$bundleVariableName.containsKey(%S))", paramName)
+            .addStatement("throw java.lang.IllegalArgumentException(%S)", errorMessage)
             .endControlFlow()
     }
 }

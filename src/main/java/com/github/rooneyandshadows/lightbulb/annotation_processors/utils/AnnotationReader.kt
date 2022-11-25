@@ -6,9 +6,12 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.Frag
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generateFragmentClassName
+import com.github.rooneyandshadows.lightbulb.annotation_processors.stringType
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.canBeInstantiated
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.getFullClassName
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.getTypeOfFieldElement
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.TypeName
 import javax.annotation.processing.Messager
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element

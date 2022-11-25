@@ -1,5 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.utils
 
+import com.github.rooneyandshadows.lightbulb.annotation_processors.*
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
 import javax.lang.model.element.Element
@@ -25,7 +27,35 @@ object ElementUtils {
 
     @JvmStatic
     fun getTypeOfFieldElement(element: Element): TypeName {
-        return element.asType().asTypeName()
+        var typeName = element.asType().asTypeName()
+        when (typeName.toString()) {
+            stringType -> {
+                typeName = ClassName("kotlin", "String")
+            }
+
+            intType, intPrimType -> {
+                typeName = ClassName("kotlin", "Int")
+            }
+
+            booleanType, booleanPrimType -> {
+                typeName = ClassName("kotlin", "Boolean")
+            }
+
+            floatType, floatPrimType -> {
+                typeName = ClassName("kotlin", "Float")
+            }
+
+            longType, longPrimType -> {
+                typeName = ClassName("kotlin", "Long")
+            }
+
+            doubleType, doublePrimType -> {
+                typeName = ClassName("kotlin", "Double")
+            }
+
+            else -> {}
+        }
+        return typeName
     }
 
     @JvmStatic

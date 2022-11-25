@@ -30,33 +30,30 @@ val DATE_UTILS: ClassName = ClassName(ROONEY_AND_SHADOWS_DATE, "DateUtils")
 val OFFSET_DATE_UTILS: ClassName = ClassName(ROONEY_AND_SHADOWS_DATE, "DateUtilsOffsetDate")
 val BUNDLE: ClassName = ClassName(ANDROID_OS, "Bundle")
 val UUID: ClassName = ClassName(JAVA_UTIL, "UUID")
-val DATE: ClassName = ClassName(JAVA_UTIL, "Date")
-val OFFSET_DATE_TIME: ClassName = ClassName(JAVA_TIME, "OffsetDateTime")
-val STRING: ClassName = ClassName(JAVA_LANG, "String")
-val JVM_STATIC_CLASSNAME = ClassName
 
 //TYPES
-val stringType: String = String::class.java.canonicalName
-val intType: String = Int::class.java.canonicalName
-val intPrimType: String = Int::class.javaPrimitiveType!!.canonicalName
-val booleanType: String = Boolean::class.java.canonicalName
-val booleanPrimType: String = Boolean::class.javaPrimitiveType!!.canonicalName
+const val stringType: String = "java.lang.String"
+const val intType: String = "java.lang.Integer"
+const val intPrimType: String = "int"
+const val booleanType: String = "java.lang.Boolean"
+const val booleanPrimType: String = "boolean"
 val uuidType: String = java.util.UUID::class.java.canonicalName
-val floatType: String = Float::class.java.canonicalName
-val floatPrimType: String = Float::class.javaPrimitiveType!!.canonicalName
-val longType: String = Long::class.java.canonicalName
-val longPrimType: String = Long::class.javaPrimitiveType!!.canonicalName
-val doubleType: String = Double::class.java.canonicalName
-val doublePrimType: String = Double::class.javaPrimitiveType!!.canonicalName
+const val floatType: String = "java.lang.Float"
+const val floatPrimType: String = "float"
+const val longType: String = "java.lang.Long"
+const val longPrimType: String = "long"
+const val doubleType: String = "java.lang.Double"
+const val doublePrimType: String = "double"
 val dateType: String = Date::class.java.canonicalName
 val OffsetDateType: String = OffsetDateTime::class.java.canonicalName
 
-private val simpleTypesList = Arrays.asList(
-    stringType, intType, intPrimType, booleanType,
-    booleanPrimType, uuidType, floatType, floatPrimType, longType, longPrimType, doubleType, doublePrimType
+private val simpleTypesList = listOf(
+    String::class.qualifiedName, Int::class.qualifiedName, Boolean::class.qualifiedName, uuidType,
+    Float::class.qualifiedName, Long::class.qualifiedName, Double::class.qualifiedName
 )
 
 fun isSimpleType(canonicalName: String): Boolean {
+
     return simpleTypesList.contains(canonicalName)
 }
 
