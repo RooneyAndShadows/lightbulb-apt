@@ -13,4 +13,16 @@ class FragmentInfo {
     var configAnnotation: FragmentConfiguration? = null
     val viewBindings: MutableMap<String, String> = mutableMapOf()
     val fragmentParameters: MutableList<FragmentParamInfo> = mutableListOf()
+
+    fun getOptionalParameters(): List<FragmentParamInfo> {
+        return fragmentParameters.filter { param ->
+            return@filter param.isOptional
+        }.toList()
+    }
+
+    fun getNotOptionalParameters(): List<FragmentParamInfo> {
+        return fragmentParameters.filter { param ->
+            return@filter !param.isOptional
+        }.toList()
+    }
 }

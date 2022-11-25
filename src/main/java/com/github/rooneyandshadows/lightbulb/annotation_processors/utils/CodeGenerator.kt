@@ -40,7 +40,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
                     .addParameter("activity", BASE_ACTIVITY)
                     .addParameter("fragmentContainerId", Int::class.javaPrimitiveType!!)
                     .returns(routerClassName)
-                    .addStatement("this.router = \$T(\$L,\$L)", routerClassName, "activity", "fragmentContainerId")
+                    .addStatement("this.router = %T(%L,%L)", routerClassName, "activity", "fragmentContainerId")
                     .addStatement("return this.router")
                     .build()
             ).addFunction(
@@ -116,7 +116,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             val paramType: TypeName = parameter.type
             val paramName = parameter.name
             routeClassConstructor.addParameter(paramName, paramType)
-            routeClassConstructor.addStatement("this.\$L = \$L", paramName, paramName)
+            routeClassConstructor.addStatement("this.%L = %L", paramName, paramName)
             routeClassBuilder.addProperty(paramName, paramType, KModifier.PRIVATE)
             routeMethod.addParameter(paramName, paramType)
             paramsString = paramsString + if (isLastParameter) paramName else "$paramName, "
@@ -139,7 +139,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
                     paramsString
                 )
             )
-        routeMethod.addStatement("return \$T(\$L)", routeClassName, paramsString)
+        routeMethod.addStatement("return %T(%L)", routeClassName, paramsString)
         routerClass.addFunction(routeMethod.build())
         routerClass.addType(routeClassBuilder.build())
     }
@@ -179,7 +179,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             methods.add(generateFragmentParametersMethod(fragmentInfo))
             methods.add(generateSaveVariablesMethod(fragmentInfo))
             methods.add(generateRestoreVariablesMethod(fragmentInfo))
-            val generatedClass = TypeSpec.classBuilder(className)
+            val generatedClass = TypeSpec.objectBuilder(className)
                 .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
                 .addFunctions(methods)
             fragmentInfo.mappedBindingType = generateMappedFragmentBindingClassName(fragmentInfo, className)
@@ -203,7 +203,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             .addModifiers(KModifier.PUBLIC)
             .returns(Void.TYPE)
         methodBuilder.addStatement(
-            "\$L.newRootScreen(\$T(\$L))",
+            "%L.newRootScreen(%T(%L))",
             "$routerClassName.this",
             screenClass,
             paramsString
@@ -222,7 +222,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             .returns(Void.TYPE)
             .addParameter("backNTimes", INT)
         methodBuilder.addStatement(
-            "\$L.backNTimesAndReplace(backNTimes,\$T(\$L))",
+            "%L.backNTimesAndReplace(backNTimes,%T(%L))",
             "$routerClassName.this",
             screenClass,
             paramsString
@@ -239,7 +239,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
             .returns(Void.TYPE)
-        methodBuilder.addStatement("\$L.replaceTop(\$T(\$L))", "$routerClassName.this", screenClass, paramsString)
+        methodBuilder.addStatement("%L.replaceTop(%T(%L))", "$routerClassName.this", screenClass, paramsString)
         return methodBuilder.build()
     }
 
@@ -252,7 +252,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
             .returns(Void.TYPE)
-        methodBuilder.addStatement("\$L.forward(\$T(\$L))", "$routerClassName.this", screenClass, paramsString)
+        methodBuilder.addStatement("%L.forward(%T(%L))", "$routerClassName.this", screenClass, paramsString)
         return methodBuilder.build()
     }
 
@@ -268,12 +268,12 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             .addParameter("fragment", fragment.className!!)
             .returns(BASE_FRAGMENT_CONFIGURATION)
             .addStatement(
-                "val layoutId = fragment.getResources().getIdentifier(\$S, \$S, fragment.getActivity().getPackageName())",
+                "val layoutId = fragment.getResources().getIdentifier(%S, %S, fragment.requireActivity().getPackageName())",
                 layoutName,
                 "layout"
             )
             .addStatement(
-                "return \$T(\$L,\$L,\$L,\$L)",
+                "return %T(%L,%L,%L,%L)",
                 BASE_FRAGMENT_CONFIGURATION,
                 "layoutId",
                 isMainScreenFragment,
@@ -290,7 +290,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             .returns(Void.TYPE)
         fragment.viewBindings.forEach { (fieldName: String?, identifierName: String?) ->
             val statement =
-                "fragment.\$L = fragment.getView().findViewById(fragment.getResources().getIdentifier(\$S, \$S, fragment.getActivity().getPackageName()))"
+                "fragment.%L = fragment.requireView().findViewById(fragment.getResources().getIdentifier(%S, %S, fragment.requireActivity().getPackageName()))"
             method.addStatement(statement, fieldName, identifierName, "id")
         }
         return method.build()
@@ -301,7 +301,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             .addParameter("fragment", fragment.className!!)
             .addModifiers(KModifier.PUBLIC)
             .returns(Void.TYPE)
-        method.addStatement("\$T arguments = fragment.getArguments()", BUNDLE)
+        method.addStatement("%T arguments = fragment.getArguments()", BUNDLE)
         fragment.fragmentParameters.forEach(Consumer { param: FragmentParamInfo ->
             val readStatement = resolveReadParamFromBundleExpression(
                 "fragment",
@@ -320,24 +320,34 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
     ): FunSpec {
         val method = FunSpec.builder("newInstance")
         method.addModifiers(KModifier.PUBLIC)
+            .addAnnotation(JvmStatic::class.java)
             .returns(fragmentInfo.className!!)
-            .addStatement("\$T fragment = new \$T()", fragmentInfo.className!!, fragmentInfo.className!!)
-            .addStatement("\$T arguments = new \$T()", BUNDLE, BUNDLE)
-        fragmentInfo.fragmentParameters.forEach { param ->
-            val acceptParam = !param.isOptional || includeOptionalParams
-            if (!acceptParam) return@forEach
+            .addStatement("val fragment = %T()", fragmentInfo.className!!)
+            .addStatement("val arguments = %T()", BUNDLE)
+        fragmentInfo.getNotOptionalParameters().forEach { param ->
             method.addParameter(
                 param.name,
                 param.type
             )
             val writeStatement = generateNewInstanceBlockOfParam(
-                param.type,
-                param.name,
-                param.name,
+                param,
                 "arguments"
             )
             method.addCode(writeStatement)
         }
+        if (includeOptionalParams)
+            fragmentInfo.getOptionalParameters().forEach { param ->
+                val nullableType = param.type.copy(true)
+                method.addParameter(
+                    param.name,
+                    nullableType
+                )
+                val writeStatement = generateNewInstanceBlockOfParam(
+                    param,
+                    "arguments"
+                )
+                method.addCode(writeStatement)
+            }
         method.addStatement("fragment.setArguments(arguments)")
         method.addStatement("return fragment")
         return method.build()
@@ -401,44 +411,71 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val codeBlock = CodeBlock.builder()
         if (isSimpleType(typeString)) {
             if (typeString == stringType) {
-                val bundleExp = "\$T \$L = " + String.format("%s.getString(\$S)", bundleVariableName)
-                codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName)
+                codeBlock.addStatement(
+                    "%T %L = $bundleVariableName.getString(%S)",
+                    paramType,
+                    parameterName,
+                    parameterName
+                )
             } else if (typeString == uuidType) {
                 val tmpVariableName = parameterName + "String"
-                val bundleExp = "\$T \$L = " + String.format("%s.getString(\$S)", bundleVariableName)
-                codeBlock.addStatement("\$T \$L = null", UUID, parameterName)
-                codeBlock.addStatement(bundleExp, STRING, tmpVariableName, parameterName)
-                codeBlock.beginControlFlow("if(\$L != null)", tmpVariableName)
-                    .addStatement("\$L = \$T.fromString(\$L)", parameterName, UUID, tmpVariableName)
+                codeBlock.addStatement("%T %L = null", UUID, parameterName)
+                codeBlock.addStatement(
+                    "%T %L = $bundleVariableName.getString(%S)",
+                    STRING,
+                    tmpVariableName,
+                    parameterName
+                )
+                codeBlock.beginControlFlow("if(%L != null)", tmpVariableName)
+                    .addStatement("%L = %T.fromString(%L)", parameterName, UUID, tmpVariableName)
                     .endControlFlow()
             } else if (typeString == intType || typeString == intPrimType) {
-                val bundleExp = "\$T \$L = " + String.format("%s.getInt(\$S)", bundleVariableName)
-                codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName)
+                codeBlock.addStatement(
+                    "%T %L = $bundleVariableName.getInt(%S)",
+                    paramType,
+                    parameterName,
+                    parameterName
+                )
             } else if (typeString == booleanType || typeString == booleanPrimType) {
-                val bundleExp = "\$T \$L = " + String.format("%s.getBoolean(\$S)", bundleVariableName)
-                codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName)
+                codeBlock.addStatement(
+                    "%T %L = $bundleVariableName.getBoolean(%S)",
+                    paramType,
+                    parameterName,
+                    parameterName
+                )
             } else if (typeString == floatType || typeString == floatPrimType) {
-                val bundleExp = "\$T \$L = " + String.format("%s.getFloat(\$S)", bundleVariableName)
-                codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName)
+                codeBlock.addStatement(
+                    "%T %L = $bundleVariableName.getFloat(%S)",
+                    paramType,
+                    parameterName,
+                    parameterName
+                )
             } else if (typeString == longType || typeString == longPrimType) {
-                val bundleExp = "\$T \$L = " + String.format("%s.getLong(\$S)", bundleVariableName)
-                codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName)
+                codeBlock.addStatement(
+                    "%T %L = $bundleVariableName.getLong(%S)",
+                    paramType,
+                    parameterName,
+                    parameterName
+                )
             } else if (typeString == doubleType || typeString == doublePrimType) {
-                val bundleExp = "\$T \$L = " + String.format("%s.getDouble(\$S)", bundleVariableName)
-                codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName)
+                codeBlock.addStatement(
+                    "%T %L = $bundleVariableName.getDouble(%S)",
+                    paramType,
+                    parameterName,
+                    parameterName
+                )
             }
             if (needsValidation) addValidationExpression(codeBlock, parameterName)
         } else if (typeString == dateType || typeString == OffsetDateType) {
-            val getDateStringExpression = String.format("%s.getString(\$S)", bundleVariableName)
             codeBlock.addStatement(
-                "\$T \$LDateString = $getDateStringExpression",
+                "%T %LDateString = $bundleVariableName.getString(%S)",
                 STRING,
                 parameterName,
                 parameterName
             )
             if (needsValidation) addValidationExpression(codeBlock, parameterName + "DateString")
             codeBlock.addStatement(
-                "\$T \$L = \$T.getDateFromStringInDefaultFormat(\$L)",
+                "%T %L = %T.getDateFromStringInDefaultFormat(%L)",
                 if (typeString == dateType) DATE else OFFSET_DATE_TIME,
                 parameterName,
                 if (typeString == dateType) DATE_UTILS else OFFSET_DATE_UTILS,
@@ -446,11 +483,11 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             )
             if (needsValidation) addValidationExpression(codeBlock, parameterName)
         } else {
-            val bundleExp = "\$T \$L = " + String.format("%s.getParcelable(\$S)", bundleVariableName)
+            val bundleExp = "%T %L = $bundleVariableName.getParcelable(%S)"
             codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName)
             if (needsValidation) addValidationExpression(codeBlock, parameterName)
         }
-        codeBlock.addStatement("\$L.\$L = \$L", fragmentVariableName, parameterName, parameterName)
+        codeBlock.addStatement("%L.%L = %L", fragmentVariableName, parameterName, parameterName)
         return codeBlock.build()
     }
 
@@ -465,59 +502,59 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val codeBlock = CodeBlock.builder()
         if (typeString == stringType) {
             codeBlock.addStatement(
-                String.format("%s.putString(\$S,\$L.\$L)", bundleVariableName),
+                "$bundleVariableName.putString(%S,%L.%L)",
                 parameterKey,
                 fragmentVariableName,
                 parameterName
             )
         } else if (typeString == uuidType) {
-            codeBlock.addStatement("\$T \$L = \$S", STRING, parameterName, "")
-            codeBlock.beginControlFlow("if(\$L.\$L != null)", fragmentVariableName, parameterName)
-                .addStatement("\$L = \$L.\$L.toString()", parameterName, fragmentVariableName, parameterName)
+            codeBlock.addStatement("%T %L = %S", STRING, parameterName, "")
+            codeBlock.beginControlFlow("if(%L.%L != null)", fragmentVariableName, parameterName)
+                .addStatement("%L = %L.%L.toString()", parameterName, fragmentVariableName, parameterName)
                 .endControlFlow()
             codeBlock.addStatement(
-                String.format("%s.putString(\$S,\$L)", bundleVariableName),
+                "$bundleVariableName.putString(%S,%L)",
                 parameterKey,
                 parameterName
             )
         } else if (typeString == intType || typeString == intPrimType) {
             codeBlock.addStatement(
-                String.format("%s.putInt(\$S,\$L.\$L)", bundleVariableName),
+                "$bundleVariableName.putInt(%S,%L.%L)",
                 parameterKey,
                 fragmentVariableName,
                 parameterName
             )
         } else if (typeString == booleanType || typeString == booleanPrimType) {
             codeBlock.addStatement(
-                String.format("%s.putBoolean(\$S,\$L.\$L)", bundleVariableName),
+                "$bundleVariableName.putBoolean(%S,%L.%L)",
                 parameterKey,
                 fragmentVariableName,
                 parameterName
             )
         } else if (typeString == floatType || typeString == floatPrimType) {
             codeBlock.addStatement(
-                String.format("%s.putFloat(\$S,\$L.\$L)", bundleVariableName),
+                "$bundleVariableName.putFloat(%S,%L.%L)",
                 parameterKey,
                 fragmentVariableName,
                 parameterName
             )
         } else if (typeString == longType || typeString == longPrimType) {
             codeBlock.addStatement(
-                String.format("%s.putLong(\$S,\$L.\$L)", bundleVariableName),
+                "$bundleVariableName.putLong(%S,%L.%L)",
                 parameterKey,
                 fragmentVariableName,
                 parameterName
             )
         } else if (typeString == doubleType || typeString == doublePrimType) {
             codeBlock.addStatement(
-                String.format("%s.putDouble(\$S,\$L.\$L)", bundleVariableName),
+                "$bundleVariableName.putDouble(%S,%L.%L)",
                 parameterKey,
                 fragmentVariableName,
                 parameterName
             )
         } else if (typeString == dateType) {
             codeBlock.addStatement(
-                "\$T \$LDateString = \$T.getDateStringInDefaultFormat(\$L.\$L);",
+                "%T %LDateString = %T.getDateStringInDefaultFormat(%L.%L);",
                 STRING,
                 parameterName,
                 DATE_UTILS,
@@ -525,13 +562,13 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
                 parameterName
             )
             codeBlock.addStatement(
-                String.format("%s.putString(\$S,\$L)", bundleVariableName),
+                "$bundleVariableName.putString(%S,%L)",
                 parameterKey,
                 parameterName + "DateString"
             )
         } else if (typeString == OffsetDateType) {
             codeBlock.addStatement(
-                "\$T \$LDateString = \$T.getDateStringInDefaultFormat(\$L.\$L);",
+                "%T %LDateString = %T.getDateStringInDefaultFormat(%L.%L);",
                 STRING,
                 parameterName,
                 OFFSET_DATE_UTILS,
@@ -539,13 +576,13 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
                 parameterName
             )
             codeBlock.addStatement(
-                String.format("%s.putString(\$S,\$L)", bundleVariableName),
+                "$bundleVariableName.putString(%S,%L)",
                 parameterKey,
                 parameterName + "DateString"
             )
         } else {
             codeBlock.addStatement(
-                String.format("%s.putParcelable(\$S,\$L.\$L)", bundleVariableName),
+                "$bundleVariableName.putParcelable(%S,%L.%L)",
                 parameterKey,
                 fragmentVariableName,
                 parameterName
@@ -555,89 +592,87 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
     }
 
     private fun generateNewInstanceBlockOfParam(
-        type: TypeName,
-        parameterKey: String,
-        parameterName: String,
-        bundleVariableName: String
+        param: FragmentParamInfo,
+        bundleVariableName: String,
     ): CodeBlock {
-        val typeString = type.toString()
+        val paramName = param.name
+        val typeString = param.type.copy(false).toString()
         val codeBlock = CodeBlock.builder()
+        val isOptional = param.isOptional
+        val isNullable = param.type.isNullable || param.isOptional
+        if (isNullable)
+            codeBlock.beginControlFlow("if($paramName != null)")
         if (typeString == stringType) {
             codeBlock.addStatement(
-                String.format("%s.putString(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                parameterName
+                "$bundleVariableName.putString(%S,%L)",
+                paramName,
+                paramName
             )
         } else if (typeString == uuidType) {
-            val tmpVariableName = parameterName + "String"
-            codeBlock.addStatement("\$T \$L = \$S", STRING, tmpVariableName, "")
-            codeBlock.beginControlFlow("if(\$L != null)", parameterName)
-                .addStatement("\$L = \$L.toString()", tmpVariableName, parameterName)
-                .endControlFlow()
             codeBlock.addStatement(
-                String.format("%s.putString(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                tmpVariableName
+                "$bundleVariableName.putString(%S,%L.toString())",
+                paramName,
+                paramName
             )
         } else if (typeString == intType || typeString == intPrimType) {
-            codeBlock.addStatement(String.format("%s.putInt(\$S,\$L)", bundleVariableName), parameterKey, parameterName)
+            codeBlock.addStatement("$bundleVariableName.putInt(%S,%L)", paramName, paramName)
         } else if (typeString == booleanType || typeString == booleanPrimType) {
             codeBlock.addStatement(
-                String.format("%s.putBoolean(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                parameterName
+                "$bundleVariableName.putBoolean(%S,%L)",
+                paramName,
+                paramName
             )
         } else if (typeString == floatType || typeString == floatPrimType) {
             codeBlock.addStatement(
-                String.format("%s.putFloat(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                parameterName
+                "$bundleVariableName.putFloat(%S,%L)",
+                paramName,
+                paramName
             )
         } else if (typeString == longType || typeString == longPrimType) {
             codeBlock.addStatement(
-                String.format("%s.putLong(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                parameterName
+                "$bundleVariableName.putLong(%S,%L)",
+                paramName,
+                paramName
             )
         } else if (typeString == doubleType || typeString == doublePrimType) {
             codeBlock.addStatement(
-                String.format("%s.putDouble(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                parameterName
+                "$bundleVariableName.putDouble(%S,%L)",
+                paramName,
+                paramName
             )
         } else if (typeString == dateType) {
             codeBlock.addStatement(
-                "\$T \$LDateString = \$T.getDateStringInDefaultFormat(\$L)",
-                STRING,
-                parameterName,
+                "var %LDateString = %T.getDateStringInDefaultFormat(%L)",
+                paramName,
                 DATE_UTILS,
-                parameterName
+                paramName
             )
             codeBlock.addStatement(
-                String.format("%s.putString(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                parameterName + "DateString"
+                "$bundleVariableName.putString(%S,%L)",
+                paramName,
+                paramName + "DateString"
             )
         } else if (typeString == OffsetDateType) {
             codeBlock.addStatement(
-                "\$T \$LDateString = \$T.getDateStringInDefaultFormat(\$L)",
-                STRING,
-                parameterName,
+                "var %LDateString = %T.getDateStringInDefaultFormat(%L)",
+                paramName,
                 OFFSET_DATE_UTILS,
-                parameterName
+                paramName
             )
             codeBlock.addStatement(
-                String.format("%s.putString(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                parameterName + "DateString"
+                "$bundleVariableName.putString(%S,%L)",
+                paramName,
+                paramName + "DateString"
             )
         } else {
             codeBlock.addStatement(
-                String.format("%s.putParcelable(\$S,\$L)", bundleVariableName),
-                parameterKey,
-                parameterName
+                "$bundleVariableName.putParcelable(%S,%L)",
+                paramName,
+                paramName
             )
         }
+        if (isNullable)
+            codeBlock.endControlFlow()
         return codeBlock.build()
     }
 
