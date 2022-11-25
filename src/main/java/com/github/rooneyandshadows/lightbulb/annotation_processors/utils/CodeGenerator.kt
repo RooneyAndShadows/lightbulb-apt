@@ -412,7 +412,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         if (isSimpleType(typeString)) {
             if (typeString == String::class.qualifiedName) {
                 codeBlock.addStatement(
-                    "val %L = $bundleVariableName.getString(%S)",
+                    "val %L = $bundleVariableName.getString(%S)?:\"\"",
                     parameterName,
                     parameterName
                 )
