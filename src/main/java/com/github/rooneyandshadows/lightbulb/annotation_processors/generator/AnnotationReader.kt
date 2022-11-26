@@ -1,17 +1,14 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.utils
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generateFragmentClassName
-import com.github.rooneyandshadows.lightbulb.annotation_processors.stringType
-import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.canBeInstantiated
-import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.getFullClassName
-import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.getTypeOfFieldElement
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.TypeName
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ElementUtils.canBeInstantiated
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ElementUtils.getFullClassName
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ElementUtils.getTypeOfFieldElement
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.generateFragmentClassName
 import javax.annotation.processing.Messager
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.Element
@@ -19,7 +16,7 @@ import javax.lang.model.element.ElementKind
 import javax.lang.model.util.Elements
 import javax.tools.Diagnostic
 
-class AnnotationReader(private val messager: Messager, private val elements: Elements) {
+internal class AnnotationReader(private val messager: Messager, private val elements: Elements) {
     val activityInfoList: MutableList<ActivityInfo> = ArrayList()
     val fragmentInfoList: MutableList<FragmentInfo> = ArrayList()
     val screenGroups: MutableList<FragmentScreenGroup> = ArrayList()
@@ -64,11 +61,10 @@ class AnnotationReader(private val messager: Messager, private val elements: Ele
                 messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentParameter should be on top of fragment field.")
                 return false
             }
-            val annotation = element.getAnnotation(FragmentParameter::class.java)
             val classElement = element.enclosingElement
             val fragmentInfo = getOrCreateFragmentInfo(classElement)
             val info =
-                FragmentParamInfo(element.simpleName.toString(), getTypeOfFieldElement(element), annotation.optional)
+                FragmentParamInfo(element.simpleName.toString(), getTypeOfFieldElement(element))
             fragmentInfo.fragmentParameters.add(info)
         }
         return true

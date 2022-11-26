@@ -1,15 +1,15 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*
-import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.AnnotationReader
-import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.CodeGenerator
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.AnnotationReader
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.CodeGenerator
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.Options.ROOT_PACKAGE
 import com.google.auto.service.AutoService
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.tools.Diagnostic
-import kotlin.concurrent.thread
 
 @AutoService(Processor::class)
 class LightBulbProcessor : AbstractProcessor() {

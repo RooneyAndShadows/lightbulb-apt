@@ -1,15 +1,28 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.utils
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.*
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ClassNames.BASE_ACTIVITY
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ClassNames.BASE_FRAGMENT_CONFIGURATION
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ClassNames.BASE_ROUTER
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ClassNames.BUNDLE
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ClassNames.DATE_UTILS
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ClassNames.OFFSET_DATE_UTILS
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.ClassNames.UUID
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.OffsetDateType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.dateType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.generateMappedFragmentBindingClassName
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.isSimpleType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.uuidType
+import com.squareup.javapoet.JavaFile
 import com.squareup.kotlinpoet.*
 import java.io.IOException
 import java.util.function.Consumer
 import javax.annotation.processing.Filer
 
-class CodeGenerator(rootPackage: String, private val filer: Filer) {
+
+internal class CodeGenerator(rootPackage: String, private val filer: Filer) {
     private val routingPackage: String
     private val screensPackage: String
     private val screensClassName: ClassName
@@ -106,7 +119,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val routeClassName = ClassName("", screenClassName)
         val routeClassBuilder = TypeSpec.classBuilder(screenClassName)
             .addModifiers(KModifier.FINAL, KModifier.PUBLIC, KModifier.INNER)
-            .addProperty("screen", screenClass)
+            .addProperty("screen", screenClass, KModifier.PRIVATE)
         val routeClassConstructor = FunSpec.constructorBuilder()
         //.addModifiers(KModifier.PRIVATE)
         val routeMethod = FunSpec.builder("to" + routeClassName.simpleName)
@@ -356,7 +369,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
     }
 
     private fun hasOptionalParameters(fragment: FragmentInfo): Boolean {
-        for (param in fragment.fragmentParameters) if (param.isOptional) return true
+        for (param in fragment.fragmentParameters) if (param.type.isNullable) return true
         return false
     }
 
@@ -368,7 +381,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
     ): CodeBlock {
         val typeString = param.type.copy(false).toString()
         val parameterName = param.name
-        val isNullable = param.type.isNullable || param.isOptional
+        val isNullable = param.type.isNullable
         val needsValidation = validateParameters && (!isNullable)
         val codeBlock = CodeBlock.builder()
         if (needsValidation)
@@ -455,7 +468,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val paramName = fragmentVariableName.plus(".").plus(param.name)
         val typeString = param.type.copy(false).toString()
         val codeBlock = CodeBlock.builder()
-        val isNullable = param.type.isNullable || param.isOptional
+        val isNullable = param.type.isNullable
         if (isNullable) codeBlock.beginControlFlow("if($paramName != null)")
         if (typeString == String::class.qualifiedName) {
             codeBlock.addStatement(
@@ -541,7 +554,7 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val paramName = param.name
         val typeString = param.type.copy(false).toString()
         val codeBlock = CodeBlock.builder()
-        val isNullable = param.type.isNullable || param.isOptional
+        val isNullable = param.type.isNullable
         if (isNullable)
             codeBlock.beginControlFlow("if($paramName != null)")
         if (typeString == String::class.qualifiedName) {

@@ -1,16 +1,25 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.utils
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.*
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.booleanPrimType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.booleanType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.doublePrimType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.doubleType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.floatPrimType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.floatType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.intPrimType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.intType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.longPrimType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.longType
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.utils.TypeUtils.stringType
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asTypeName
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.Modifier
-import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.Elements
 
-object ElementUtils {
+internal object ElementUtils {
     @JvmStatic
     fun getPackage(elements: Elements, element: Element?): String {
         return elements.getPackageOf(element)

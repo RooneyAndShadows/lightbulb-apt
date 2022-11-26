@@ -16,13 +16,13 @@ class FragmentInfo {
 
     fun getOptionalParameters(): List<FragmentParamInfo> {
         return fragmentParameters.filter { param ->
-            return@filter param.isOptional
+            return@filter param.type.isNullable
         }.toList()
     }
 
     fun getNotOptionalParameters(): List<FragmentParamInfo> {
         return fragmentParameters.filter { param ->
-            return@filter !param.isOptional
+            return@filter !param.type.isNullable
         }.toList()
     }
 }
