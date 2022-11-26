@@ -53,7 +53,6 @@ private val simpleTypesList = listOf(
 )
 
 fun isSimpleType(canonicalName: String): Boolean {
-
     return simpleTypesList.contains(canonicalName)
 }
 

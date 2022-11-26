@@ -9,6 +9,7 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.tools.Diagnostic
+import kotlin.concurrent.thread
 
 @AutoService(Processor::class)
 class LightBulbProcessor : AbstractProcessor() {

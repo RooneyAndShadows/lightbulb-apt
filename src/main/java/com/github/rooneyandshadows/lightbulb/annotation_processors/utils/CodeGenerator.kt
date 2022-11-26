@@ -66,22 +66,21 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
             .addFunction(
                 FunSpec.constructorBuilder()
+                    .callSuperConstructor("contextActivity", "fragmentContainerId")
                     .addModifiers(KModifier.PUBLIC)
                     .addParameter("contextActivity", BASE_ACTIVITY)
                     .addParameter("fragmentContainerId", INT)
-                    .addStatement("super(contextActivity,fragmentContainerId)")
                     .build()
             )
         screenGroups.forEach(Consumer { group: FragmentScreenGroup ->
-            group.screens.forEach(
-                Consumer { fragment: FragmentInfo ->
-                    generateRouteClass(
-                        routerClass,
-                        fragment,
-                        group,
-                        routerClassName
-                    )
-                })
+            group.screens.forEach { fragment: FragmentInfo ->
+                generateRouteClass(
+                    routerClass,
+                    fragment,
+                    group,
+                    routerClassName
+                )
+            }
         })
 
         try {
@@ -106,9 +105,10 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val screenClass = groupClass.nestedClass(screenName!!)
         val routeClassName = ClassName("", screenClassName)
         val routeClassBuilder = TypeSpec.classBuilder(screenClassName)
-            .addModifiers(KModifier.FINAL, KModifier.PUBLIC)
+            .addModifiers(KModifier.FINAL, KModifier.PUBLIC, KModifier.INNER)
+            .addProperty("screen", screenClass)
         val routeClassConstructor = FunSpec.constructorBuilder()
-            .addModifiers(KModifier.PRIVATE)
+        //.addModifiers(KModifier.PRIVATE)
         val routeMethod = FunSpec.builder("to" + routeClassName.simpleName)
             .addModifiers(KModifier.PUBLIC)
             .returns(routeClassName)
@@ -124,24 +124,12 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             routeMethod.addParameter(paramName, paramType)
             paramsString = paramsString + if (isLastParameter) paramName else "$paramName, "
         }
-        routeClassBuilder
-            .addFunction(routeClassConstructor.build())
-            .addFunction(generateRouteForwardMethodForScreen(screenClass, routerClassName.simpleName, paramsString))
-            .addFunction(generateRouteReplaceMethodForScreen(screenClass, routerClassName.simpleName, paramsString))
-            .addFunction(
-                generateRouteBackNTimesAndReplaceMethodForScreen(
-                    screenClass,
-                    routerClassName.simpleName,
-                    paramsString
-                )
-            )
-            .addFunction(
-                generateRouteToNewRootScreenMethodForScreen(
-                    screenClass,
-                    routerClassName.simpleName,
-                    paramsString
-                )
-            )
+        routeClassConstructor.addStatement("this.screen = %T(%L)", screenClass, paramsString)
+        routeClassBuilder.addFunction(routeClassConstructor.build())
+            .addFunction(generateRouteForwardMethodForScreen(routerClassName.simpleName))
+            .addFunction(generateRouteReplaceMethodForScreen(routerClassName.simpleName))
+            .addFunction(generateRouteBackNTimesAndReplaceMethodForScreen(routerClassName.simpleName))
+            .addFunction(generateRouteToNewRootScreenMethodForScreen(routerClassName.simpleName))
         routeMethod.addStatement("return %T(%L)", routeClassName, paramsString)
         routerClass.addFunction(routeMethod.build())
         routerClass.addType(routeClassBuilder.build())
@@ -198,62 +186,36 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         })
     }
 
-    private fun generateRouteToNewRootScreenMethodForScreen(
-        screenClass: ClassName,
-        routerClassName: String,
-        paramsString: String
-    ): FunSpec {
+    private fun generateRouteToNewRootScreenMethodForScreen(routerClassName: String): FunSpec {
         val methodName = "newRootScreen"
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
-        methodBuilder.addStatement(
-            "%L.newRootScreen(%T(%L))",
-            "$routerClassName.this",
-            screenClass,
-            paramsString
-        )
+        methodBuilder.addStatement("%L.newRootScreen(screen)", "this@$routerClassName")
         return methodBuilder.build()
     }
 
-    private fun generateRouteBackNTimesAndReplaceMethodForScreen(
-        screenClass: ClassName,
-        routerClassName: String,
-        paramsString: String
-    ): FunSpec {
+    private fun generateRouteBackNTimesAndReplaceMethodForScreen(routerClassName: String): FunSpec {
         val methodName = "backAndReplace"
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
             .addParameter("backNTimes", INT)
-        methodBuilder.addStatement(
-            "%L.backNTimesAndReplace(backNTimes,%T(%L))",
-            "$routerClassName.this",
-            screenClass,
-            paramsString
-        )
+        methodBuilder.addStatement("%L.backNTimesAndReplace(backNTimes,screen)", "this@$routerClassName")
         return methodBuilder.build()
     }
 
-    private fun generateRouteReplaceMethodForScreen(
-        screenClass: ClassName,
-        routerClassName: String,
-        paramsString: String
-    ): FunSpec {
+    private fun generateRouteReplaceMethodForScreen(routerClassName: String): FunSpec {
         val methodName = "replace"
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
-        methodBuilder.addStatement("%L.replaceTop(%T(%L))", "$routerClassName.this", screenClass, paramsString)
+        methodBuilder.addStatement("%L.replaceTop(screen)", "this@$routerClassName")
         return methodBuilder.build()
     }
 
-    private fun generateRouteForwardMethodForScreen(
-        screenClass: ClassName,
-        routerClassName: String,
-        paramsString: String
-    ): FunSpec {
+    private fun generateRouteForwardMethodForScreen(routerClassName: String): FunSpec {
         val methodName = "forward"
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
-        methodBuilder.addStatement("%L.forward(%T(%L))", "$routerClassName.this", screenClass, paramsString)
+        methodBuilder.addStatement("%L.forward(screen)", "this@$routerClassName")
         return methodBuilder.build()
     }
 

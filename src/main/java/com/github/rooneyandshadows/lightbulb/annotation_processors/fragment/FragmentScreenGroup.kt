@@ -34,7 +34,7 @@ class FragmentScreenGroup(screenGroupName: String?) {
                 .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
             val getFragmentMethod: FunSpec.Builder = FunSpec
                 .builder("getFragment")
-                .addModifiers(KModifier.PUBLIC)
+                .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
                 .addAnnotation(Override::class.java)
                 .returns(fragmentInfo.className!!)
             var paramsString = ""
@@ -44,11 +44,11 @@ class FragmentScreenGroup(screenGroupName: String?) {
                 val parameterType: TypeName = paramInfo.type
                 val parameterName = paramInfo.name
                 screenConstructor.addParameter(parameterName, parameterType)
-                screenConstructor.addStatement("this.\$L = \$L", parameterName, parameterName)
+                screenConstructor.addStatement("this.%L = %L", parameterName, parameterName)
                 screenClass.addProperty(parameterName, parameterType, KModifier.PRIVATE)
                 paramsString = paramsString + if (isLast) parameterName else "$parameterName, "
             }
-            getFragmentMethod.addStatement("return \$T.newInstance($paramsString)", fragmentInfo.mappedBindingType!!)
+            getFragmentMethod.addStatement("return %T.newInstance($paramsString)", fragmentInfo.mappedBindingType!!)
             screenClass.addFunction(screenConstructor.build())
             screenClass.addFunction(getFragmentMethod.build())
             groupClass.addType(screenClass.build())
