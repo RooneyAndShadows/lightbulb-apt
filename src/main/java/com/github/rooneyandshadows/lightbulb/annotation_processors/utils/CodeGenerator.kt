@@ -26,13 +26,18 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val navigatorClassName = ClassName("", className)
         val singletonClass: TypeSpec.Builder = TypeSpec.objectBuilder(navigatorClassName)
             .addModifiers(KModifier.PUBLIC)
-            .addProperty("router", routerClassName, KModifier.PRIVATE)
+            .addProperty(
+                PropertySpec.builder("router", routerClassName.copy(true), KModifier.PRIVATE)
+                    .mutable(true)
+                    .initializer("null")
+                    .build()
+            )
             .addFunction(
                 FunSpec.builder("route")
                     .addAnnotation(JvmStatic::class.java)
                     .addModifiers(KModifier.PUBLIC)
                     .returns(routerClassName)
-                    .addStatement("return getInstance().getRouter()")
+                    .addStatement("return router!!")
                     .build()
             ).addFunction(
                 FunSpec.builder("initializeRouter")
@@ -40,11 +45,10 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
                     .addParameter("fragmentContainerId", Int::class.javaPrimitiveType!!)
                     .returns(routerClassName)
                     .addStatement("this.router = %T(%L,%L)", routerClassName, "activity", "fragmentContainerId")
-                    .addStatement("return this.router")
+                    .addStatement("return this.router!!")
                     .build()
             ).addFunction(
                 FunSpec.builder("unBind")
-                    .returns(Void.TYPE)
                     .addStatement("this.router = null")
                     .build()
             )
@@ -178,9 +182,11 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             methods.add(generateFragmentParametersMethod(fragmentInfo))
             methods.add(generateSaveVariablesMethod(fragmentInfo))
             methods.add(generateRestoreVariablesMethod(fragmentInfo))
-            val generatedClass = TypeSpec.objectBuilder(className)
-                .addModifiers(KModifier.PUBLIC, KModifier.FINAL)
+            val generatedClass = TypeSpec.classBuilder(className)
+                .addModifiers(KModifier.INTERNAL, KModifier.FINAL)
+            val companion = TypeSpec.companionObjectBuilder()
                 .addFunctions(methods)
+            generatedClass.addType(companion.build())
             fragmentInfo.mappedBindingType = generateMappedFragmentBindingClassName(fragmentInfo, className)
             try {
                 file.addType(generatedClass.build())
@@ -200,7 +206,6 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val methodName = "newRootScreen"
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
-            .returns(Void.TYPE)
         methodBuilder.addStatement(
             "%L.newRootScreen(%T(%L))",
             "$routerClassName.this",
@@ -218,7 +223,6 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val methodName = "backAndReplace"
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
-            .returns(Void.TYPE)
             .addParameter("backNTimes", INT)
         methodBuilder.addStatement(
             "%L.backNTimesAndReplace(backNTimes,%T(%L))",
@@ -237,7 +241,6 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val methodName = "replace"
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
-            .returns(Void.TYPE)
         methodBuilder.addStatement("%L.replaceTop(%T(%L))", "$routerClassName.this", screenClass, paramsString)
         return methodBuilder.build()
     }
@@ -250,7 +253,6 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val methodName = "forward"
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC)
-            .returns(Void.TYPE)
         methodBuilder.addStatement("%L.forward(%T(%L))", "$routerClassName.this", screenClass, paramsString)
         return methodBuilder.build()
     }
@@ -263,7 +265,8 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         val hasLeftDrawer: String = fragment.configAnnotation!!.hasLeftDrawer.toString()
         val hasOptionsMenu: String = fragment.configAnnotation!!.hasOptionsMenu.toString()
         return FunSpec.builder("generateConfiguration")
-            .addModifiers(KModifier.PUBLIC)
+            .addAnnotation(JvmStatic::class.java)
+            .addModifiers(KModifier.INTERNAL)
             .addParameter("fragment", fragment.className!!)
             .returns(BASE_FRAGMENT_CONFIGURATION)
             .addStatement(
@@ -285,8 +288,8 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
     private fun generateFragmentViewBindingsMethod(fragment: FragmentInfo): FunSpec {
         val method = FunSpec.builder("generateViewBindings")
             .addParameter("fragment", fragment.className!!)
-            .addModifiers(KModifier.PUBLIC)
-            .returns(Void.TYPE)
+            .addAnnotation(JvmStatic::class.java)
+            .addModifiers(KModifier.INTERNAL)
         fragment.viewBindings.forEach { (fieldName: String?, identifierName: String?) ->
             val statement =
                 "fragment.%L = fragment.requireView().findViewById(fragment.getResources().getIdentifier(%S, %S, fragment.requireActivity().getPackageName()))"
@@ -298,8 +301,8 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
     private fun generateFragmentParametersMethod(fragment: FragmentInfo): FunSpec {
         val method = FunSpec.builder("generateParameters")
             .addParameter("fragment", fragment.className!!)
-            .addModifiers(KModifier.PUBLIC)
-            .returns(Void.TYPE)
+            .addAnnotation(JvmStatic::class.java)
+            .addModifiers(KModifier.INTERNAL)
         method.addStatement("val arguments = fragment.requireArguments()")
         fragment.fragmentParameters.forEach(Consumer { param: FragmentParamInfo ->
             val readStatement = resolveReadParamFromBundleExpression(
@@ -318,8 +321,9 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
         includeOptionalParams: Boolean
     ): FunSpec {
         val method = FunSpec.builder("newInstance")
-        method.addModifiers(KModifier.PUBLIC)
+        method
             .addAnnotation(JvmStatic::class.java)
+            .addModifiers(KModifier.INTERNAL)
             .returns(fragmentInfo.className!!)
             .addStatement("val fragment = %T()", fragmentInfo.className!!)
             .addStatement("val arguments = %T()", BUNDLE)
@@ -355,10 +359,10 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
     private fun generateSaveVariablesMethod(fragmentInfo: FragmentInfo): FunSpec {
         val method = FunSpec
             .builder("saveVariablesState")
-            .addModifiers(KModifier.PUBLIC)
+            .addAnnotation(JvmStatic::class.java)
+            .addModifiers(KModifier.INTERNAL)
             .addParameter("outState", BUNDLE)
             .addParameter("fragment", fragmentInfo.className!!)
-            .returns(Void.TYPE)
         fragmentInfo.fragmentParameters.forEach(Consumer { param: FragmentParamInfo ->
             val writeStatement = generateSaveInstanceStateBlockOfParam(
                 "fragment",
@@ -373,10 +377,9 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
     private fun generateRestoreVariablesMethod(fragmentInfo: FragmentInfo): FunSpec {
         val method = FunSpec
             .builder("restoreVariablesState")
-            .addModifiers(KModifier.PUBLIC)
+            .addModifiers(KModifier.INTERNAL)
             .addParameter("fragmentSavedInstanceState", BUNDLE)
             .addParameter("fragment", fragmentInfo.className!!)
-            .returns(Void.TYPE)
         fragmentInfo.fragmentParameters.forEach(Consumer { param: FragmentParamInfo ->
             val readStatement = resolveReadParamFromBundleExpression(
                 "fragment",
