@@ -122,7 +122,8 @@ class CodeGenerator(rootPackage: String, private val filer: Filer) {
             routeClassConstructor.addStatement("this.%L = %L", paramName, paramName)
             routeClassBuilder.addProperty(paramName, paramType, KModifier.PRIVATE)
             routeMethod.addParameter(paramName, paramType)
-            paramsString = paramsString + if (isLastParameter) paramName else "$paramName, "
+            paramsString += paramName
+            if (!isLastParameter) paramsString += ", "
         }
         routeClassConstructor.addStatement("this.screen = %T(%L)", screenClass, paramsString)
         routeClassBuilder.addFunction(routeClassConstructor.build())
