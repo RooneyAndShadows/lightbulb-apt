@@ -1,0 +1,90 @@
+package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
+
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
+import com.squareup.javapoet.TypeName;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.getTypeOfFieldElement;
+
+@SuppressWarnings("DuplicatedCode")
+public class FragmentParamInfo {
+    private final String name;
+    private final TypeName type;
+    private final boolean optional;
+    private final String setterName;
+    private final String getterName;
+    private final Element element;
+    private final boolean hasSetter;
+    private final boolean hasGetter;
+
+    public FragmentParamInfo(Element element, FragmentParameter annotation) {
+        this.element = element;
+        this.name = element.getSimpleName().toString();
+        this.type = getTypeOfFieldElement(element);
+        this.optional = annotation.optional();
+        this.setterName = "set".concat(capitalizeName());
+        this.getterName = "get".concat(capitalizeName());
+        this.hasSetter = scanParentForSetter();
+        this.hasGetter = scanParentForGetter();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public TypeName getType() {
+        return type;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public String getSetterName() {
+        return setterName;
+    }
+
+    public String getGetterName() {
+        return getterName;
+    }
+
+    public boolean hasSetter() {
+        return hasSetter;
+    }
+
+    public boolean hasGetter() {
+        return hasGetter;
+    }
+
+    private boolean scanParentForSetter() {
+        Element parent = element.getEnclosingElement();
+        if (parent.getKind() != ElementKind.CLASS)
+            return false;
+        return parent.getEnclosedElements()
+                .stream().anyMatch(target -> {
+                    String targetName = target.getSimpleName().toString();
+                    boolean take = target.getKind() == ElementKind.METHOD;
+                    take &= targetName.equals(setterName);
+                    return take;
+                });
+    }
+
+    private boolean scanParentForGetter() {
+        Element parent = element.getEnclosingElement();
+        if (parent.getKind() != ElementKind.CLASS)
+            return false;
+        return parent.getEnclosedElements()
+                .stream().anyMatch(target -> {
+                    String targetName = target.getSimpleName().toString();
+                    boolean take = target.getKind() == ElementKind.METHOD;
+                    take &= targetName.equals(getterName);
+                    return take;
+                });
+    }
+
+    private String capitalizeName() {
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
+    }
+}
