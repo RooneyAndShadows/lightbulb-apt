@@ -216,14 +216,21 @@ public class CodeGenerator {
     }
 
     private MethodSpec generateFragmentConfigurationMethod(FragmentInfo fragment) {
+        String methodName = "generateConfiguration";
         boolean hasFragmentConfigAnnotation = fragment.getConfigAnnotation() != null;
-        if (!hasFragmentConfigAnnotation)
-            return null;
+        if (!hasFragmentConfigAnnotation) {
+            return MethodSpec.methodBuilder(methodName)
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addParameter(fragment.getClassName(), "fragment")
+                    .returns(BASE_FRAGMENT_CONFIGURATION)
+                    .addStatement("return new $T($L,$L,$L,$L)", BASE_FRAGMENT_CONFIGURATION, -1, true, false, false)
+                    .build();
+        }
         String layoutName = fragment.getConfigAnnotation().layoutName();
         String isMainScreenFragment = String.valueOf(fragment.getConfigAnnotation().isMainScreenFragment());
         String hasLeftDrawer = String.valueOf(fragment.getConfigAnnotation().hasLeftDrawer());
         String hasOptionsMenu = String.valueOf(fragment.getConfigAnnotation().hasOptionsMenu());
-        return MethodSpec.methodBuilder("generateConfiguration")
+        return MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(fragment.getClassName(), "fragment")
                 .returns(BASE_FRAGMENT_CONFIGURATION)
