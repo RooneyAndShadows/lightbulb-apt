@@ -327,9 +327,9 @@ public class CodeGenerator {
         String typeString = parameter.getType().toString();
         TypeName paramType = parameter.getType();
         String parameterName = parameter.getName();
-        boolean isNullable = parameter.isNullable();
+        boolean isNullable = parameter.isNullable() || parameter.isOptional();
         boolean isPrimitive = parameter.getType().isPrimitive();
-        boolean needsValidation = !isPrimitive && validateParameters && !parameter.isOptional() && !isNullable;
+        boolean needsValidation = !isPrimitive && validateParameters && !isNullable;
         CodeBlock.Builder codeBlock = CodeBlock.builder();
         if (needsValidation) addBundleEntryValidationExpression(bundleVariableName, parameterName, codeBlock);
         else codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, parameterName);
@@ -423,15 +423,13 @@ public class CodeGenerator {
         String typeString = parameter.getType().toString();
         String parameterName = parameter.getName();
         CodeBlock.Builder codeBlock = CodeBlock.builder();
+        boolean needsNullCheck = !parameter.getType().isPrimitive() || parameter.isNullable() || parameter.isOptional();
+        if (needsNullCheck)
+            codeBlock.beginControlFlow("if($L != null)", parameterName);
         if (isString(typeString)) {
             codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isUUID(typeString)) {
-            String tmpVariableName = parameterName.concat("String");
-            codeBlock.addStatement("$T $L = $S", STRING, tmpVariableName, "");
-            codeBlock.beginControlFlow("if($L != null)", parameterName)
-                    .addStatement("$L = $L.toString()", tmpVariableName, parameterName)
-                    .endControlFlow();
-            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, tmpVariableName);
+            codeBlock.addStatement(String.format("%s.putString($S,$L.toString())", bundleVariableName), parameterName, parameterName);
         } else if (isInt(typeString)) {
             codeBlock.addStatement(String.format("%s.putInt($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isBoolean(typeString)) {
@@ -451,6 +449,8 @@ public class CodeGenerator {
         } else {
             codeBlock.addStatement(String.format("%s.putParcelable($S,$L)", bundleVariableName), parameterName, parameterName);
         }
+        if (needsNullCheck)
+            codeBlock.endControlFlow();
         return codeBlock.build();
     }
 
