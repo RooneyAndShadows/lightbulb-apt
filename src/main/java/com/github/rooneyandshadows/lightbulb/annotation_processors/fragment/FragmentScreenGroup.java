@@ -7,6 +7,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class FragmentScreenGroup {
     private final String screenGroupName;
@@ -31,13 +32,18 @@ public class FragmentScreenGroup {
     }
 
     public TypeSpec build() {
+
         ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
         ClassName fragmentScreenClass = baseRouterClass.nestedClass("FragmentScreen");
         TypeSpec.Builder groupClass = TypeSpec
                 .classBuilder(screenGroupName)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
         screens.forEach(fragmentInfo -> {
-            MethodSpec.Builder screenConstructor = MethodSpec
+            boolean hasOptionalParameters = fragmentInfo.hasOptionalParameters();
+            MethodSpec.Builder optionalScreenConstructor = MethodSpec
+                    .constructorBuilder()
+                    .addModifiers(Modifier.PUBLIC);
+            MethodSpec.Builder notOptionalScreenConstructor = !hasOptionalParameters ? null : MethodSpec
                     .constructorBuilder()
                     .addModifiers(Modifier.PUBLIC);
             TypeSpec.Builder screenClass = TypeSpec
@@ -49,19 +55,25 @@ public class FragmentScreenGroup {
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(fragmentInfo.getClassName());
-            String paramsString = "";
-            for (int i = 0; i < fragmentInfo.getFragmentParameters().size(); i++) {
-                boolean isLast = i == fragmentInfo.getFragmentParameters().size() - 1;
-                FragmentParamInfo paramInfo = fragmentInfo.getFragmentParameters().get(i);
-                TypeName parameterType = paramInfo.getType();
+            String allParams = fragmentInfo.generateCommaSeparatedParams(true, paramInfo -> {
                 String parameterName = paramInfo.getName();
-                screenConstructor.addParameter(paramInfo.getParameterSpec());
-                screenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
+                TypeName parameterType = paramInfo.getType();
+                optionalScreenConstructor.addParameter(paramInfo.getParameterSpec());
+                optionalScreenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
                 screenClass.addField(parameterType, parameterName, Modifier.PRIVATE);
-                paramsString = paramsString.concat(isLast ? parameterName : parameterName.concat(", "));
+            });
+            screenClass.addMethod(optionalScreenConstructor.build());
+            if (notOptionalScreenConstructor != null) {
+                String notOptionalParams = fragmentInfo.generateCommaSeparatedParams(false, paramInfo -> {
+                    String parameterName = paramInfo.getName();
+                    if (!paramInfo.isOptional()) {
+                        notOptionalScreenConstructor.addParameter(paramInfo.getParameterSpec());
+                        notOptionalScreenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
+                    }
+                });
+                screenClass.addMethod(notOptionalScreenConstructor.build());
             }
-            screenClass.addMethod(screenConstructor.build());
-            getFragmentMethod.addStatement("return $T.newInstance(" + paramsString + ")", fragmentInfo.getMappedBindingType());
+            getFragmentMethod.addStatement("return $T.newInstance(" + allParams + ")", fragmentInfo.getMappedBindingType());
             screenClass.addMethod(getFragmentMethod.build());
             groupClass.addType(screenClass.build());
         });

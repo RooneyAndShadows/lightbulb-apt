@@ -103,6 +103,7 @@ public class CodeGenerator {
     }
 
     private void generateRouteClass(TypeSpec.Builder routerClass, FragmentInfo fragment, FragmentScreenGroup fragmentGroup, ClassName routerClassName) {
+        boolean hasOptionalParameters = fragment.hasOptionalParameters();
         String groupName = fragmentGroup.getScreenGroupName();
         String screenName = fragment.getScreenName();
         String screenClassName = groupName.concat(screenName);
@@ -111,29 +112,42 @@ public class CodeGenerator {
         ClassName routeClassName = ClassName.get("", screenClassName);
         TypeSpec.Builder routeClassBuilder = TypeSpec.classBuilder(screenClassName)
                 .addModifiers(Modifier.FINAL, Modifier.PUBLIC);
-        MethodSpec.Builder routeClassConstructor = MethodSpec.constructorBuilder()
+        MethodSpec.Builder notOptionalConstructor = !hasOptionalParameters ? null : MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PRIVATE);
-        MethodSpec.Builder routeMethod = MethodSpec.methodBuilder("to".concat(routeClassName.simpleName()))
+        MethodSpec.Builder optionalConstructor = MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PRIVATE);
+        MethodSpec.Builder allParamsRouteMethod = MethodSpec.methodBuilder("to".concat(routeClassName.simpleName()))
                 .addModifiers(Modifier.PUBLIC)
                 .returns(routeClassName);
-        String paramsString = "";
-        for (int i = 0; i < fragment.getFragmentParameters().size(); i++) {
-            boolean isLastParameter = i == fragment.getFragmentParameters().size() - 1;
-            FragmentParamInfo parameter = fragment.getFragmentParameters().get(i);
-            String paramName = parameter.getName();
-            routeClassConstructor.addParameter(parameter.getParameterSpec());
-            routeMethod.addParameter(parameter.getParameterSpec());
-            paramsString = paramsString.concat(isLastParameter ? paramName : paramName.concat(", "));
+        MethodSpec.Builder requiredParamsRouteMethod = !hasOptionalParameters ? null : MethodSpec
+                .methodBuilder("to".concat(routeClassName.simpleName()))
+                .addModifiers(Modifier.PUBLIC)
+                .returns(routeClassName);
+        String allParams = fragment.generateCommaSeparatedParams(true, parameter -> {
+            optionalConstructor.addParameter(parameter.getParameterSpec());
+            allParamsRouteMethod.addParameter(parameter.getParameterSpec());
+        });
+        allParamsRouteMethod.addStatement("return new $T($L)", routeClassName, allParams);
+        optionalConstructor.addStatement("this.screen = new $T($L)", screenClass, allParams);
+        if (notOptionalConstructor != null) {
+            String notOptionalParams = fragment.generateCommaSeparatedParams(false, parameter -> {
+                notOptionalConstructor.addParameter(parameter.getParameterSpec());
+                requiredParamsRouteMethod.addParameter(parameter.getParameterSpec());
+            });
+            notOptionalConstructor.addStatement("this.screen = new $T($L)", screenClass, notOptionalParams);
+            requiredParamsRouteMethod.addStatement("return new $T($L)", routeClassName, notOptionalParams);
         }
         routeClassBuilder.addField(screenClass, "screen", Modifier.PRIVATE, Modifier.FINAL);
-        routeClassConstructor.addStatement("this.screen = new $T($L)", screenClass, paramsString);
-        routeClassBuilder.addMethod(routeClassConstructor.build())
+        routeClassBuilder.addMethod(optionalConstructor.build())
                 .addMethod(generateRouteForwardMethodForScreen(routerClassName.simpleName()))
                 .addMethod(generateRouteReplaceMethodForScreen(routerClassName.simpleName()))
                 .addMethod(generateRouteBackNTimesAndReplaceMethodForScreen(routerClassName.simpleName()))
                 .addMethod(generateRouteToNewRootScreenMethodForScreen(routerClassName.simpleName()));
-        routeMethod.addStatement("return new $T($L)", routeClassName, paramsString);
-        routerClass.addMethod(routeMethod.build());
+        if (hasOptionalParameters)
+            routeClassBuilder.addMethod(notOptionalConstructor.build());
+        routerClass.addMethod(allParamsRouteMethod.build());
+        if (hasOptionalParameters)
+            routerClass.addMethod(requiredParamsRouteMethod.build());
         routerClass.addType(routeClassBuilder.build());
     }
 
@@ -156,7 +170,7 @@ public class CodeGenerator {
             methods.clear();
             String className = fragmentInfo.getClassName().simpleName().concat("Bindings");
             if (fragmentInfo.isCanBeInstantiated()) {
-                if (hasOptionalParameters(fragmentInfo))
+                if (fragmentInfo.hasOptionalParameters())
                     methods.add(generateFragmentNewInstanceMethod(fragmentInfo, false));
                 methods.add(generateFragmentNewInstanceMethod(fragmentInfo, true));
             }
@@ -275,9 +289,7 @@ public class CodeGenerator {
                 .returns(fragmentInfo.getClassName())
                 .addStatement("$T fragment = new $T()", fragmentInfo.getClassName(), fragmentInfo.getClassName())
                 .addStatement("$T arguments = new $T()", BUNDLE, BUNDLE);
-        fragmentInfo.getFragmentParameters().forEach(param -> {
-            boolean acceptParam = !param.isOptional() || includeOptionalParams;
-            if (!acceptParam) return;
+        fragmentInfo.getFragmentParameters(includeOptionalParams).forEach(param -> {
             method.addParameter(param.getParameterSpec());
             CodeBlock writeStatement = generateNewInstanceBlockOfParam(param, "arguments");
             method.addCode(writeStatement);
@@ -339,12 +351,6 @@ public class CodeGenerator {
             method.addCode(readStatement);
         });
         return method.build();
-    }
-
-    private boolean hasOptionalParameters(FragmentInfo fragment) {
-        for (FragmentParamInfo param : fragment.getFragmentParameters())
-            if (param.isOptional()) return true;
-        return false;
     }
 
     @SuppressWarnings("DuplicatedCode")

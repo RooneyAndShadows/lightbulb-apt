@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class FragmentInfo {
     private TypeMirror type;
@@ -19,6 +21,32 @@ public class FragmentInfo {
     private final Map<String, String> viewBindings = new HashMap<>();
     private final List<FragmentParamInfo> fragmentParameters = new ArrayList<>();
     private final List<FragmentVariableInfo> fragmentPersistedVariables = new ArrayList<>();
+
+    public boolean hasOptionalParameters() {
+        for (FragmentParamInfo param : getFragmentParameters())
+            if (param.isOptional()) return true;
+        return false;
+    }
+
+    public List<FragmentParamInfo> getFragmentParameters(boolean includeOptional) {
+        return includeOptional ? fragmentParameters : fragmentParameters.stream()
+                .filter(paramInfo -> !paramInfo.isOptional())
+                .collect(Collectors.toList());
+    }
+
+    public String generateCommaSeparatedParams(boolean includeOptional, Consumer<FragmentParamInfo> consumer) {
+        String paramsString = "";
+        List<FragmentParamInfo> collection = getFragmentParameters(includeOptional);
+        for (int index = 0; index < collection.size(); index++) {
+            FragmentParamInfo param = collection.get(index);
+            boolean isLast = index == collection.size() - 1;
+            consumer.accept(param);
+            paramsString = paramsString.concat(param.name);
+            if (!isLast)
+                paramsString = paramsString.concat(", ");
+        }
+        return paramsString;
+    }
 
     public void setType(TypeMirror type) {
         this.type = type;
