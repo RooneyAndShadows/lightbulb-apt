@@ -1,7 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -18,6 +20,7 @@ public class FragmentParamInfo {
     private final Element element;
     private final boolean hasSetter;
     private final boolean hasGetter;
+    private final boolean isNullable;
 
     public FragmentParamInfo(Element element, FragmentParameter annotation) {
         this.element = element;
@@ -28,6 +31,14 @@ public class FragmentParamInfo {
         this.getterName = "get".concat(capitalizeName());
         this.hasSetter = scanParentForSetter();
         this.hasGetter = scanParentForGetter();
+        this.isNullable = element.getAnnotation(Nullable.class) != null;
+    }
+
+    public ParameterSpec getParameterSpec() {
+        ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name);
+        if (isNullable)
+            parameterBuilder.addAnnotation(Nullable.class);
+        return parameterBuilder.build();
     }
 
     public String getName() {
@@ -56,6 +67,10 @@ public class FragmentParamInfo {
 
     public boolean hasGetter() {
         return hasGetter;
+    }
+
+    public boolean isNullable() {
+        return isNullable;
     }
 
     private boolean scanParentForSetter() {

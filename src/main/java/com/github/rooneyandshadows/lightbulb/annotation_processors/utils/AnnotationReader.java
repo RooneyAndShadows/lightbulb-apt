@@ -11,6 +11,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.Frag
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
 import com.squareup.javapoet.TypeName;
 
+import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;

@@ -55,7 +55,7 @@ public class FragmentScreenGroup {
                 FragmentParamInfo paramInfo = fragmentInfo.getFragmentParameters().get(i);
                 TypeName parameterType = paramInfo.getType();
                 String parameterName = paramInfo.getName();
-                screenConstructor.addParameter(parameterType, parameterName);
+                screenConstructor.addParameter(paramInfo.getParameterSpec());
                 screenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
                 screenClass.addField(parameterType, parameterName, Modifier.PRIVATE);
                 paramsString = paramsString.concat(isLast ? parameterName : parameterName.concat(", "));

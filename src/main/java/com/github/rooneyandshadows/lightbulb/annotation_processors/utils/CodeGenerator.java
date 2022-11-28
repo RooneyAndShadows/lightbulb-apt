@@ -4,6 +4,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.Frag
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
 import com.squareup.javapoet.*;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
@@ -118,19 +119,18 @@ public class CodeGenerator {
         for (int i = 0; i < fragment.getFragmentParameters().size(); i++) {
             boolean isLastParameter = i == fragment.getFragmentParameters().size() - 1;
             FragmentParamInfo parameter = fragment.getFragmentParameters().get(i);
-            TypeName paramType = parameter.getType();
             String paramName = parameter.getName();
-            routeClassConstructor.addParameter(paramType, paramName);
-            routeClassConstructor.addStatement("this.$L = $L", paramName, paramName);
-            routeClassBuilder.addField(paramType, paramName, Modifier.PRIVATE);
-            routeMethod.addParameter(paramType, paramName);
+            routeClassConstructor.addParameter(parameter.getParameterSpec());
+            routeMethod.addParameter(parameter.getParameterSpec());
             paramsString = paramsString.concat(isLastParameter ? paramName : paramName.concat(", "));
         }
+        routeClassBuilder.addField(screenClass, "screen", Modifier.PRIVATE, Modifier.FINAL);
+        routeClassConstructor.addStatement("this.screen = new $T($L)", screenClass, paramsString);
         routeClassBuilder.addMethod(routeClassConstructor.build())
-                .addMethod(generateRouteForwardMethodForScreen(screenClass, routerClassName.simpleName(), paramsString))
-                .addMethod(generateRouteReplaceMethodForScreen(screenClass, routerClassName.simpleName(), paramsString))
-                .addMethod(generateRouteBackNTimesAndReplaceMethodForScreen(screenClass, routerClassName.simpleName(), paramsString))
-                .addMethod(generateRouteToNewRootScreenMethodForScreen(screenClass, routerClassName.simpleName(), paramsString));
+                .addMethod(generateRouteForwardMethodForScreen(routerClassName.simpleName()))
+                .addMethod(generateRouteReplaceMethodForScreen(routerClassName.simpleName()))
+                .addMethod(generateRouteBackNTimesAndReplaceMethodForScreen(routerClassName.simpleName()))
+                .addMethod(generateRouteToNewRootScreenMethodForScreen(routerClassName.simpleName()));
         routeMethod.addStatement("return new $T($L)", routeClassName, paramsString);
         routerClass.addMethod(routeMethod.build());
         routerClass.addType(routeClassBuilder.build());
@@ -177,40 +177,40 @@ public class CodeGenerator {
         });
     }
 
-    private MethodSpec generateRouteToNewRootScreenMethodForScreen(ClassName screenClass, String routerClassName, String paramsString) {
+    private MethodSpec generateRouteToNewRootScreenMethodForScreen(String routerClassName) {
         String methodName = "newRootScreen";
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class);
-        methodBuilder.addStatement("$L.newRootScreen(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
+        methodBuilder.addStatement("$L.newRootScreen(screen)", routerClassName.concat(".this"));
         return methodBuilder.build();
     }
 
-    private MethodSpec generateRouteBackNTimesAndReplaceMethodForScreen(ClassName screenClass, String routerClassName, String paramsString) {
+    private MethodSpec generateRouteBackNTimesAndReplaceMethodForScreen(String routerClassName) {
         String methodName = "backAndReplace";
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class)
                 .addParameter(TypeName.INT, "backNTimes");
-        methodBuilder.addStatement("$L.backNTimesAndReplace(backNTimes,new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
+        methodBuilder.addStatement("$L.backNTimesAndReplace(backNTimes,screen)", routerClassName.concat(".this"));
         return methodBuilder.build();
     }
 
-    private MethodSpec generateRouteReplaceMethodForScreen(ClassName screenClass, String routerClassName, String paramsString) {
+    private MethodSpec generateRouteReplaceMethodForScreen(String routerClassName) {
         String methodName = "replace";
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class);
-        methodBuilder.addStatement("$L.replaceTop(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
+        methodBuilder.addStatement("$L.replaceTop(screen)", routerClassName.concat(".this"));
         return methodBuilder.build();
     }
 
-    private MethodSpec generateRouteForwardMethodForScreen(ClassName screenClass, String routerClassName, String paramsString) {
+    private MethodSpec generateRouteForwardMethodForScreen(String routerClassName) {
         String methodName = "forward";
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class);
-        methodBuilder.addStatement("$L.forward(new $T($L))", routerClassName.concat(".this"), screenClass, paramsString);
+        methodBuilder.addStatement("$L.forward(screen)", routerClassName.concat(".this"));
         return methodBuilder.build();
     }
 
@@ -270,16 +270,8 @@ public class CodeGenerator {
         fragmentInfo.getFragmentParameters().forEach(param -> {
             boolean acceptParam = !param.isOptional() || includeOptionalParams;
             if (!acceptParam) return;
-            method.addParameter(
-                    param.getType(),
-                    param.getName()
-            );
-            CodeBlock writeStatement = generateNewInstanceBlockOfParam(
-                    param.getType(),
-                    param.getName(),
-                    param.getName(),
-                    "arguments"
-            );
+            method.addParameter(param.getParameterSpec());
+            CodeBlock writeStatement = generateNewInstanceBlockOfParam(param, "arguments");
             method.addCode(writeStatement);
         });
         method.addStatement("fragment.setArguments(arguments)");
@@ -395,8 +387,8 @@ public class CodeGenerator {
         if (isString(typeString)) {
             codeBlock.addStatement(String.format("%s.putString($S,$L.$L)", bundleVariableName), parameterName, fragmentVariableName, getExpression);
         } else if (isUUID(typeString)) {
-            codeBlock.addStatement("$T $L = $S", STRING, parameterName, "");
-            codeBlock.beginControlFlow("if($L.$L != null)", fragmentVariableName, parameterName)
+            codeBlock.addStatement("$T $L = null", STRING, parameterName);
+            codeBlock.beginControlFlow("if($L.$L != null)", fragmentVariableName, getExpression)
                     .addStatement("$L = $L.$L.toString()", parameterName, fragmentVariableName, getExpression)
                     .endControlFlow();
             codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName);
@@ -422,36 +414,37 @@ public class CodeGenerator {
         return codeBlock.build();
     }
 
-    private CodeBlock generateNewInstanceBlockOfParam(TypeName type, String parameterKey, String parameterName, String bundleVariableName) {
-        String typeString = type.toString();
+    private CodeBlock generateNewInstanceBlockOfParam(FragmentParamInfo parameter, String bundleVariableName) {
+        String typeString = parameter.getType().toString();
+        String parameterName = parameter.getName();
         CodeBlock.Builder codeBlock = CodeBlock.builder();
         if (isString(typeString)) {
-            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName);
+            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isUUID(typeString)) {
             String tmpVariableName = parameterName.concat("String");
             codeBlock.addStatement("$T $L = $S", STRING, tmpVariableName, "");
             codeBlock.beginControlFlow("if($L != null)", parameterName)
                     .addStatement("$L = $L.toString()", tmpVariableName, parameterName)
                     .endControlFlow();
-            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, tmpVariableName);
+            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, tmpVariableName);
         } else if (isInt(typeString)) {
-            codeBlock.addStatement(String.format("%s.putInt($S,$L)", bundleVariableName), parameterKey, parameterName);
+            codeBlock.addStatement(String.format("%s.putInt($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isBoolean(typeString)) {
-            codeBlock.addStatement(String.format("%s.putBoolean($S,$L)", bundleVariableName), parameterKey, parameterName);
+            codeBlock.addStatement(String.format("%s.putBoolean($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isFloat(typeString)) {
-            codeBlock.addStatement(String.format("%s.putFloat($S,$L)", bundleVariableName), parameterKey, parameterName);
+            codeBlock.addStatement(String.format("%s.putFloat($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isLong(typeString)) {
-            codeBlock.addStatement(String.format("%s.putLong($S,$L)", bundleVariableName), parameterKey, parameterName);
+            codeBlock.addStatement(String.format("%s.putLong($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isDouble(typeString)) {
-            codeBlock.addStatement(String.format("%s.putDouble($S,$L)", bundleVariableName), parameterKey, parameterName);
+            codeBlock.addStatement(String.format("%s.putDouble($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isDate(typeString)) {
             codeBlock.addStatement("$T $LDateString = $T.getDateStringInDefaultFormat($L)", STRING, parameterName, DATE_UTILS, parameterName);
-            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName.concat("DateString"));
+            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName.concat("DateString"));
         } else if (isOffsetDate(typeString)) {
             codeBlock.addStatement("$T $LDateString = $T.getDateStringInDefaultFormat($L)", STRING, parameterName, OFFSET_DATE_UTILS, parameterName);
-            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterKey, parameterName.concat("DateString"));
+            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName.concat("DateString"));
         } else {
-            codeBlock.addStatement(String.format("%s.putParcelable($S,$L)", bundleVariableName), parameterKey, parameterName);
+            codeBlock.addStatement(String.format("%s.putParcelable($S,$L)", bundleVariableName), parameterName, parameterName);
         }
         return codeBlock.build();
     }
