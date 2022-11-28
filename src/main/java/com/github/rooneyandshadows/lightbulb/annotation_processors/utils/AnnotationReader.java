@@ -1,14 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.utils;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.ActivityConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentVariableInfo;
 import com.squareup.javapoet.TypeName;
 
 import javax.annotation.Nullable;
@@ -88,6 +85,21 @@ public class AnnotationReader {
             FragmentInfo fragmentInfo = getOrCreateFragmentInfo(classElement);
             FragmentParamInfo info = new FragmentParamInfo(element, annotation);
             fragmentInfo.getFragmentParameters().add(info);
+        }
+        return true;
+    }
+
+    public boolean obtainAnnotatedFieldsWithFragmentStatePersisted(RoundEnvironment roundEnvironment) {
+        for (Element element : roundEnvironment.getElementsAnnotatedWith(FragmentStatePersisted.class)) {
+            if (element.getKind() != ElementKind.FIELD) {
+                messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentStatePersisted should be on top of fragment field.");
+                return false;
+            }
+            FragmentStatePersisted annotation = element.getAnnotation(FragmentStatePersisted.class);
+            Element classElement = element.getEnclosingElement();
+            FragmentInfo fragmentInfo = getOrCreateFragmentInfo(classElement);
+            FragmentVariableInfo info = new FragmentVariableInfo(element);
+            fragmentInfo.getFragmentPersistedVariables().add(info);
         }
         return true;
     }

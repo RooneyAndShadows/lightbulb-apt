@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.utils;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentVariableInfo;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -294,6 +295,14 @@ public class CodeGenerator {
             );
             method.addCode(writeStatement);
         });
+        fragmentInfo.getFragmentPersistedVariables().forEach(param -> {
+            CodeBlock writeStatement = generateSaveInstanceStateBlockOfParam(
+                    param,
+                    "fragment",
+                    "outState"
+            );
+            method.addCode(writeStatement);
+        });
         return method.build();
     }
 
@@ -313,6 +322,15 @@ public class CodeGenerator {
             );
             method.addCode(readStatement);
         });
+        fragmentInfo.getFragmentPersistedVariables().forEach(param -> {
+            CodeBlock readStatement = resolveReadParamFromBundleExpression(
+                    "fragment",
+                    param,
+                    "fragmentSavedInstanceState",
+                    false
+            );
+            method.addCode(readStatement);
+        });
         return method.build();
     }
 
@@ -323,11 +341,11 @@ public class CodeGenerator {
     }
 
     @SuppressWarnings("DuplicatedCode")
-    private CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, FragmentParamInfo parameter, String bundleVariableName, boolean validateParameters) {
+    private CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, FragmentVariableInfo parameter, String bundleVariableName, boolean validateParameters) {
         String typeString = parameter.getType().toString();
         TypeName paramType = parameter.getType();
         String parameterName = parameter.getName();
-        boolean isNullable = parameter.isNullable() || parameter.isOptional();
+        boolean isNullable = parameter.isNullable() || ((parameter instanceof FragmentParamInfo) && ((FragmentParamInfo) parameter).isOptional());
         boolean isPrimitive = parameter.getType().isPrimitive();
         boolean needsValidation = !isPrimitive && validateParameters && !isNullable;
         CodeBlock.Builder codeBlock = CodeBlock.builder();
@@ -384,19 +402,16 @@ public class CodeGenerator {
         return codeBlock.build();
     }
 
-    private CodeBlock generateSaveInstanceStateBlockOfParam(FragmentParamInfo parameter, String fragmentVariableName, String bundleVariableName) {
+    private CodeBlock generateSaveInstanceStateBlockOfParam(FragmentVariableInfo parameter, String fragmentVariableName, String bundleVariableName) {
         String typeString = parameter.getType().toString();
         String parameterName = parameter.getName();
         String getExpression = parameter.hasGetter() ? parameter.getGetterName().concat("()") : parameterName;
         CodeBlock.Builder codeBlock = CodeBlock.builder();
+        codeBlock.beginControlFlow("if($L.$L != null)", fragmentVariableName, getExpression);
         if (isString(typeString)) {
             codeBlock.addStatement(String.format("%s.putString($S,$L.$L)", bundleVariableName), parameterName, fragmentVariableName, getExpression);
         } else if (isUUID(typeString)) {
-            codeBlock.addStatement("$T $L = null", STRING, parameterName);
-            codeBlock.beginControlFlow("if($L.$L != null)", fragmentVariableName, getExpression)
-                    .addStatement("$L = $L.$L.toString()", parameterName, fragmentVariableName, getExpression)
-                    .endControlFlow();
-            codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName);
+            codeBlock.addStatement(String.format("%s.putString($S,$L.$L.toString())", bundleVariableName), parameterName, fragmentVariableName, getExpression);
         } else if (isInt(typeString)) {
             codeBlock.addStatement(String.format("%s.putInt($S,$L.$L)", bundleVariableName), parameterName, fragmentVariableName, getExpression);
         } else if (isBoolean(typeString)) {
@@ -416,6 +431,7 @@ public class CodeGenerator {
         } else {
             codeBlock.addStatement(String.format("%s.putParcelable($S,$L.$L)", bundleVariableName), parameterName, fragmentVariableName, getExpression);
         }
+        codeBlock.endControlFlow();
         return codeBlock.build();
     }
 

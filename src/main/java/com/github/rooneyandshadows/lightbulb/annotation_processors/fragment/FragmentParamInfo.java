@@ -12,27 +12,12 @@ import javax.lang.model.element.ElementKind;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.getTypeOfFieldElement;
 
 @SuppressWarnings("DuplicatedCode")
-public class FragmentParamInfo {
-    private final String name;
-    private final TypeName type;
+public class FragmentParamInfo extends FragmentVariableInfo {
     private final boolean optional;
-    private final String setterName;
-    private final String getterName;
-    private final Element element;
-    private final boolean hasSetter;
-    private final boolean hasGetter;
-    private final boolean isNullable;
 
     public FragmentParamInfo(Element element, FragmentParameter annotation) {
-        this.element = element;
-        this.name = element.getSimpleName().toString();
-        this.type = getTypeOfFieldElement(element);
+        super(element);
         this.optional = annotation.optional();
-        this.setterName = "set".concat(capitalizeName());
-        this.getterName = "get".concat(capitalizeName());
-        this.hasSetter = scanParentForSetter();
-        this.hasGetter = scanParentForGetter();
-        this.isNullable = element.getAnnotation(Nullable.class) != null;
     }
 
     public ParameterSpec getParameterSpec() {

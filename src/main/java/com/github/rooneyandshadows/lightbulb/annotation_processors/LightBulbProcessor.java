@@ -46,6 +46,7 @@ public class LightBulbProcessor extends AbstractProcessor {
         processResult = reader.obtainAnnotatedClassesWithActivityConfiguration(roundEnvironment);
         processResult &= reader.obtainAnnotatedClassesWithFragmentConfiguration(roundEnvironment);
         processResult &= reader.obtainAnnotatedClassesWithFragmentScreen(roundEnvironment);
+        processResult &= reader.obtainAnnotatedFieldsWithFragmentStatePersisted(roundEnvironment);
         processResult &= reader.obtainAnnotatedFieldsWithBindView(roundEnvironment);
         processResult &= reader.obtainAnnotatedFieldsWithFragmentParameter(roundEnvironment);
         if (!processResult) return false;
@@ -70,6 +71,7 @@ public class LightBulbProcessor extends AbstractProcessor {
                 add(ActivityConfiguration.class.getCanonicalName());
                 add(BindView.class.getCanonicalName());
                 add(FragmentConfiguration.class.getCanonicalName());
+                add(FragmentStatePersisted.class.getCanonicalName());
                 add(FragmentParameter.class.getCanonicalName());
                 add(FragmentScreen.class.getCanonicalName());
             }

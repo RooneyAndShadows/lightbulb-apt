@@ -18,6 +18,7 @@ public class FragmentInfo {
     private FragmentConfiguration configAnnotation;
     private final Map<String, String> viewBindings = new HashMap<>();
     private final List<FragmentParamInfo> fragmentParameters = new ArrayList<>();
+    private final List<FragmentVariableInfo> fragmentPersistedVariables = new ArrayList<>();
 
     public void setType(TypeMirror type) {
         this.type = type;
@@ -73,5 +74,9 @@ public class FragmentInfo {
 
     public List<FragmentParamInfo> getFragmentParameters() {
         return fragmentParameters;
+    }
+
+    public List<FragmentVariableInfo> getFragmentPersistedVariables() {
+        return fragmentPersistedVariables;
     }
 }
