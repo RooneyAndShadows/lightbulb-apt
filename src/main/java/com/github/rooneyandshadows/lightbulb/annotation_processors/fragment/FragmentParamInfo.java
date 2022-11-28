@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
@@ -36,8 +37,10 @@ public class FragmentParamInfo {
 
     public ParameterSpec getParameterSpec() {
         ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name);
-        if (isNullable)
+        if (isNullable || isOptional())
             parameterBuilder.addAnnotation(Nullable.class);
+        else
+            parameterBuilder.addAnnotation(NotNull.class);
         return parameterBuilder.build();
     }
 

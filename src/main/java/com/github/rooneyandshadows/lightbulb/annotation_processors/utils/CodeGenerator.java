@@ -4,12 +4,12 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.Frag
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
 import com.squareup.javapoet.*;
-import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames.*;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.TypeUtils.*;
@@ -327,21 +327,19 @@ public class CodeGenerator {
         String typeString = parameter.getType().toString();
         TypeName paramType = parameter.getType();
         String parameterName = parameter.getName();
-        boolean optional = parameter.isOptional();
-        boolean needsValidation = validateParameters && (!optional || !parameter.getType().isPrimitive());
+        boolean isNullable = parameter.isNullable();
+        boolean isPrimitive = parameter.getType().isPrimitive();
+        boolean needsValidation = !isPrimitive && validateParameters && !parameter.isOptional() && !isNullable;
         CodeBlock.Builder codeBlock = CodeBlock.builder();
+        if (needsValidation) addBundleEntryValidationExpression(bundleVariableName, parameterName, codeBlock);
+        else codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, parameterName);
         if (isSimpleType(typeString)) {
             if (isString(typeString)) {
-                String bundleExp = "$T $L = ".concat(String.format("%s.getString($S)", bundleVariableName));
+                String bundleExp = "$T $L = ".concat(String.format("%s.getString($S,\"\")", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             } else if (isUUID(typeString)) {
-                String tmpVariableName = parameterName.concat("String");
-                String bundleExp = "$T $L = ".concat(String.format("%s.getString($S)", bundleVariableName));
-                codeBlock.addStatement("$T $L = null", UUID, parameterName);
-                codeBlock.addStatement(bundleExp, STRING, tmpVariableName, parameterName);
-                codeBlock.beginControlFlow("if($L != null)", tmpVariableName)
-                        .addStatement("$L = $T.fromString($L)", parameterName, UUID, tmpVariableName)
-                        .endControlFlow();
+                String bundleExp = String.format("$T $L = $T.fromString(%s.getString($S,\"\"))", bundleVariableName);
+                codeBlock.addStatement(bundleExp, UUID, parameterName, UUID, parameterName);
             } else if (isInt(typeString)) {
                 String bundleExp = "$T $L = ".concat(String.format("%s.getInt($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
@@ -358,24 +356,31 @@ public class CodeGenerator {
                 String bundleExp = "$T $L = ".concat(String.format("%s.getDouble($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             }
-            if (needsValidation && !paramType.isPrimitive())
-                addValidationExpression(codeBlock, parameterName);
         } else if (isDate(typeString) || isOffsetDate(typeString)) {
             String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
             codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
-            if (needsValidation)
-                addValidationExpression(codeBlock, parameterName.concat("DateString"));
             codeBlock.addStatement("$T $L = $T.getDateFromStringInDefaultFormat($L)", isDate(typeString) ? DATE : OFFSET_DATE_TIME, parameterName, isDate(typeString) ? DATE_UTILS : OFFSET_DATE_UTILS, parameterName.concat("DateString"));
-            if (needsValidation) addValidationExpression(codeBlock, parameterName);
+            if (validateParameters) {
+                String errorString = String.format("Argument %s is provided but date could not be parsed.", parameterName);
+                codeBlock.beginControlFlow("if($L == null)", parameterName)
+                        .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, errorString)
+                        .endControlFlow();
+            }
         } else {
             String bundleExp = "$T $L = ".concat(String.format("%s.getParcelable($S)", bundleVariableName));
             codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
-            if (needsValidation) addValidationExpression(codeBlock, parameterName);
+            if (validateParameters) {
+                String errorString = String.format("Argument %s is not nullable, but null value received from bundle.", parameterName);
+                codeBlock.beginControlFlow("if($L == null)", parameterName)
+                        .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, errorString)
+                        .endControlFlow();
+            }
         }
         if (parameter.hasSetter())
             codeBlock.addStatement("$L.$L($L)", fragmentVariableName, parameter.getSetterName(), parameterName);
         else
             codeBlock.addStatement("$L.$L = $L", fragmentVariableName, parameterName, parameterName);
+        if (!needsValidation) codeBlock.endControlFlow();
         return codeBlock.build();
     }
 
@@ -449,9 +454,14 @@ public class CodeGenerator {
         return codeBlock.build();
     }
 
-    private void addValidationExpression(CodeBlock.Builder codeBlock, String paramName) {
-        codeBlock.beginControlFlow("if(" + paramName + " == null)")
-                .addStatement("throw new java.lang.IllegalArgumentException(\"Argument " + paramName + " is not optional.\")")
+    private void addBundleEntryValidationExpression(
+            String bundleVariableName,
+            String paramName,
+            CodeBlock.Builder codeBlock
+    ) {
+        String errorMessage = String.format("Argument %s is not optional.", paramName);
+        codeBlock.beginControlFlow("if(!$L.containsKey($S))", bundleVariableName, paramName)
+                .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, errorMessage)
                 .endControlFlow();
     }
 }

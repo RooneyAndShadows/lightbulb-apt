@@ -21,6 +21,7 @@ public class ClassNames {
     public static final ClassName DATE = ClassName.get(JAVA_UTIL, "Date");
     public static final ClassName OFFSET_DATE_TIME = ClassName.get(JAVA_TIME, "OffsetDateTime");
     public static final ClassName STRING = ClassName.get(JAVA_LANG, "String");
+    public static final ClassName ILLEGAL_ARGUMENT_EXCEPTION = ClassName.get(JAVA_LANG, "IllegalArgumentException");
 
 
     public static ClassName generateMappedFragmentBindingClassName(FragmentInfo fragmentInfo, String className) {
