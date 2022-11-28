@@ -420,7 +420,9 @@ public class CodeGenerator {
         String parameterName = parameter.getName();
         String getExpression = parameter.hasGetter() ? parameter.getGetterName().concat("()") : parameterName;
         CodeBlock.Builder codeBlock = CodeBlock.builder();
-        codeBlock.beginControlFlow("if($L.$L != null)", fragmentVariableName, getExpression);
+        boolean checkForNull = !parameter.getType().isPrimitive();
+        if (checkForNull)
+            codeBlock.beginControlFlow("if($L.$L != null)", fragmentVariableName, getExpression);
         if (isString(typeString)) {
             codeBlock.addStatement(String.format("%s.putString($S,$L.$L)", bundleVariableName), parameterName, fragmentVariableName, getExpression);
         } else if (isUUID(typeString)) {
@@ -444,7 +446,8 @@ public class CodeGenerator {
         } else {
             codeBlock.addStatement(String.format("%s.putParcelable($S,$L.$L)", bundleVariableName), parameterName, fragmentVariableName, getExpression);
         }
-        codeBlock.endControlFlow();
+        if (checkForNull)
+            codeBlock.endControlFlow();
         return codeBlock.build();
     }
 

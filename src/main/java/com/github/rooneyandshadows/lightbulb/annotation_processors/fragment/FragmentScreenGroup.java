@@ -1,13 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
-import java.util.function.Consumer;
 
 public class FragmentScreenGroup {
     private final String screenGroupName;
@@ -55,16 +51,22 @@ public class FragmentScreenGroup {
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(fragmentInfo.getClassName());
+            fragmentInfo.getFragmentParameters().forEach(paramInfo -> {
+                String parameterName = paramInfo.name;
+                TypeName parameterType = paramInfo.getType();
+                FieldSpec.Builder field = FieldSpec.builder(parameterType, parameterName, Modifier.PRIVATE);
+                if (paramInfo.isOptional())
+                    field.initializer("null");
+                screenClass.addField(field.build());
+            });
             String allParams = fragmentInfo.generateCommaSeparatedParams(true, paramInfo -> {
                 String parameterName = paramInfo.getName();
-                TypeName parameterType = paramInfo.getType();
                 optionalScreenConstructor.addParameter(paramInfo.getParameterSpec());
                 optionalScreenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
-                screenClass.addField(parameterType, parameterName, Modifier.PRIVATE);
             });
             screenClass.addMethod(optionalScreenConstructor.build());
             if (notOptionalScreenConstructor != null) {
-                String notOptionalParams = fragmentInfo.generateCommaSeparatedParams(false, paramInfo -> {
+                fragmentInfo.getFragmentParameters(false).forEach(paramInfo -> {
                     String parameterName = paramInfo.getName();
                     if (!paramInfo.isOptional()) {
                         notOptionalScreenConstructor.addParameter(paramInfo.getParameterSpec());
