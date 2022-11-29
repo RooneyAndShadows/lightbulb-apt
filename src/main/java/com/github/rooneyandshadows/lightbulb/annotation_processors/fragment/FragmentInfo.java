@@ -18,7 +18,7 @@ public class FragmentInfo {
     private String screenName;
     private boolean canBeInstantiated;
     private FragmentConfiguration configAnnotation;
-    private final Map<String, String> viewBindings = new HashMap<>();
+    private final List<FragmentViewBindingInfo> viewBindings = new ArrayList<>();
     private final List<FragmentParamInfo> fragmentParameters = new ArrayList<>();
     private final List<FragmentVariableInfo> fragmentPersistedVariables = new ArrayList<>();
 
@@ -96,7 +96,7 @@ public class FragmentInfo {
         return configAnnotation;
     }
 
-    public Map<String, String> getViewBindings() {
+    public List<FragmentViewBindingInfo> getViewBindings() {
         return viewBindings;
     }
 

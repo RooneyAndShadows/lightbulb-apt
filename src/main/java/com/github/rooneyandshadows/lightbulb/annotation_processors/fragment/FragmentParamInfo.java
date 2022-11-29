@@ -29,65 +29,7 @@ public class FragmentParamInfo extends FragmentVariableInfo {
         return parameterBuilder.build();
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public TypeName getType() {
-        return type;
-    }
-
     public boolean isOptional() {
         return optional;
-    }
-
-    public String getSetterName() {
-        return setterName;
-    }
-
-    public String getGetterName() {
-        return getterName;
-    }
-
-    public boolean hasSetter() {
-        return hasSetter;
-    }
-
-    public boolean hasGetter() {
-        return hasGetter;
-    }
-
-    public boolean isNullable() {
-        return isNullable;
-    }
-
-    private boolean scanParentForSetter() {
-        Element parent = element.getEnclosingElement();
-        if (parent.getKind() != ElementKind.CLASS)
-            return false;
-        return parent.getEnclosedElements()
-                .stream().anyMatch(target -> {
-                    String targetName = target.getSimpleName().toString();
-                    boolean take = target.getKind() == ElementKind.METHOD;
-                    take &= targetName.equals(setterName);
-                    return take;
-                });
-    }
-
-    private boolean scanParentForGetter() {
-        Element parent = element.getEnclosingElement();
-        if (parent.getKind() != ElementKind.CLASS)
-            return false;
-        return parent.getEnclosedElements()
-                .stream().anyMatch(target -> {
-                    String targetName = target.getSimpleName().toString();
-                    boolean take = target.getKind() == ElementKind.METHOD;
-                    take &= targetName.equals(getterName);
-                    return take;
-                });
-    }
-
-    private String capitalizeName() {
-        return name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 }

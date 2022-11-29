@@ -9,6 +9,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 
 public class ElementUtils {
+
     public static String getPackage(Elements elements, Element element) {
         return elements.getPackageOf(element)
                 .getQualifiedName()
@@ -21,11 +22,41 @@ public class ElementUtils {
         return classPackage.concat(".").concat(classSimpleName);
     }
 
+    public static String scanForSetter(Element classElement, String fieldName) {
+        String setterName = "set".concat(capitalizeFirstLetter(fieldName));
+        if (classElement.getKind() != ElementKind.CLASS) return null;
+        boolean setterExists = classElement.getEnclosedElements().stream()
+                .anyMatch(target -> {
+                    String targetName = target.getSimpleName().toString();
+                    boolean take = target.getKind() == ElementKind.METHOD;
+                    take &= targetName.equals(setterName);
+                    return take;
+                });
+        return setterExists ? setterName : null;
+    }
+
+    public static String scanForGetter(Element classElement, String fieldName) {
+        String setterName = "get".concat(capitalizeFirstLetter(fieldName));
+        if (classElement.getKind() != ElementKind.CLASS) return null;
+        boolean setterExists = classElement.getEnclosedElements().stream()
+                .anyMatch(target -> {
+                    String targetName = target.getSimpleName().toString();
+                    boolean take = target.getKind() == ElementKind.METHOD;
+                    take &= targetName.equals(setterName);
+                    return take;
+                });
+        return setterExists ? setterName : null;
+    }
+
     public static TypeName getTypeOfFieldElement(Element element) {
         return ClassName.get(element.asType());
     }
 
     public static boolean canBeInstantiated(Element classElement) {
         return classElement.getKind() == ElementKind.CLASS && !classElement.getModifiers().contains(Modifier.ABSTRACT);
+    }
+
+    private static String capitalizeFirstLetter(String target) {
+        return target.substring(0, 1).toUpperCase() + target.substring(1);
     }
 }

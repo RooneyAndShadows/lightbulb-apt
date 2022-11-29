@@ -258,9 +258,15 @@ public class CodeGenerator {
                 .addParameter(fragment.getClassName(), "fragment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class);
-        fragment.getViewBindings().forEach((fieldName, identifierName) -> {
-            String statement = "fragment.$L = fragment.getView().findViewById(fragment.getResources().getIdentifier($S, $S, fragment.getActivity().getPackageName()))";
-            method.addStatement(statement, fieldName, identifierName, "id");
+        fragment.getViewBindings().forEach(bindingInfo -> {
+            String fieldName = bindingInfo.getFieldName();
+            if (bindingInfo.hasSetter()) {
+                String statement = "fragment.$L(fragment.getView().findViewById(fragment.getResources().getIdentifier($S, $S, fragment.getActivity().getPackageName())))";
+                method.addStatement(statement, bindingInfo.getSetterName(), fieldName, "id");
+            } else {
+                String statement = "fragment.$L = fragment.getView().findViewById(fragment.getResources().getIdentifier($S, $S, fragment.getActivity().getPackageName()))";
+                method.addStatement(statement, fieldName, fieldName, "id");
+            }
         });
         return method.build();
     }

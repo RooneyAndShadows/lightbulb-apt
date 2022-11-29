@@ -2,10 +2,7 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.utils;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentVariableInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.*;
 import com.squareup.javapoet.TypeName;
 
 import javax.annotation.Nullable;
@@ -124,8 +121,8 @@ public class AnnotationReader {
             }
             Element classElement = element.getEnclosingElement();
             FragmentInfo classInfo = getOrCreateFragmentInfo(classElement);
-            BindView annotation = element.getAnnotation(BindView.class);
-            classInfo.getViewBindings().put(element.getSimpleName().toString(), annotation.name());
+            FragmentViewBindingInfo viewBindingInfo = new FragmentViewBindingInfo(element, element.getAnnotation(BindView.class));
+            classInfo.getViewBindings().add(viewBindingInfo);
         }
         return true;
     }
