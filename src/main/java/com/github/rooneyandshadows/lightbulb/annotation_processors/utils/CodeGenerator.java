@@ -260,12 +260,13 @@ public class CodeGenerator {
                 .returns(void.class);
         fragment.getViewBindings().forEach(bindingInfo -> {
             String fieldName = bindingInfo.getFieldName();
+            String resourceName = bindingInfo.getResourceName();
             if (bindingInfo.hasSetter()) {
                 String statement = "fragment.$L(fragment.getView().findViewById(fragment.getResources().getIdentifier($S, $S, fragment.getActivity().getPackageName())))";
-                method.addStatement(statement, bindingInfo.getSetterName(), fieldName, "id");
+                method.addStatement(statement, bindingInfo.getSetterName(), resourceName, "id");
             } else {
                 String statement = "fragment.$L = fragment.getView().findViewById(fragment.getResources().getIdentifier($S, $S, fragment.getActivity().getPackageName()))";
-                method.addStatement(statement, fieldName, fieldName, "id");
+                method.addStatement(statement, fieldName, resourceName, "id");
             }
         });
         return method.build();
