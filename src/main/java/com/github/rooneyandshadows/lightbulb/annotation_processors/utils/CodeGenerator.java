@@ -4,6 +4,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.Frag
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentVariableInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -405,8 +406,12 @@ public class CodeGenerator {
                         .endControlFlow();
             }
         } else {
-            String bundleExp = "$T $L = ".concat(String.format("%s.getParcelable($S)", bundleVariableName));
-            codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
+            codeBlock.addStatement("$T $L", paramType, parameterName);
+            codeBlock.beginControlFlow("if($L >= $L)", SDK_INT, ClassNames.generateVersionCodeClassName("TIRAMISU"))
+                    .addStatement("$L = ".concat(String.format("%s.getParcelable($S,$L)", bundleVariableName)), parameterName, parameterName, paramType.toString().concat(".class"))
+                    .nextControlFlow("else")
+                    .addStatement("$L = ".concat(String.format("%s.getParcelable($S)", bundleVariableName)), parameterName, parameterName)
+                    .endControlFlow();
             if (validateParameters) {
                 String errorString = String.format("Argument %s is not nullable, but null value received from bundle.", parameterName);
                 codeBlock.beginControlFlow("if($L == null)", parameterName)
