@@ -395,10 +395,20 @@ public class CodeGenerator {
                 String bundleExp = "$T $L = ".concat(String.format("%s.getDouble($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             }
-        } else if (isDate(typeString) || isOffsetDate(typeString)) {
+        } else if (isDate(typeString)) {
             String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
             codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
-            codeBlock.addStatement("$T $L = $T.getDateFromStringInDefaultFormat($L)", isDate(typeString) ? DATE : OFFSET_DATE_TIME, parameterName, isDate(typeString) ? DATE_UTILS : OFFSET_DATE_UTILS, parameterName.concat("DateString"));
+            codeBlock.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", DATE, parameterName, DATE_UTILS, DATE_UTILS, "defaultFormat", parameterName.concat("DateString"));
+            if (validateParameters) {
+                String errorString = String.format("Argument %s is provided but date could not be parsed.", parameterName);
+                codeBlock.beginControlFlow("if($L == null)", parameterName)
+                        .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, errorString)
+                        .endControlFlow();
+            }
+        } else if (isOffsetDate(typeString)) {
+            String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
+            codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
+            codeBlock.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", OFFSET_DATE_TIME, parameterName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", parameterName.concat("DateString"));
             if (validateParameters) {
                 String errorString = String.format("Argument %s is provided but date could not be parsed.", parameterName);
                 codeBlock.beginControlFlow("if($L == null)", parameterName)
@@ -450,10 +460,10 @@ public class CodeGenerator {
         } else if (isDouble(typeString)) {
             codeBlock.addStatement(String.format("%s.putDouble($S,$L.$L)", bundleVariableName), parameterName, fragmentVariableName, getExpression);
         } else if (isDate(typeString)) {
-            codeBlock.addStatement("$T $LDateString = $T.getDateStringInDefaultFormat($L.$L);", STRING, parameterName, DATE_UTILS, fragmentVariableName, getExpression);
+            codeBlock.addStatement("$T $LDateString = $T.getDateString($T.$L,$L.$L);", STRING, parameterName, DATE_UTILS, DATE_UTILS, "defaultFormat", fragmentVariableName, getExpression);
             codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName.concat("DateString"));
         } else if (isOffsetDate(typeString)) {
-            codeBlock.addStatement("$T $LDateString = $T.getDateStringInDefaultFormat($L.$L);", STRING, parameterName, OFFSET_DATE_UTILS, fragmentVariableName, getExpression);
+            codeBlock.addStatement("$T $LDateString = $T.getDateString($T.$L,$L.$L);", STRING, parameterName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", fragmentVariableName, getExpression);
             codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName.concat("DateString"));
         } else {
             codeBlock.addStatement(String.format("%s.putParcelable($S,$L.$L)", bundleVariableName), parameterName, fragmentVariableName, getExpression);
@@ -485,10 +495,10 @@ public class CodeGenerator {
         } else if (isDouble(typeString)) {
             codeBlock.addStatement(String.format("%s.putDouble($S,$L)", bundleVariableName), parameterName, parameterName);
         } else if (isDate(typeString)) {
-            codeBlock.addStatement("$T $LDateString = $T.getDateStringInDefaultFormat($L)", STRING, parameterName, DATE_UTILS, parameterName);
+            codeBlock.addStatement("$T $LDateString = $T.getDateString($T.$L,$L)", STRING, parameterName, DATE_UTILS, DATE_UTILS, "defaultFormat", parameterName);
             codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName.concat("DateString"));
         } else if (isOffsetDate(typeString)) {
-            codeBlock.addStatement("$T $LDateString = $T.getDateStringInDefaultFormat($L)", STRING, parameterName, OFFSET_DATE_UTILS, parameterName);
+            codeBlock.addStatement("$T $LDateString = $T.getDateString($T.$L,$L)", STRING, parameterName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", parameterName);
             codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVariableName), parameterName, parameterName.concat("DateString"));
         } else {
             codeBlock.addStatement(String.format("%s.putParcelable($S,$L)", bundleVariableName), parameterName, parameterName);

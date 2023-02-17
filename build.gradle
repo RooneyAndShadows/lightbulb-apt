@@ -11,8 +11,9 @@ plugins {
     id 'maven-publish'
     id 'org.jetbrains.kotlin.jvm' version '1.7.0'
 }
+
 group 'com.github.rooneyandshadows'
-version '1.0.6-RC2'
+version '1.0.6-RC3'
 
 repositories {
     mavenCentral()
