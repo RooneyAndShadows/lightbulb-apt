@@ -22,6 +22,7 @@ import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.
 
 @SuppressWarnings("FieldCanBeLocal")
 @AutoService(Processor.class)
+//TODO ADD GENERATION FOR PARCELABLE OBJECTS (auto created parcelling part)
 public class LightBulbProcessor extends AbstractProcessor {
     private Filer filer;
     private Messager messager;
