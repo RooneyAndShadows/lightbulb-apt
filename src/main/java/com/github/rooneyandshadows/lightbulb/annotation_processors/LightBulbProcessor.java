@@ -2,10 +2,16 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.FragmentGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.AnnotationReader;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.CodeGenerator;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.RoutingGenerator;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.*;
@@ -29,6 +35,8 @@ public class LightBulbProcessor extends AbstractProcessor {
     private Elements elements;
     private Map<String, String> options;
     private String rootPackage;
+    private RoutingGenerator routingGenerator;
+    private FragmentGenerator fragmentGenerator;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -36,6 +44,9 @@ public class LightBulbProcessor extends AbstractProcessor {
         this.messager = processingEnvironment.getMessager();
         this.elements = processingEnvironment.getElementUtils();
         this.options = processingEnvironment.getOptions();
+        routingGenerator = new RoutingGenerator(rootPackage, filer);
+        fragmentGenerator = new FragmentGenerator(rootPackage, filer);
+
     }
 
     @Override
@@ -50,17 +61,18 @@ public class LightBulbProcessor extends AbstractProcessor {
         processResult &= reader.obtainAnnotatedFieldsWithBindView(roundEnvironment);
         processResult &= reader.obtainAnnotatedFieldsWithFragmentParameter(roundEnvironment);
         if (!processResult) return false;
+
         List<FragmentInfo> fragmentInfoList = reader.getFragmentInfoList();
         List<ActivityInfo> activityInfoList = reader.getActivityInfoList();
         List<FragmentScreenGroup> screenGroups = reader.getScreenGroups();
-        CodeGenerator generator = new CodeGenerator(rootPackage, filer);
-        generator.generateFragmentBindingClasses(fragmentInfoList);
-        activityInfoList.forEach(activityInfo -> {
-            if (!activityInfo.isRoutingEnabled())
-                return;
-            generator.generateRoutingScreens(screenGroups);
-            generator.generateRouterClass(activityInfo.getClassName(), screenGroups);
-        });
+
+        fragmentGenerator.generateFragmentBindingClasses(fragmentInfoList);
+        routingGenerator.generateRoutingScreens(screenGroups);
+
+        activityInfoList.stream()
+                .filter(ActivityInfo::isRoutingEnabled)
+                .forEach(activityInfo -> routingGenerator.generateRouterClass(activityInfo.getClassName(), screenGroups));
+
         return true;
     }
 
@@ -69,7 +81,7 @@ public class LightBulbProcessor extends AbstractProcessor {
         return new HashSet<String>() {
             {
                 add(ActivityConfiguration.class.getCanonicalName());
-                add(BindView.class.getCanonicalName());
+                add(FragmentBindView.class.getCanonicalName());
                 add(FragmentConfiguration.class.getCanonicalName());
                 add(FragmentStatePersisted.class.getCanonicalName());
                 add(FragmentParameter.class.getCanonicalName());

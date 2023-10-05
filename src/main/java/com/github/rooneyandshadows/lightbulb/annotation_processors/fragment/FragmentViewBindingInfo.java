@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentBindView;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
 import javax.lang.model.element.Element;
 
@@ -9,7 +9,7 @@ public class FragmentViewBindingInfo {
     private final String resourceName;
     private final String setterName;
 
-    public FragmentViewBindingInfo(Element fieldElement, BindView annotation) {
+    public FragmentViewBindingInfo(Element fieldElement, FragmentBindView annotation) {
         Element classElement = fieldElement.getEnclosingElement();
         this.fieldName = fieldElement.getSimpleName().toString();
         this.resourceName = annotation.name();

@@ -28,7 +28,6 @@ public class FragmentScreenGroup {
     }
 
     public TypeSpec build() {
-
         ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
         ClassName fragmentScreenClass = baseRouterClass.nestedClass("FragmentScreen");
         TypeSpec.Builder groupClass = TypeSpec
@@ -75,7 +74,7 @@ public class FragmentScreenGroup {
                 });
                 screenClass.addMethod(notOptionalScreenConstructor.build());
             }
-            getFragmentMethod.addStatement("return $T.newInstance(" + allParams + ")", fragmentInfo.getMappedBindingType());
+            getFragmentMethod.addStatement("return $T.newInstance(" + allParams + ")", fragmentInfo.getBindingClassName());
             screenClass.addMethod(getFragmentMethod.build());
             groupClass.addType(screenClass.build());
         });

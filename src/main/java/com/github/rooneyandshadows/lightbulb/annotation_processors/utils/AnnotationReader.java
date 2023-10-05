@@ -2,20 +2,24 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.utils;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.*;
-import com.squareup.javapoet.TypeName;
 
-import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames.generateFragmentClassName;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.*;
@@ -114,14 +118,14 @@ public class AnnotationReader {
     }
 
     public boolean obtainAnnotatedFieldsWithBindView(RoundEnvironment roundEnvironment) {
-        for (Element element : roundEnvironment.getElementsAnnotatedWith(BindView.class)) {
+        for (Element element : roundEnvironment.getElementsAnnotatedWith(FragmentBindView.class)) {
             if (element.getKind() != ElementKind.FIELD) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "@BindView should be on top of fragment field.");
                 return false;
             }
             Element classElement = element.getEnclosingElement();
             FragmentInfo classInfo = getOrCreateFragmentInfo(classElement);
-            FragmentViewBindingInfo viewBindingInfo = new FragmentViewBindingInfo(element, element.getAnnotation(BindView.class));
+            FragmentViewBindingInfo viewBindingInfo = new FragmentViewBindingInfo(element, element.getAnnotation(FragmentBindView.class));
             classInfo.getViewBindings().add(viewBindingInfo);
         }
         return true;
@@ -145,10 +149,7 @@ public class AnnotationReader {
                 .orElse(null);
         FragmentInfo fragmentInformation;
         if (existingClassInfo == null) {
-            fragmentInformation = new FragmentInfo();
-            fragmentInformation.setType(classElement.asType());
-            fragmentInformation.setCanBeInstantiated(canBeInstantiated(classElement));
-            fragmentInformation.setClassName(generateFragmentClassName(classElement, elements));
+            fragmentInformation = new FragmentInfo(classElement);
             fragmentInfoList.add(fragmentInformation);
         } else {
             fragmentInformation = existingClassInfo;
