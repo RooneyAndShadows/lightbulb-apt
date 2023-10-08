@@ -1,8 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.Param;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.Variable;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Parameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Variable;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames;
 import com.squareup.javapoet.*;
@@ -186,7 +186,7 @@ public class FragmentGenerator extends CodeGenerator {
         String typeString = parameter.getType().toString();
         TypeName paramType = parameter.getType();
         String parameterName = parameter.getName();
-        boolean isNullable = parameter.isNullable() || ((parameter instanceof Param) && ((Param) parameter).isOptional());
+        boolean isNullable = parameter.isNullable() || ((parameter instanceof Parameter) && ((Parameter) parameter).isOptional());
         boolean isPrimitive = parameter.getType().isPrimitive();
         boolean needsValidation = !isPrimitive && validateParameters && !isNullable;
         CodeBlock.Builder codeBlock = CodeBlock.builder();
@@ -293,7 +293,7 @@ public class FragmentGenerator extends CodeGenerator {
         return codeBlock.build();
     }
 
-    private CodeBlock generateNewInstanceBlockOfParam(Param parameter, String bundleVariableName) {
+    private CodeBlock generateNewInstanceBlockOfParam(Parameter parameter, String bundleVariableName) {
         String typeString = parameter.getType().toString();
         String parameterName = parameter.getName();
         CodeBlock.Builder codeBlock = CodeBlock.builder();

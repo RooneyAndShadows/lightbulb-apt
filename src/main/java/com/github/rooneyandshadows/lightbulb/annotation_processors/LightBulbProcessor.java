@@ -8,7 +8,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.f
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.ScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenGroup;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.FragmentGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.AnnotationReader;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.RoutingGenerator;

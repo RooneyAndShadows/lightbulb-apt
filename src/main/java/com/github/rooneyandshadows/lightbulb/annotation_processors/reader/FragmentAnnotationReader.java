@@ -6,6 +6,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.f
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.*;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenGroup;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationReader;
 
 import javax.annotation.processing.Messager;

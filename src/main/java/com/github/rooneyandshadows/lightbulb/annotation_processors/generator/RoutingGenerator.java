@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.generator;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.ScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenGroup;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;

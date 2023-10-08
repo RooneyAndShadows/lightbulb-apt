@@ -4,10 +4,13 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.Acti
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.*;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Parameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Variable;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ViewBinding;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
@@ -74,15 +77,15 @@ public class AnnotationReader {
     }
 
     public boolean obtainAnnotatedFieldsWithFragmentParameter(RoundEnvironment roundEnvironment) {
-        for (Element element : roundEnvironment.getElementsAnnotatedWith(FragmentParameter.class)) {
+        for (Element element : roundEnvironment.getElementsAnnotatedWith(com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter.class)) {
             if (element.getKind() != ElementKind.FIELD) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentParameter should be on top of fragment field.");
                 return false;
             }
-            FragmentParameter annotation = element.getAnnotation(FragmentParameter.class);
+            com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter annotation = element.getAnnotation(com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter.class);
             Element classElement = element.getEnclosingElement();
             FragmentBindingData fragmentInfo = getOrCreateFragmentInfo(classElement);
-            Param info = new Param(element, annotation, optional);
+            Parameter info = new Parameter(element, annotation, optional);
             fragmentInfo.getParameters().add(info);
         }
         return true;

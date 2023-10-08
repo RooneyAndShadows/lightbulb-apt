@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner;
 
 import com.squareup.javapoet.ParameterSpec;
 import org.jetbrains.annotations.NotNull;
@@ -7,10 +7,10 @@ import org.jetbrains.annotations.Nullable;
 import javax.lang.model.element.Element;
 
 @SuppressWarnings("DuplicatedCode")
-public class Param extends Variable {
+public class Parameter extends Variable {
     private final boolean optional;
 
-    public Param(Element element, boolean optional) {
+    public Parameter(Element element, boolean optional) {
         super(element);
         this.optional = optional;
     }

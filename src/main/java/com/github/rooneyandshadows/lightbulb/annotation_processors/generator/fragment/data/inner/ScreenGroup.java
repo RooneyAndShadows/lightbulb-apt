@@ -1,5 +1,6 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner;
 
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
 import com.squareup.javapoet.*;
 
 import javax.lang.model.element.Modifier;
