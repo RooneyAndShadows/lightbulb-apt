@@ -1,5 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base;
 
+
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -7,22 +8,40 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
+import java.util.*;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.getFullClassName;
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.getSimpleName;
-
-public class AnnotationReader {
+public abstract class AnnotationReader {
     protected final Messager messager;
     protected final Elements elements;
     protected final RoundEnvironment environment;
+    private final Map<Class<? extends Annotation>, ElementKind> targets;
 
     public AnnotationReader(Messager messager, Elements elements, RoundEnvironment environment) {
         this.messager = messager;
         this.elements = elements;
         this.environment = environment;
+        this.targets = Collections.unmodifiableMap(getAnnotationTargets());
     }
 
-    protected <T extends Annotation> boolean obtainAnnotations(Class<T> annotationClass, ElementKind requiredKind, AnnotationConsumer<T> targetConsumer) {
+    protected abstract void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations);
+
+    protected abstract Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets();
+
+    public final boolean readAnnotations() {
+        Map<Element, List<AnnotatedElement>> annotatedElements = new HashMap<>();
+        for (Map.Entry<Class<? extends Annotation>, ElementKind> entry : targets.entrySet()) {
+            Class<? extends Annotation> annotationClass = entry.getKey();
+            ElementKind elementKind = entry.getValue();
+            boolean result = obtainAnnotations(annotationClass, elementKind, annotatedElements);
+            if (!result) {
+                return false;
+            }
+        }
+        onAnnotationsExtracted(annotatedElements);
+        return true;
+    }
+
+    private <T extends Annotation> boolean obtainAnnotations(Class<T> annotationClass, ElementKind requiredKind, Map<Element, List<AnnotatedElement>> annotatedElements) {
         for (Element element : environment.getElementsAnnotatedWith(annotationClass)) {
             if (element.getKind() != requiredKind) {
                 String annotationClassName = annotationClass.getSimpleName();
@@ -30,16 +49,31 @@ public class AnnotationReader {
                 messager.printMessage(Diagnostic.Kind.ERROR, errorString);
                 return false;
             }
-            Element enclosingClassElement = requiredKind.isField() ? element.getEnclosingElement() : null;
-            String className = getFullClassName(elements, enclosingClassElement != null ? enclosingClassElement : element);
-            String targetElementSimpleName = getSimpleName(elements, element);
+
             T annotation = element.getAnnotation(annotationClass);
-            targetConsumer.accept(targetElementSimpleName, className, annotation);
+            List<AnnotatedElement> targetsForClassName = annotatedElements.computeIfAbsent(element, key -> new ArrayList<>());
+            AnnotatedElement annotationTarget = new AnnotatedElement(element, annotation);
+            targetsForClassName.add(annotationTarget);
         }
         return true;
     }
 
-    protected interface AnnotationConsumer<T extends Annotation> {
-        void accept(String targetElementSimpleName, String enclosingClassName, T annotation);
+    @SuppressWarnings("ClassCanBeRecord")
+    public static final class AnnotatedElement {
+        private final Element element;
+        private final Annotation annotation;
+
+        public AnnotatedElement(Element element, Annotation annotation) {
+            this.element = element;
+            this.annotation = annotation;
+        }
+
+        public Element getElement() {
+            return element;
+        }
+
+        public Annotation getAnnotation() {
+            return annotation;
+        }
     }
 }

@@ -1,18 +1,18 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentBindView;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
+
 import javax.lang.model.element.Element;
 
-public class FragmentViewBindingInfo {
+public class ViewBinding {
     private final String fieldName;
     private final String resourceName;
     private final String setterName;
 
-    public FragmentViewBindingInfo(Element fieldElement, FragmentBindView annotation) {
+    public ViewBinding(Element fieldElement, String resourceName) {
         Element classElement = fieldElement.getEnclosingElement();
-        this.fieldName = fieldElement.getSimpleName().toString();
-        this.resourceName = annotation.name();
+        this.fieldName = ElementUtils.getSimpleName(fieldElement);
+        this.resourceName = resourceName;
         this.setterName = ElementUtils.scanForSetter(classElement, fieldName);
     }
 

@@ -1,15 +1,15 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data;
 
 import com.squareup.javapoet.*;
 
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 
-public class FragmentScreenGroup {
+public class ScreenGroup {
     private final String screenGroupName;
-    private final ArrayList<FragmentInfo> screens = new ArrayList<>();
+    private final ArrayList<FragmentBindingData> screens = new ArrayList<>();
 
-    public FragmentScreenGroup(String screenGroupName) {
+    public ScreenGroup(String screenGroupName) {
         if (screenGroupName == null || screenGroupName.equals(""))
             screenGroupName = "Common";
         this.screenGroupName = screenGroupName;
@@ -19,11 +19,11 @@ public class FragmentScreenGroup {
         return screenGroupName;
     }
 
-    public ArrayList<FragmentInfo> getScreens() {
+    public ArrayList<FragmentBindingData> getScreens() {
         return screens;
     }
 
-    public void addScreen(FragmentInfo fragmentInfo) {
+    public void addScreen(FragmentBindingData fragmentInfo) {
         screens.add(fragmentInfo);
     }
 
@@ -50,7 +50,7 @@ public class FragmentScreenGroup {
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(fragmentInfo.getClassName());
-            fragmentInfo.getFragmentParameters().forEach(paramInfo -> {
+            fragmentInfo.getParameters().forEach(paramInfo -> {
                 String parameterName = paramInfo.name;
                 TypeName parameterType = paramInfo.getType();
                 FieldSpec.Builder field = FieldSpec.builder(parameterType, parameterName, Modifier.PRIVATE);

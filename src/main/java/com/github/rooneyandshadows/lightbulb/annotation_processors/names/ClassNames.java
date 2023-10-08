@@ -1,6 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.names;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
 import com.squareup.javapoet.ClassName;
 
@@ -24,13 +23,18 @@ public class ClassNames {
     public static final ClassName STRING = ClassName.get(JAVA_LANG, "String");
     public static final ClassName ILLEGAL_ARGUMENT_EXCEPTION = ClassName.get(JAVA_LANG, "IllegalArgumentException");
 
-    public static ClassName generateMappedFragmentBindingClassName(FragmentInfo fragmentInfo, String className) {
-        return ClassName.get(fragmentInfo.getClassName().packageName(), className);
+
+    public static String getClassPackage(Elements elements, Element element) {
+        return ElementUtils.getPackage(elements, element);
     }
 
-    public static ClassName generateFragmentClassName(Element fragmentClass, Elements elements) {
-        String classPackage = ElementUtils.getPackage(elements, fragmentClass);
-        return ClassName.get(classPackage, fragmentClass.getSimpleName().toString());
+    public static ClassName generateClassName(Element element, Elements elements, String classNameSuffix) {
+        String classPackage = ElementUtils.getPackage(elements, element);
+        return ClassName.get(classPackage, element.getSimpleName().toString().concat(classNameSuffix));
+    }
+
+    public static ClassName generateClassName(Element element, Elements elements) {
+        return generateClassName(element, elements, "");
     }
 
     public static ClassName generateVersionCodeClassName(String versionCode) {

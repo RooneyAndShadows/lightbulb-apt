@@ -1,8 +1,8 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentVariableInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.Param;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.Variable;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames;
 import com.squareup.javapoet.*;
@@ -23,7 +23,7 @@ public class FragmentGenerator extends CodeGenerator {
         super(rootPackage, filer);
     }
 
-    public void generateFragmentBindingClasses(List<FragmentInfo> fragmentInfoList) {
+    public void generateFragmentBindingClasses(List<FragmentBindingData> fragmentInfoList) {
         List<MethodSpec> methods = new ArrayList<>();
         fragmentInfoList.forEach(fragmentInfo -> {
             methods.clear();
@@ -51,7 +51,7 @@ public class FragmentGenerator extends CodeGenerator {
         });
     }
 
-    private MethodSpec generateFragmentConfigurationMethod(FragmentInfo fragment) {
+    private MethodSpec generateFragmentConfigurationMethod(FragmentBindingData fragment) {
         String methodName = "generateConfiguration";
         boolean hasFragmentConfigAnnotation = fragment.getConfigAnnotation() != null;
         if (!hasFragmentConfigAnnotation) {
@@ -75,7 +75,7 @@ public class FragmentGenerator extends CodeGenerator {
                 .build();
     }
 
-    private MethodSpec generateFragmentViewBindingsMethod(FragmentInfo fragment) {
+    private MethodSpec generateFragmentViewBindingsMethod(FragmentBindingData fragment) {
         MethodSpec.Builder method = MethodSpec.methodBuilder("generateViewBindings")
                 .addParameter(fragment.getClassName(), "fragment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -94,13 +94,13 @@ public class FragmentGenerator extends CodeGenerator {
         return method.build();
     }
 
-    private MethodSpec generateFragmentParametersMethod(FragmentInfo fragment) {
+    private MethodSpec generateFragmentParametersMethod(FragmentBindingData fragment) {
         MethodSpec.Builder method = MethodSpec.methodBuilder("generateParameters")
                 .addParameter(fragment.getClassName(), "fragment")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class);
         method.addStatement("$T arguments = fragment.getArguments()", BUNDLE);
-        fragment.getFragmentParameters().forEach(param -> {
+        fragment.getParameters().forEach(param -> {
             CodeBlock readStatement = resolveReadParamFromBundleExpression(
                     "fragment",
                     param,
@@ -112,7 +112,7 @@ public class FragmentGenerator extends CodeGenerator {
         return method.build();
     }
 
-    private MethodSpec generateFragmentNewInstanceMethod(FragmentInfo fragmentInfo, boolean includeOptionalParams) {
+    private MethodSpec generateFragmentNewInstanceMethod(FragmentBindingData fragmentInfo, boolean includeOptionalParams) {
         MethodSpec.Builder method = MethodSpec.methodBuilder("newInstance");
         method.addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(fragmentInfo.getClassName())
@@ -128,14 +128,14 @@ public class FragmentGenerator extends CodeGenerator {
         return method.build();
     }
 
-    private MethodSpec generateSaveVariablesMethod(FragmentInfo fragmentInfo) {
+    private MethodSpec generateSaveVariablesMethod(FragmentBindingData fragmentInfo) {
         MethodSpec.Builder method = MethodSpec
                 .methodBuilder("saveVariablesState")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(BUNDLE, "outState")
                 .addParameter(fragmentInfo.getClassName(), "fragment")
                 .returns(void.class);
-        fragmentInfo.getFragmentParameters().forEach(param -> {
+        fragmentInfo.getParameters().forEach(param -> {
             CodeBlock writeStatement = generateSaveInstanceStateBlockOfParam(
                     param,
                     "fragment",
@@ -143,7 +143,7 @@ public class FragmentGenerator extends CodeGenerator {
             );
             method.addCode(writeStatement);
         });
-        fragmentInfo.getFragmentPersistedVariables().forEach(param -> {
+        fragmentInfo.getPersistedVariables().forEach(param -> {
             CodeBlock writeStatement = generateSaveInstanceStateBlockOfParam(
                     param,
                     "fragment",
@@ -154,14 +154,14 @@ public class FragmentGenerator extends CodeGenerator {
         return method.build();
     }
 
-    private MethodSpec generateRestoreVariablesMethod(FragmentInfo fragmentInfo) {
+    private MethodSpec generateRestoreVariablesMethod(FragmentBindingData fragmentInfo) {
         MethodSpec.Builder method = MethodSpec
                 .methodBuilder("restoreVariablesState")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(BUNDLE, "fragmentSavedInstanceState")
                 .addParameter(fragmentInfo.getClassName(), "fragment")
                 .returns(void.class);
-        fragmentInfo.getFragmentParameters().forEach(param -> {
+        fragmentInfo.getParameters().forEach(param -> {
             CodeBlock readStatement = resolveReadParamFromBundleExpression(
                     "fragment",
                     param,
@@ -170,7 +170,7 @@ public class FragmentGenerator extends CodeGenerator {
             );
             method.addCode(readStatement);
         });
-        fragmentInfo.getFragmentPersistedVariables().forEach(param -> {
+        fragmentInfo.getPersistedVariables().forEach(param -> {
             CodeBlock readStatement = resolveReadParamFromBundleExpression(
                     "fragment",
                     param,
@@ -182,11 +182,11 @@ public class FragmentGenerator extends CodeGenerator {
         return method.build();
     }
 
-    private CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, FragmentVariableInfo parameter, String bundleVariableName, boolean validateParameters) {
+    private CodeBlock resolveReadParamFromBundleExpression(String fragmentVariableName, Variable parameter, String bundleVariableName, boolean validateParameters) {
         String typeString = parameter.getType().toString();
         TypeName paramType = parameter.getType();
         String parameterName = parameter.getName();
-        boolean isNullable = parameter.isNullable() || ((parameter instanceof FragmentParamInfo) && ((FragmentParamInfo) parameter).isOptional());
+        boolean isNullable = parameter.isNullable() || ((parameter instanceof Param) && ((Param) parameter).isOptional());
         boolean isPrimitive = parameter.getType().isPrimitive();
         boolean needsValidation = !isPrimitive && validateParameters && !isNullable;
         CodeBlock.Builder codeBlock = CodeBlock.builder();
@@ -257,7 +257,7 @@ public class FragmentGenerator extends CodeGenerator {
         return codeBlock.build();
     }
 
-    private CodeBlock generateSaveInstanceStateBlockOfParam(FragmentVariableInfo parameter, String fragmentVariableName, String bundleVariableName) {
+    private CodeBlock generateSaveInstanceStateBlockOfParam(Variable parameter, String fragmentVariableName, String bundleVariableName) {
         String typeString = parameter.getType().toString();
         String parameterName = parameter.getName();
         String getExpression = parameter.hasGetter() ? parameter.getGetterName().concat("()") : parameterName;
@@ -293,7 +293,7 @@ public class FragmentGenerator extends CodeGenerator {
         return codeBlock.build();
     }
 
-    private CodeBlock generateNewInstanceBlockOfParam(FragmentParamInfo parameter, String bundleVariableName) {
+    private CodeBlock generateNewInstanceBlockOfParam(Param parameter, String bundleVariableName) {
         String typeString = parameter.getType().toString();
         String parameterName = parameter.getName();
         CodeBlock.Builder codeBlock = CodeBlock.builder();

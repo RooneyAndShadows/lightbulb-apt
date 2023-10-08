@@ -1,6 +1,5 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.fragment;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
 import com.squareup.javapoet.ParameterSpec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -8,12 +7,12 @@ import org.jetbrains.annotations.Nullable;
 import javax.lang.model.element.Element;
 
 @SuppressWarnings("DuplicatedCode")
-public class FragmentParamInfo extends FragmentVariableInfo {
+public class Param extends Variable {
     private final boolean optional;
 
-    public FragmentParamInfo(Element element, FragmentParameter annotation) {
+    public Param(Element element, boolean optional) {
         super(element);
-        this.optional = annotation.optional();
+        this.optional = optional;
     }
 
     public ParameterSpec getParameterSpec() {

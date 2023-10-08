@@ -7,9 +7,9 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.f
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.FragmentGenerator;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.ScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.FragmentGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.AnnotationReader;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.RoutingGenerator;
 import com.google.auto.service.AutoService;
@@ -46,7 +46,6 @@ public class LightBulbProcessor extends AbstractProcessor {
         this.options = processingEnvironment.getOptions();
         routingGenerator = new RoutingGenerator(rootPackage, filer);
         fragmentGenerator = new FragmentGenerator(rootPackage, filer);
-
     }
 
     @Override
@@ -62,9 +61,11 @@ public class LightBulbProcessor extends AbstractProcessor {
         processResult &= reader.obtainAnnotatedFieldsWithFragmentParameter(roundEnvironment);
         if (!processResult) return false;
 
-        List<FragmentInfo> fragmentInfoList = reader.getFragmentInfoList();
+
+
+        List<FragmentBindingData> fragmentInfoList = reader.getFragmentInfoList();
         List<ActivityInfo> activityInfoList = reader.getActivityInfoList();
-        List<FragmentScreenGroup> screenGroups = reader.getScreenGroups();
+        List<ScreenGroup> screenGroups = reader.getScreenGroups();
 
         fragmentGenerator.generateFragmentBindingClasses(fragmentInfoList);
         routingGenerator.generateRoutingScreens(screenGroups);
@@ -73,7 +74,7 @@ public class LightBulbProcessor extends AbstractProcessor {
                 .filter(ActivityInfo::isRoutingEnabled)
                 .forEach(activityInfo -> routingGenerator.generateRouterClass(activityInfo.getClassName(), screenGroups));
 
-        return true;
+        return false;
     }
 
     @Override

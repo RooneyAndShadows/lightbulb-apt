@@ -1,20 +1,15 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.generator;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentParamInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentScreenGroup;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.fragment.FragmentVariableInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.ScreenGroup;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.TypeUtils.*;
 
 @SuppressWarnings("DuplicatedCode")
 public class RoutingGenerator {
@@ -75,7 +70,7 @@ public class RoutingGenerator {
         }
     }
 
-    public void generateRouterClass(ClassName activityClassName, List<FragmentScreenGroup> screenGroups) {
+    public void generateRouterClass(ClassName activityClassName, List<ScreenGroup> screenGroups) {
         String routerPackage = activityClassName.packageName();
         ClassName routerClassName = ClassName.get(routerPackage, activityClassName.simpleName().concat("Router"));
         TypeSpec.Builder routerClass = TypeSpec
@@ -103,7 +98,7 @@ public class RoutingGenerator {
         generateActivityNavigatorSingleton(activityClassName, routerClassName);
     }
 
-    private void generateRouteClass(TypeSpec.Builder routerClass, FragmentInfo fragment, FragmentScreenGroup fragmentGroup, ClassName routerClassName) {
+    private void generateRouteClass(TypeSpec.Builder routerClass, FragmentBindingData fragment, ScreenGroup fragmentGroup, ClassName routerClassName) {
         boolean hasOptionalParameters = fragment.hasOptionalParameters();
         String groupName = fragmentGroup.getScreenGroupName();
         String screenName = fragment.getScreenName();
@@ -153,7 +148,7 @@ public class RoutingGenerator {
     }
 
 
-    public void generateRoutingScreens(List<FragmentScreenGroup> screenGroups) {
+    public void generateRoutingScreens(List<ScreenGroup> screenGroups) {
         TypeSpec.Builder rootClass = TypeSpec
                 .classBuilder("Screens")
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);

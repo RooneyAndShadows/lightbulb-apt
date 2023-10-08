@@ -24,10 +24,8 @@ public class ElementUtils {
                 .toString();
     }
 
-    public static String getSimpleName(Elements elements, Element element) {
-        String classPackage = getPackage(elements, element);
-        String classSimpleName = element.getSimpleName().toString();
-        return classPackage.concat(".").concat(classSimpleName);
+    public static String getSimpleName(Element element) {
+        return element.getSimpleName().toString();
     }
 
     public static String getFullClassName(Elements elements, Element element) {
