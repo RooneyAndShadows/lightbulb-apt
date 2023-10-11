@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.names;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
 import com.squareup.javapoet.ClassName;
@@ -6,7 +6,7 @@ import com.squareup.javapoet.ClassName;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.PackageNames.*;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.PackageNames.*;
 
 public class ClassNames {
     public static final ClassName BASE_FRAGMENT = ClassName.get(LB_FRAGMENT, "BaseFragment");

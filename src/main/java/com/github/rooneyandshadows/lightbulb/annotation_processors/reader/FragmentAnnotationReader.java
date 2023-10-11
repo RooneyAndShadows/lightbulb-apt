@@ -6,7 +6,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.f
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.*;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationReader;
 
 import javax.annotation.processing.Messager;
@@ -17,9 +17,10 @@ import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
+import static javax.lang.model.element.ElementKind.*;
+
 public class FragmentAnnotationReader extends AnnotationReader {
     private final List<FragmentBindingData> fragmentBindings = new ArrayList<>();
-    private final List<ScreenGroup> screenGroups = new ArrayList<>();
 
     public FragmentAnnotationReader(Messager messager, Elements elements, RoundEnvironment environment) {
         super(messager, elements, environment);
@@ -27,10 +28,6 @@ public class FragmentAnnotationReader extends AnnotationReader {
 
     public List<FragmentBindingData> getFragmentBindings() {
         return fragmentBindings;
-    }
-
-    public List<ScreenGroup> getScreenGroups() {
-        return screenGroups;
     }
 
     @Override
@@ -48,11 +45,11 @@ public class FragmentAnnotationReader extends AnnotationReader {
     @Override
     protected Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets() {
         Map<Class<? extends Annotation>, ElementKind> targets = new HashMap<>();
-        targets.put(FragmentConfiguration.class, ElementKind.CLASS);
-        targets.put(FragmentScreen.class, ElementKind.CLASS);
-        targets.put(FragmentParameter.class, ElementKind.FIELD);
-        targets.put(FragmentStatePersisted.class, ElementKind.FIELD);
-        targets.put(FragmentBindView.class, ElementKind.FIELD);
+        targets.put(FragmentConfiguration.class, CLASS);
+        targets.put(FragmentScreen.class, CLASS);
+        targets.put(FragmentParameter.class, FIELD);
+        targets.put(FragmentStatePersisted.class, FIELD);
+        targets.put(FragmentBindView.class, FIELD);
         return targets;
     }
 }

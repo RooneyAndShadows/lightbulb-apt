@@ -1,15 +1,17 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.routing;
 
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.activity.data.ActivityBindingData;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenGroup;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.BASE_ACTIVITY;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.BASE_ROUTER;
 
 @SuppressWarnings("DuplicatedCode")
 public class RoutingGenerator {
@@ -23,6 +25,13 @@ public class RoutingGenerator {
         routingPackage = rootPackage.concat(".routing");
         screensPackage = routingPackage.concat(".screens");
         screensClassName = ClassName.get(screensPackage, "Screens");
+    }
+
+    public void generateRoutingClasses(List<ActivityBindingData> activityBindings, List<FragmentBindingData> fragmentBindings) {
+        generateRoutingScreens(fragmentBindings);
+        activityBindings.stream()
+                .filter(ActivityBindingData::isRoutingEnabled)
+                .forEach(activityInfo -> generateRouterClass(activityInfo.getClassName(), fragmentBindings));
     }
 
     private void generateActivityNavigatorSingleton(ClassName activityClassName, ClassName routerClassName) {
@@ -70,7 +79,7 @@ public class RoutingGenerator {
         }
     }
 
-    public void generateRouterClass(ClassName activityClassName, List<ScreenGroup> screenGroups) {
+    private void generateRouterClass(ClassName activityClassName, List<FragmentBindingData> fragmentBindings) {
         String routerPackage = activityClassName.packageName();
         ClassName routerClassName = ClassName.get(routerPackage, activityClassName.simpleName().concat("Router"));
         TypeSpec.Builder routerClass = TypeSpec
@@ -84,12 +93,14 @@ public class RoutingGenerator {
                         .addStatement("super(contextActivity,fragmentContainerId)")
                         .build()
                 );
-
-        screenGroups.forEach(group -> {
-            group.getScreens().forEach(fragment -> {
-                generateRouteClass(routerClass, fragment, group, routerClassName);
-            });
-        });
+        fragmentBindings.stream()
+                .filter(fragmentBindingData -> fragmentBindingData.getScreenInfo() != null)
+                .collect(Collectors.groupingBy(fragmentBindingData -> fragmentBindingData.getScreenInfo().getScreenGroupName()))
+                .forEach((groupName, fragmentsInGroup) -> {
+                    fragmentsInGroup.forEach(fragmentBinding -> {
+                        generateRouteClass(routerClass, fragmentBinding, routerClassName);
+                    });
+                });
         try {
             JavaFile.builder(routerPackage, routerClass.build()).build().writeTo(filer);
         } catch (IOException e) {
@@ -98,10 +109,29 @@ public class RoutingGenerator {
         generateActivityNavigatorSingleton(activityClassName, routerClassName);
     }
 
-    private void generateRouteClass(TypeSpec.Builder routerClass, FragmentBindingData fragment, ScreenGroup fragmentGroup, ClassName routerClassName) {
+    private void generateRoutingScreens(List<FragmentBindingData> fragmentBindings) {
+        TypeSpec.Builder rootClass = TypeSpec
+                .classBuilder("Screens")
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
+
+        fragmentBindings.stream()
+                .filter(fragmentBindingData -> fragmentBindingData.getScreenInfo() != null)
+                .collect(Collectors.groupingBy(fragmentBindingData -> fragmentBindingData.getScreenInfo().getScreenGroupName()))
+                .forEach((screenGroup, fragments) -> {
+                    TypeSpec screenGroupClass = generateScreenGroupClass(screenGroup, fragments);
+                    rootClass.addType(screenGroupClass);
+                });
+        try {
+            JavaFile.builder(screensPackage, rootClass.build()).build().writeTo(filer);
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
+    }
+
+    private void generateRouteClass(TypeSpec.Builder routerClass, FragmentBindingData fragment, ClassName routerClassName) {
         boolean hasOptionalParameters = fragment.hasOptionalParameters();
-        String groupName = fragmentGroup.getScreenGroupName();
-        String screenName = fragment.getScreenName();
+        String groupName = fragment.getScreenInfo().getScreenGroupName();
+        String screenName = fragment.getScreenInfo().getScreenName();
         String screenClassName = groupName.concat(screenName);
         ClassName groupClass = screensClassName.nestedClass(groupName);
         ClassName screenClass = groupClass.nestedClass(screenName);
@@ -147,17 +177,61 @@ public class RoutingGenerator {
         routerClass.addType(routeClassBuilder.build());
     }
 
+    private TypeSpec generateScreenGroupClass(String screenGroupName, List<FragmentBindingData> fragments) {
+        ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
+        ClassName fragmentScreenClass = baseRouterClass.nestedClass("FragmentScreen");
 
-    public void generateRoutingScreens(List<ScreenGroup> screenGroups) {
-        TypeSpec.Builder rootClass = TypeSpec
-                .classBuilder("Screens")
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
-        screenGroups.forEach(group -> rootClass.addType(group.build()));
-        try {
-            JavaFile.builder(screensPackage, rootClass.build()).build().writeTo(filer);
-        } catch (IOException e) {
-            //e.printStackTrace();
-        }
+
+        TypeSpec.Builder groupClass = TypeSpec
+                .classBuilder(screenGroupName)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
+        fragments.forEach(fragmentInfo -> {
+            boolean hasOptionalParameters = fragmentInfo.hasOptionalParameters();
+            String screenName = fragmentInfo.getScreenInfo().getScreenName();
+            MethodSpec.Builder optionalScreenConstructor = MethodSpec
+                    .constructorBuilder()
+                    .addModifiers(Modifier.PUBLIC);
+            MethodSpec.Builder notOptionalScreenConstructor = !hasOptionalParameters ? null : MethodSpec
+                    .constructorBuilder()
+                    .addModifiers(Modifier.PUBLIC);
+            TypeSpec.Builder screenClass = TypeSpec
+                    .classBuilder(screenName)
+                    .superclass(fragmentScreenClass)
+                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
+            MethodSpec.Builder getFragmentMethod = MethodSpec
+                    .methodBuilder("getFragment")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(fragmentInfo.getClassName());
+            fragmentInfo.getParameters().forEach(paramInfo -> {
+                String parameterName = paramInfo.getName();
+                TypeName parameterType = paramInfo.getType();
+                FieldSpec.Builder field = FieldSpec.builder(parameterType, parameterName, Modifier.PRIVATE);
+                if (paramInfo.isOptional())
+                    field.initializer("null");
+                screenClass.addField(field.build());
+            });
+            String allParams = fragmentInfo.generateCommaSeparatedParams(true, paramInfo -> {
+                String parameterName = paramInfo.getName();
+                optionalScreenConstructor.addParameter(paramInfo.getParameterSpec());
+                optionalScreenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
+            });
+            screenClass.addMethod(optionalScreenConstructor.build());
+            if (notOptionalScreenConstructor != null) {
+                fragmentInfo.getFragmentParameters(false).forEach(paramInfo -> {
+                    String parameterName = paramInfo.getName();
+                    if (!paramInfo.isOptional()) {
+                        notOptionalScreenConstructor.addParameter(paramInfo.getParameterSpec());
+                        notOptionalScreenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
+                    }
+                });
+                screenClass.addMethod(notOptionalScreenConstructor.build());
+            }
+            getFragmentMethod.addStatement("return $T.newInstance(" + allParams + ")", fragmentInfo.getBindingClassName());
+            screenClass.addMethod(getFragmentMethod.build());
+            groupClass.addType(screenClass.build());
+        });
+        return groupClass.build();
     }
 
     private MethodSpec generateRouteToNewRootScreenMethodForScreen(String routerClassName) {

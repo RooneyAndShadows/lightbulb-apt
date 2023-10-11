@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.names;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names;
 
 public class PackageNames {
     public static final String LB_ROUTING = "com.github.rooneyandshadows.lightbulb.application.activity.routing";

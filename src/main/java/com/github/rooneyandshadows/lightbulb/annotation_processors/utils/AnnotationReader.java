@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.utils;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.activity.data.ActivityBindingData;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
@@ -8,7 +8,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.f
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.*;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Parameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Variable;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ViewBinding;
 
@@ -22,22 +22,22 @@ import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames.generateClassName;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.generateClassName;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils.*;
 
 public class AnnotationReader {
     private final Messager messager;
     private final Elements elements;
-    private final List<ActivityInfo> activityInfoList = new ArrayList<>();
+    private final List<ActivityBindingData> activityInfoList = new ArrayList<>();
     private final List<FragmentBindingData> fragmentInfoList = new ArrayList<>();
-    private final List<ScreenGroup> screenGroups = new ArrayList<>();
+    private final List<ScreenInfo> screenGroups = new ArrayList<>();
 
     public AnnotationReader(Messager messager, Elements elements) {
         this.messager = messager;
         this.elements = elements;
     }
 
-    public List<ActivityInfo> getActivityInfoList() {
+    public List<ActivityBindingData> getActivityInfoList() {
         return activityInfoList;
     }
 
@@ -45,7 +45,7 @@ public class AnnotationReader {
         return fragmentInfoList;
     }
 
-    public List<ScreenGroup> getScreenGroups() {
+    public List<ScreenInfo> getScreenGroups() {
         return screenGroups;
     }
 
@@ -56,7 +56,7 @@ public class AnnotationReader {
                 return false;
             }
             ActivityConfiguration annotation = classElement.getAnnotation(ActivityConfiguration.class);
-            ActivityInfo activityInfo = getOrCreateActivityInfo(classElement);
+            ActivityBindingData activityInfo = getOrCreateActivityInfo(classElement);
             activityInfo.setRoutingEnabled(annotation.enableRouterGeneration());
         }
         return true;
@@ -133,11 +133,11 @@ public class AnnotationReader {
     }
 
     private void CreateOrUpdateScreenGroup(FragmentBindingData fragmentInfo, String screenGroup) {
-        ScreenGroup group = screenGroups.stream().filter(info -> info.getScreenGroupName().equals(screenGroup))
+        ScreenInfo group = screenGroups.stream().filter(info -> info.getScreenGroupName().equals(screenGroup))
                 .findFirst()
                 .orElse(null);
         if (group == null) {
-            group = new ScreenGroup(screenGroup);
+            group = new ScreenInfo(screenGroup);
             screenGroups.add(group);
         }
         group.addScreen(fragmentInfo);
@@ -158,14 +158,14 @@ public class AnnotationReader {
         return fragmentInformation;
     }
 
-    private ActivityInfo getOrCreateActivityInfo(Element classElement) {
+    private ActivityBindingData getOrCreateActivityInfo(Element classElement) {
         String canonicalName = getFullClassName(elements, classElement);
-        ActivityInfo existingClassInfo = activityInfoList.stream().filter(info -> info.getClassName().canonicalName().equals(canonicalName))
+        ActivityBindingData existingClassInfo = activityInfoList.stream().filter(info -> info.getClassName().canonicalName().equals(canonicalName))
                 .findFirst()
                 .orElse(null);
-        ActivityInfo activityInformation;
+        ActivityBindingData activityInformation;
         if (existingClassInfo == null) {
-            activityInformation = new ActivityInfo();
+            activityInformation = new ActivityBindingData();
             activityInformation.setClassName(generateClassName(classElement, elements));
             activityInfoList.add(activityInformation);
         } else {

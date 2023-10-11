@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.activity.ActivityInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.activity.ActivityGenerator;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.activity.data.ActivityBindingData;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
@@ -8,10 +9,11 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.f
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenGroup;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.FragmentGenerator;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.AnnotationReader;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.RoutingGenerator;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.ActivityAnnotationReader;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.FragmentAnnotationReader;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.routing.RoutingGenerator;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.*;
@@ -24,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ProcessorOptionNames.ROOT_PACKAGE;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames.ROOT_PACKAGE;
 
 @SuppressWarnings("FieldCanBeLocal")
 @AutoService(Processor.class)
@@ -36,6 +38,7 @@ public class LightBulbProcessor extends AbstractProcessor {
     private Map<String, String> options;
     private String rootPackage;
     private RoutingGenerator routingGenerator;
+    private ActivityGenerator activityGenerator;
     private FragmentGenerator fragmentGenerator;
 
     @Override
@@ -46,33 +49,28 @@ public class LightBulbProcessor extends AbstractProcessor {
         this.options = processingEnvironment.getOptions();
         routingGenerator = new RoutingGenerator(rootPackage, filer);
         fragmentGenerator = new FragmentGenerator(rootPackage, filer);
+        activityGenerator = new ActivityGenerator();
+
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
         rootPackage = getRootPackage();
         boolean processResult;
-        AnnotationReader reader = new AnnotationReader(messager, elements);
-        processResult = reader.obtainAnnotatedClassesWithActivityConfiguration(roundEnvironment);
-        processResult &= reader.obtainAnnotatedClassesWithFragmentConfiguration(roundEnvironment);
-        processResult &= reader.obtainAnnotatedClassesWithFragmentScreen(roundEnvironment);
-        processResult &= reader.obtainAnnotatedFieldsWithFragmentStatePersisted(roundEnvironment);
-        processResult &= reader.obtainAnnotatedFieldsWithBindView(roundEnvironment);
-        processResult &= reader.obtainAnnotatedFieldsWithFragmentParameter(roundEnvironment);
+        ActivityAnnotationReader activityAnnotationReader = new ActivityAnnotationReader(messager, elements, roundEnvironment);
+        FragmentAnnotationReader fragmentAnnotationReader = new FragmentAnnotationReader(messager, elements, roundEnvironment);
+
+        processResult = activityAnnotationReader.readAnnotations();
+        processResult &= fragmentAnnotationReader.readAnnotations();
         if (!processResult) return false;
 
 
+        List<ActivityBindingData> activityInfoList = activityAnnotationReader.getActivityBindings();
+        List<FragmentBindingData> fragmentInfoList = fragmentAnnotationReader.getFragmentBindings();
 
-        List<FragmentBindingData> fragmentInfoList = reader.getFragmentInfoList();
-        List<ActivityInfo> activityInfoList = reader.getActivityInfoList();
-        List<ScreenGroup> screenGroups = reader.getScreenGroups();
 
         fragmentGenerator.generateFragmentBindingClasses(fragmentInfoList);
-        routingGenerator.generateRoutingScreens(screenGroups);
-
-        activityInfoList.stream()
-                .filter(ActivityInfo::isRoutingEnabled)
-                .forEach(activityInfo -> routingGenerator.generateRouterClass(activityInfo.getClassName(), screenGroups));
+        routingGenerator.generateRoutingClasses(activityInfoList, fragmentInfoList);
 
         return false;
     }

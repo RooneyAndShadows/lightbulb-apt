@@ -2,13 +2,11 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fr
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentBindView;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Configuration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Parameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Variable;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ViewBinding;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.*;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationReader.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
 import com.squareup.javapoet.ClassName;
@@ -28,7 +26,7 @@ public class FragmentBindingData {
     private final ClassName className;
     private final ClassName bindingClassName;
     private final boolean canBeInstantiated;
-    private String screenName;
+    private ScreenInfo screenInfo;
     private Configuration configuration;
     private final List<Parameter> parameters = new ArrayList<>();
     private final List<Variable> persistedVariables = new ArrayList<>();
@@ -40,15 +38,50 @@ public class FragmentBindingData {
         this.className = ClassNames.generateClassName(fragmentClassElement, elements);
         this.bindingClassName = ClassNames.generateClassName(fragmentClassElement, elements, BINDING_CLASS_NAME_SUFFIX);
         this.canBeInstantiated = ElementUtils.canBeInstantiated(fragmentClassElement);
-        setupFromAnnotations(annotatedElements);
+        annotatedElements.forEach(element -> {
+            handleFragmentConfiguration(element);
+            handleFragmentScreen(element);
+            handleFragmentParameter(element);
+            handleFragmentStatePersisted(element);
+            handleFragmentBindView(element);
+        });
+    }
+
+    public ClassName getClassName() {
+        return className;
+    }
+
+    public ClassName getBindingClassName() {
+        return bindingClassName;
+    }
+
+    public boolean isCanBeInstantiated() {
+        return canBeInstantiated;
+    }
+
+    public ScreenInfo getScreenInfo() {
+        return screenInfo;
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public List<Parameter> getParameters() {
+        return parameters;
+    }
+
+    public List<Variable> getPersistedVariables() {
+        return persistedVariables;
+    }
+
+    public List<ViewBinding> getViewBindings() {
+        return viewBindings;
     }
 
     public boolean hasOptionalParameters() {
-        for (Parameter param : parameters) {
-            if (param.isOptional()) {
-                return true;
-            }
-        }
+        for (Parameter param : parameters)
+            if (param.isOptional()) return true;
         return false;
     }
 
@@ -69,59 +102,42 @@ public class FragmentBindingData {
         return paramsString;
     }
 
-    public TypeMirror getType() {
-        return type;
+    private void handleFragmentConfiguration(AnnotatedElement element) {
+        Annotation annotation = element.getAnnotation();
+        if (!(annotation instanceof FragmentConfiguration config)) return;
+        configuration = new Configuration(
+                config.isMainScreenFragment(),
+                config.hasLeftDrawer(),
+                config.hasOptionsMenu(),
+                config.layoutName()
+        );
     }
 
-    public ClassName getClassName() {
-        return className;
+    private void handleFragmentScreen(AnnotatedElement element) {
+        Annotation annotation = element.getAnnotation();
+        if (!(annotation instanceof FragmentScreen screen)) return;
+        screenInfo = new ScreenInfo(screen.screenName(), screen.screenGroup());
     }
 
-    public ClassName getBindingClassName() {
-        return bindingClassName;
+    private void handleFragmentParameter(AnnotatedElement element) {
+        Annotation annotation = element.getAnnotation();
+        if (!(annotation instanceof FragmentParameter screen)) return;
+        Parameter parameter = new Parameter(element.getElement(), screen.optional());
+        parameters.add(parameter);
     }
 
-    public String getScreenName() {
-        return screenName;
+    private void handleFragmentStatePersisted(AnnotatedElement element) {
+        Annotation annotation = element.getAnnotation();
+        if (!(annotation instanceof FragmentStatePersisted statePersisted)) return;
+        Variable variableInfo = new Variable(element.getElement());
+        persistedVariables.add(variableInfo);
+
     }
 
-    public boolean isCanBeInstantiated() {
-        return canBeInstantiated;
-    }
-
-
-    public List<Parameter> getParameters() {
-        return parameters;
-    }
-
-    public List<Variable> getPersistedVariables() {
-        return persistedVariables;
-    }
-
-    public List<ViewBinding> getViewBindings() {
-        return viewBindings;
-    }
-
-    private void setupFromAnnotations(List<AnnotatedElement> annotatedElements) {
-        annotatedElements.forEach(element -> {
-            Annotation annotation = element.getAnnotation();
-            if (annotation instanceof FragmentConfiguration config) {
-                configuration = new Configuration(
-                        config.isMainScreenFragment(),
-                        config.hasLeftDrawer(),
-                        config.hasOptionsMenu(),
-                        config.layoutName()
-                );
-            } else if (annotation instanceof FragmentScreen screen) {
-                screenName = screen.screenName();
-            } else if (annotation instanceof com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter param) {
-                Parameter parameter = new Parameter(element.getElement(), param.optional());
-                parameters.add(parameter);
-            } else if (annotation instanceof FragmentStatePersisted) {
-
-            } else if (annotation instanceof FragmentBindView) {
-
-            }
-        });
+    private void handleFragmentBindView(AnnotatedElement element) {
+        Annotation annotation = element.getAnnotation();
+        if (!(annotation instanceof FragmentBindView bindView)) return;
+        ViewBinding viewBindingInfo = new ViewBinding(element.getElement(), bindView.name());
+        viewBindings.add(viewBindingInfo);
     }
 }

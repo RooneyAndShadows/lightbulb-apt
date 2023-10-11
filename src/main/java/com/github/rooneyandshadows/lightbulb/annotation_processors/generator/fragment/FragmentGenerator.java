@@ -1,10 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Configuration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Parameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Variable;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -13,7 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.names.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.*;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.TypeUtils.*;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.TypeUtils.isOffsetDate;
 
@@ -27,7 +28,6 @@ public class FragmentGenerator extends CodeGenerator {
         List<MethodSpec> methods = new ArrayList<>();
         fragmentInfoList.forEach(fragmentInfo -> {
             methods.clear();
-            String className = fragmentInfo.getClassName().simpleName().concat("Bindings");
             if (fragmentInfo.isCanBeInstantiated()) {
                 if (fragmentInfo.hasOptionalParameters())
                     methods.add(generateFragmentNewInstanceMethod(fragmentInfo, false));
@@ -39,12 +39,11 @@ public class FragmentGenerator extends CodeGenerator {
             methods.add(generateSaveVariablesMethod(fragmentInfo));
             methods.add(generateRestoreVariablesMethod(fragmentInfo));
             TypeSpec.Builder generatedClass = TypeSpec
-                    .classBuilder(className)
+                    .classBuilder(fragmentInfo.getBindingClassName())
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                     .addMethods(methods);
-            fragmentInfo.setBindingClassName(generateMappedFragmentBindingClassName(fragmentInfo, className));
             try {
-                JavaFile.builder(fragmentInfo.getClassName().packageName(), generatedClass.build()).build().writeTo(filer);
+                JavaFile.builder(fragmentInfo.getBindingClassName().packageName(), generatedClass.build()).build().writeTo(filer);
             } catch (IOException e) {
                 //e.printStackTrace();
             }
@@ -53,8 +52,8 @@ public class FragmentGenerator extends CodeGenerator {
 
     private MethodSpec generateFragmentConfigurationMethod(FragmentBindingData fragment) {
         String methodName = "generateConfiguration";
-        boolean hasFragmentConfigAnnotation = fragment.getConfigAnnotation() != null;
-        if (!hasFragmentConfigAnnotation) {
+        Configuration configuration = fragment.getConfiguration();
+        if (configuration == null) {
             return MethodSpec.methodBuilder(methodName)
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                     .addParameter(fragment.getClassName(), "fragment")
@@ -62,10 +61,10 @@ public class FragmentGenerator extends CodeGenerator {
                     .addStatement("return new $T($L,$L,$L,$L)", BASE_FRAGMENT_CONFIGURATION, -1, true, false, false)
                     .build();
         }
-        String layoutName = fragment.getConfigAnnotation().layoutName();
-        String isMainScreenFragment = String.valueOf(fragment.getConfigAnnotation().isMainScreenFragment());
-        String hasLeftDrawer = String.valueOf(fragment.getConfigAnnotation().hasLeftDrawer());
-        String hasOptionsMenu = String.valueOf(fragment.getConfigAnnotation().hasOptionsMenu());
+        String layoutName = configuration.getLayoutName();
+        String isMainScreenFragment = String.valueOf(configuration.isMainScreenFragment());
+        String hasLeftDrawer = String.valueOf(configuration.isHasLeftDrawer());
+        String hasOptionsMenu = String.valueOf(configuration.isHasOptionsMenu());
         return MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(fragment.getClassName(), "fragment")

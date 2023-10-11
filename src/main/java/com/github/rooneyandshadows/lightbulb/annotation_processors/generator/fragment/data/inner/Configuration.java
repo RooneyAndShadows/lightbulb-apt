@@ -12,4 +12,20 @@ public class Configuration {
         this.hasOptionsMenu = hasOptionsMenu;
         this.layoutName = layoutName;
     }
+
+    public boolean isMainScreenFragment() {
+        return isMainScreenFragment;
+    }
+
+    public boolean isHasLeftDrawer() {
+        return hasLeftDrawer;
+    }
+
+    public boolean isHasOptionsMenu() {
+        return hasOptionsMenu;
+    }
+
+    public String getLayoutName() {
+        return layoutName;
+    }
 }
