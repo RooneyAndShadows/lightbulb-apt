@@ -12,8 +12,10 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fra
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenInfo;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.FragmentGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.ActivityAnnotationReader;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.FragmentAnnotationReader;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.routing.RoutingGenerator;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationReader;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.*;
@@ -21,10 +23,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames.ROOT_PACKAGE;
 
@@ -51,11 +50,20 @@ public class LightBulbProcessor extends AbstractProcessor {
         fragmentGenerator = new FragmentGenerator(rootPackage, filer);
         activityGenerator = new ActivityGenerator();
 
+
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
         rootPackage = getRootPackage();
+
+//-------------
+        List<AnnotationReader> readers = new ArrayList<>();
+        AnnotationResultsRegistry resultsRegistry = new AnnotationResultsRegistry();
+        readers.add(new ActivityAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
+        readers.add(new FragmentAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
+        readers.forEach(AnnotationReader::readAnnotations);
+//-------------
         boolean processResult;
         ActivityAnnotationReader activityAnnotationReader = new ActivityAnnotationReader(messager, elements, roundEnvironment);
         FragmentAnnotationReader fragmentAnnotationReader = new FragmentAnnotationReader(messager, elements, roundEnvironment);

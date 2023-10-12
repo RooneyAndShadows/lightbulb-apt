@@ -17,13 +17,14 @@ import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.reader.AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS;
 import static javax.lang.model.element.ElementKind.*;
 
 public class FragmentAnnotationReader extends AnnotationReader {
     private final List<FragmentBindingData> fragmentBindings = new ArrayList<>();
 
-    public FragmentAnnotationReader(Messager messager, Elements elements, RoundEnvironment environment) {
-        super(messager, elements, environment);
+    public FragmentAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
+        super(resultsRegistry, messager, elements, environment);
     }
 
     public List<FragmentBindingData> getFragmentBindings() {
@@ -38,6 +39,7 @@ public class FragmentAnnotationReader extends AnnotationReader {
 
             FragmentBindingData bindingData = new FragmentBindingData(elements, fragmentClassElement, annotatedElements);
             fragmentBindings.add(bindingData);
+            resultsRegistry.setResult(FRAGMENT_BINDINGS, fragmentBindings);
         }
     }
 

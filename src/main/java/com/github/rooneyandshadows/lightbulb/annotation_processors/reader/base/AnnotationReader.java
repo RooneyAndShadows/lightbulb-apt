@@ -1,6 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base;
 
 
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.AnnotationResultsRegistry;
+
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -14,9 +16,11 @@ public abstract class AnnotationReader {
     protected final Messager messager;
     protected final Elements elements;
     protected final RoundEnvironment environment;
+    protected final AnnotationResultsRegistry resultsRegistry;
     private final Map<Class<? extends Annotation>, ElementKind> targets;
 
-    public AnnotationReader(Messager messager, Elements elements, RoundEnvironment environment) {
+    public AnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
+        this.resultsRegistry = resultsRegistry;
         this.messager = messager;
         this.elements = elements;
         this.environment = environment;
