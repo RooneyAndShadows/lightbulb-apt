@@ -15,7 +15,8 @@ public class ClassNames {
     public static final ClassName BASE_ROUTER = ClassName.get(LB_ROUTING, "BaseActivityRouter");
     public static final ClassName DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_DATE, "DateUtils");
     public static final ClassName OFFSET_DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_DATE, "DateUtilsOffsetDate");
-    public static final ClassName BUNDLE = ClassName.get(ANDROID_OS, "Bundle");
+    public static final ClassName ANDROID_BUNDLE = ClassName.get(ANDROID_OS, "Bundle");
+    public static final ClassName ANDROID_RESOURCES = ClassName.get(ANDROID_CONTENT_RES, "Resources");
     public static final ClassName SDK_INT = ClassName.get(ANDROID_BUILD_VERSION, "SDK_INT");
     public static final ClassName UUID = ClassName.get(JAVA_UTIL, "UUID");
     public static final ClassName DATE = ClassName.get(JAVA_UTIL, "Date");

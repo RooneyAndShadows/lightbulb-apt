@@ -11,7 +11,7 @@ public final class AnnotationResultsRegistry {
         results.put(key, value);
     }
 
-    public <T> T getResult(AnnotationResultTypes key, Object value) {
+    public <T> T getResult(AnnotationResultTypes key) {
         return (T) results.get(key);
     }
 

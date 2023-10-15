@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.BASE_ACTIVITY;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.BASE_ROUTER;
 
@@ -32,14 +34,14 @@ public class RoutingGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        //TODO GET FROM REGISTRY AND GENERATE
-    }
-
-    public void generateRoutingClasses(List<ActivityBindingData> activityBindings, List<FragmentBindingData> fragmentBindings) {
+        List<FragmentBindingData> fragmentBindings = annotationResultsRegistry.getResult(FRAGMENT_BINDINGS);
+        List<ActivityBindingData> activityBindings = annotationResultsRegistry.getResult(ACTIVITY_BINDINGS);
         generateRoutingScreens(fragmentBindings);
         activityBindings.stream()
                 .filter(ActivityBindingData::isRoutingEnabled)
-                .forEach(activityInfo -> generateRouterClass(activityInfo.getClassName(), fragmentBindings));
+                .forEach(activityInfo -> {
+                    generateRouterClass(activityInfo.getClassName(), fragmentBindings);
+                });
     }
 
     private void generateActivityNavigatorSingleton(ClassName activityClassName, ClassName routerClassName) {
@@ -186,10 +188,7 @@ public class RoutingGenerator extends CodeGenerator {
     }
 
     private TypeSpec generateScreenGroupClass(String screenGroupName, List<FragmentBindingData> fragments) {
-        ClassName baseRouterClass = ClassName.get("com.github.rooneyandshadows.lightbulb.application.activity.routing", "BaseActivityRouter");
-        ClassName fragmentScreenClass = baseRouterClass.nestedClass("FragmentScreen");
-
-
+        ClassName fragmentScreenClass = BASE_ROUTER.nestedClass("FragmentScreen");
         TypeSpec.Builder groupClass = TypeSpec
                 .classBuilder(screenGroupName)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
