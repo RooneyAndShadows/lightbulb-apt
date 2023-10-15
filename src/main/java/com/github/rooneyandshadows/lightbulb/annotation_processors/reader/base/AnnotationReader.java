@@ -1,8 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base;
 
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.AnnotationResultsRegistry;
-
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -27,7 +25,7 @@ public abstract class AnnotationReader {
         this.targets = Collections.unmodifiableMap(getAnnotationTargets());
     }
 
-    protected abstract void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations);
+    protected abstract void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations, AnnotationResultsRegistry resultRegistry);
 
     protected abstract Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets();
 
@@ -41,7 +39,7 @@ public abstract class AnnotationReader {
                 return false;
             }
         }
-        onAnnotationsExtracted(annotatedElements);
+        onAnnotationsExtracted(annotatedElements, resultsRegistry);
         return true;
     }
 
@@ -60,24 +58,5 @@ public abstract class AnnotationReader {
             targetsForClassName.add(annotationTarget);
         }
         return true;
-    }
-
-    @SuppressWarnings("ClassCanBeRecord")
-    public static final class AnnotatedElement {
-        private final Element element;
-        private final Annotation annotation;
-
-        public AnnotatedElement(Element element, Annotation annotation) {
-            this.element = element;
-            this.annotation = annotation;
-        }
-
-        public Element getElement() {
-            return element;
-        }
-
-        public Annotation getAnnotation() {
-            return annotation;
-        }
     }
 }

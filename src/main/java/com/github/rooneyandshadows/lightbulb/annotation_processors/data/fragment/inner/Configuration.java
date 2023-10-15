@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner;
 
 public class Configuration {
     private boolean isMainScreenFragment;

@@ -1,10 +1,11 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Configuration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Parameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Variable;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.Configuration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.Parameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.Variable;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames;
 import com.squareup.javapoet.*;
 
@@ -20,8 +21,13 @@ import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.
 
 public class FragmentGenerator extends CodeGenerator {
 
-    public FragmentGenerator(String rootPackage, Filer filer) {
-        super(rootPackage, filer);
+    public FragmentGenerator(String rootPackage, Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(rootPackage, filer, annotationResultsRegistry);
+    }
+
+    @Override
+    public void generate() {
+        //TODO GET FROM REGISTRY AND GENERATE
     }
 
     public void generateFragmentBindingClasses(List<FragmentBindingData> fragmentInfoList) {

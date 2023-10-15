@@ -1,16 +1,16 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.utils;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.activity.data.ActivityBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.activity.ActivityBindingData;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.*;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.*;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Parameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenInfo;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.Variable;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ViewBinding;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentStatePersisted;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.Parameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.ScreenInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.Variable;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.ViewBinding;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
@@ -77,12 +77,12 @@ public class AnnotationReader {
     }
 
     public boolean obtainAnnotatedFieldsWithFragmentParameter(RoundEnvironment roundEnvironment) {
-        for (Element element : roundEnvironment.getElementsAnnotatedWith(com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter.class)) {
+        for (Element element : roundEnvironment.getElementsAnnotatedWith(FragmentParameter.class)) {
             if (element.getKind() != ElementKind.FIELD) {
                 messager.printMessage(Diagnostic.Kind.ERROR, "@FragmentParameter should be on top of fragment field.");
                 return false;
             }
-            com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter annotation = element.getAnnotation(com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter.class);
+            FragmentParameter annotation = element.getAnnotation(FragmentParameter.class);
             Element classElement = element.getEnclosingElement();
             FragmentBindingData fragmentInfo = getOrCreateFragmentInfo(classElement);
             Parameter info = new Parameter(element, annotation, optional);

@@ -1,12 +1,13 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.reader;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentBindView;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.*;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.ScreenInfo;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentStatePersisted;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotatedElement;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationReader;
 
 import javax.annotation.processing.Messager;
@@ -17,7 +18,7 @@ import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.reader.AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS;
 import static javax.lang.model.element.ElementKind.*;
 
 public class FragmentAnnotationReader extends AnnotationReader {
@@ -27,22 +28,18 @@ public class FragmentAnnotationReader extends AnnotationReader {
         super(resultsRegistry, messager, elements, environment);
     }
 
-    public List<FragmentBindingData> getFragmentBindings() {
-        return fragmentBindings;
-    }
-
     @Override
-    protected void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations) {
+    protected void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations, AnnotationResultsRegistry resultRegistry) {
         for (Map.Entry<Element, List<AnnotatedElement>> entry : annotations.entrySet()) {
             Element fragmentClassElement = entry.getKey();
             List<AnnotatedElement> annotatedElements = entry.getValue();
 
             FragmentBindingData bindingData = new FragmentBindingData(elements, fragmentClassElement, annotatedElements);
             fragmentBindings.add(bindingData);
-            resultsRegistry.setResult(FRAGMENT_BINDINGS, fragmentBindings);
-        }
-    }
 
+        }
+        resultsRegistry.setResult(FRAGMENT_BINDINGS, fragmentBindings);
+    }
 
     @Override
     protected Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets() {

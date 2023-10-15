@@ -1,7 +1,9 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.routing;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.generator;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.activity.data.ActivityBindingData;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.activity.ActivityBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -14,17 +16,23 @@ import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.BASE_ROUTER;
 
 @SuppressWarnings("DuplicatedCode")
-public class RoutingGenerator {
+public class RoutingGenerator extends CodeGenerator {
     private final Filer filer;
     private final String routingPackage;
     private final String screensPackage;
     private final ClassName screensClassName;
 
-    public RoutingGenerator(String rootPackage, Filer filer) {
+    public RoutingGenerator(String rootPackage, Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(rootPackage, filer, annotationResultsRegistry);
         this.filer = filer;
         routingPackage = rootPackage.concat(".routing");
         screensPackage = routingPackage.concat(".screens");
         screensClassName = ClassName.get(screensPackage, "Screens");
+    }
+
+    @Override
+    public void generate() {
+        //TODO GET FROM REGISTRY AND GENERATE
     }
 
     public void generateRoutingClasses(List<ActivityBindingData> activityBindings, List<FragmentBindingData> fragmentBindings) {

@@ -1,7 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.reader;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.activity.ActivityConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.activity.data.ActivityBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.activity.ActivityBindingData;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotatedElement;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationReader;
 
 import javax.annotation.processing.Messager;
@@ -15,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.reader.AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS;
 
 public class ActivityAnnotationReader extends AnnotationReader {
     private final List<ActivityBindingData> activityBindings = new ArrayList<>();
@@ -24,22 +26,17 @@ public class ActivityAnnotationReader extends AnnotationReader {
         super(resultsRegistry, messager, elements, environment);
     }
 
-    public List<ActivityBindingData> getActivityBindings() {
-        return activityBindings;
-    }
-
     @Override
-    protected void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations) {
+    protected void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations, AnnotationResultsRegistry resultRegistry) {
         for (Map.Entry<Element, List<AnnotatedElement>> entry : annotations.entrySet()) {
             Element activityClassElement = entry.getKey();
             List<AnnotatedElement> annotatedElements = entry.getValue();
 
             ActivityBindingData bindingData = new ActivityBindingData(elements, activityClassElement, annotatedElements);
             activityBindings.add(bindingData);
-            resultsRegistry.setResult(ACTIVITY_BINDINGS, activityBindings);
         }
+        resultsRegistry.setResult(ACTIVITY_BINDINGS, activityBindings);
     }
-
 
     @Override
     protected Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets() {

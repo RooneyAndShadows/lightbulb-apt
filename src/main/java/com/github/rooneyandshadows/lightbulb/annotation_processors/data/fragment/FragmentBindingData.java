@@ -1,13 +1,13 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentBindView;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.fragment.FragmentStatePersisted;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner.*;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentStatePersisted;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.*;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationReader.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
 import com.squareup.javapoet.ClassName;
 

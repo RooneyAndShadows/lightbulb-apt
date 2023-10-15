@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.generator.fragment.data.inner;
+package com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
 import com.squareup.javapoet.TypeName;
