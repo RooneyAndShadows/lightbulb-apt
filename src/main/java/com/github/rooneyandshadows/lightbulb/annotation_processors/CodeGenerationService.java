@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.ActivityGenerator;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.BindingRegistryGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.FragmentGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.RoutingGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
@@ -41,6 +42,7 @@ public class CodeGenerationService {
         generators.add(new FragmentGenerator(rootPackage, filer, resultsRegistry));
         generators.add(new RoutingGenerator(rootPackage, filer, resultsRegistry));
         generators.add(new ActivityGenerator(rootPackage, filer, resultsRegistry));
+        generators.add(new BindingRegistryGenerator(rootPackage, filer, resultsRegistry));
     }
 
     public void process() {
