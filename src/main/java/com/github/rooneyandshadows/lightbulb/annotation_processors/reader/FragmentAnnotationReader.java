@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.reader;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentBindView;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
@@ -33,10 +33,8 @@ public class FragmentAnnotationReader extends AnnotationReader {
         for (Map.Entry<Element, List<AnnotatedElement>> entry : annotations.entrySet()) {
             Element fragmentClassElement = entry.getKey();
             List<AnnotatedElement> annotatedElements = entry.getValue();
-
             FragmentBindingData bindingData = new FragmentBindingData(elements, fragmentClassElement, annotatedElements);
             fragmentBindings.add(bindingData);
-
         }
         resultsRegistry.setResult(FRAGMENT_BINDINGS, fragmentBindings);
     }
@@ -48,7 +46,7 @@ public class FragmentAnnotationReader extends AnnotationReader {
         targets.put(FragmentScreen.class, CLASS);
         targets.put(FragmentParameter.class, FIELD);
         targets.put(FragmentStatePersisted.class, FIELD);
-        targets.put(FragmentBindView.class, FIELD);
+        targets.put(BindView.class, FIELD);
         return targets;
     }
 }

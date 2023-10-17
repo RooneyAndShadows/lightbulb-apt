@@ -16,7 +16,6 @@ import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.PackageNames.ANDROID_VIEW;
 import static javax.lang.model.element.Modifier.*;
 
 public class FragmentGenerator extends CodeGenerator {

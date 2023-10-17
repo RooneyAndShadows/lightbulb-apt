@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment;
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentBindView;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
@@ -136,7 +136,7 @@ public class FragmentBindingData {
 
     private void handleFragmentBindView(AnnotatedElement element) {
         Annotation annotation = element.getAnnotation();
-        if (!(annotation instanceof FragmentBindView bindView)) return;
+        if (!(annotation instanceof BindView bindView)) return;
         ViewBinding viewBindingInfo = new ViewBinding(element.getElement(), bindView.name());
         viewBindings.add(viewBindingInfo);
     }

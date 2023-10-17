@@ -53,7 +53,8 @@ public abstract class AnnotationReader {
             }
 
             T annotation = element.getAnnotation(annotationClass);
-            List<AnnotatedElement> targetsForClassName = annotatedElements.computeIfAbsent(element, key -> new ArrayList<>());
+            Element key = element.getKind() == ElementKind.CLASS ? element : element.getEnclosingElement();
+            List<AnnotatedElement> targetsForClassName = annotatedElements.computeIfAbsent(key, targetKey -> new ArrayList<>());
             AnnotatedElement annotationTarget = new AnnotatedElement(element, annotation);
             targetsForClassName.add(annotationTarget);
         }
