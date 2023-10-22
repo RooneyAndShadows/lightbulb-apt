@@ -1,2 +1,4 @@
 rootProject.name = 'lightbulb-annotation-processors'
+include 'lb-processor'
+include 'lb-plugin'
 

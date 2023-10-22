@@ -10,7 +10,7 @@ buildscript {
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'org.jetbrains.kotlin.jvm' version '1.7.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
 }
 
 group 'com.github.rooneyandshadows'
@@ -28,21 +28,25 @@ dependencies {
     api "com.github.rooneyandshadows:java-commons:1.0.7"
 }
 
-afterEvaluate {
-    publishing {
-        repositories {
-            mavenLocal()
-        }
-        publications {
-            release(MavenPublication) {
-                from components.java
-                groupId "$group"
-                version "$version"
-                artifactId "$artifactId"
+subprojects {
+    afterEvaluate {
+        publishing {
+            repositories {
+                mavenLocal()
+            }
+            publications {
+                "$project.name"(MavenPublication) {
+                    groupId project.group
+                    artifactId project.name
+                    version project.version
+                    from components.java
+                }
             }
         }
     }
 }
+
+
 
 compileKotlin {
     kotlinOptions {
