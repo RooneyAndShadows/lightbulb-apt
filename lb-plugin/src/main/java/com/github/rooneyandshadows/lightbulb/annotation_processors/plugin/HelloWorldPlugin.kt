@@ -13,7 +13,6 @@ class HelloWorldPlugin : Plugin<Project> {
             //configureHilt(project)
         }
 
-
         //val extension = project.extensions.create<HelloWorldExtension>("greeting")
         //val task = project.tasks.register("hello", SayHelloTask::class.java, extension)
         //project.tasks.getByName("preBuild").doFirst {

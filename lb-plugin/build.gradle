@@ -13,17 +13,16 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'com.android.application:com.android.application.gradle.plugin:8.0.2'
-    testImplementation platform('org.junit:junit-bom:5.9.1')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'org.javassist:javassist:3.29.2-GA'
 }
 
 gradlePlugin {
     plugins {
         create("com.github.rooneyandshadows.lightbulb.annotation_processors.plugin") {
             id = "com.github.rooneyandshadows.lightbulb.annotation_processors.plugin"
-            implementationClass= "com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.HelloWorldPlugin"
+            implementationClass = "com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.HelloWorldPlugin"
         }
     }
 }
