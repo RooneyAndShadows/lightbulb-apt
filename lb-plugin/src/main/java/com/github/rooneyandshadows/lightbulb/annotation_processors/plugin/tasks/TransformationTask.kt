@@ -11,10 +11,11 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.file.Paths
 
+@Suppress("MemberVisibilityCanBePrivate")
 abstract class TransformationTask : DefaultTask() {
     private var destinationDir: Any = Paths.get(project.buildDir.toString(), "transformations", this.name).toFile()
     private var classesDir: Any? = null
-    private var transformation: IClassTransformer? = null
+    var transformation: IClassTransformer? = null
 
     @get:InputFiles
     val classpath: FileCollection = project.files()
@@ -50,12 +51,8 @@ abstract class TransformationTask : DefaultTask() {
         this.didWork = workDone
     }
 
-    fun transform(closure: Closure<Unit>) {
-        transformation = GroovyClassTransformation(closure)
-    }
-
-    fun where(closure: Closure<Boolean>) {
-        transformation = GroovyClassTransformation(null, closure)
+    fun transform(transformClosure: Closure<Unit>, filterClosure: Closure<Boolean>?) {
+        transformation = GroovyClassTransformation(transformClosure, filterClosure)
     }
 
     fun from(dir: Any?) {

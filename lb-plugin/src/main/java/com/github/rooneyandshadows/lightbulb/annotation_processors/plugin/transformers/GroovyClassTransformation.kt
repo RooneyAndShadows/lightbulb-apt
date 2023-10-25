@@ -4,33 +4,16 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.api.IC
 import groovy.lang.Closure
 import javassist.CtClass
 
-class GroovyClassTransformation : IClassTransformer {
-    private var transform: Closure<Unit>
-    private var filter: Closure<Boolean>?
-
-    constructor(transform: Closure<Unit>) {
-        this.transform = transform
-        filter = null
-    }
-
-    constructor(transform: Closure<Unit>, filter: Closure<Boolean>?) {
-        this.transform = transform
-        this.filter = filter
-    }
+class GroovyClassTransformation(
+    private val transform: Closure<Unit>,
+    private val filter: Closure<Boolean>? = null
+) : IClassTransformer {
 
     override fun applyTransformations(ctClass: CtClass?) {
         transform.call(ctClass)
     }
 
     override fun shouldTransform(ctClass: CtClass?): Boolean {
-        return filter == null || filter!!.call(ctClass)
-    }
-
-    fun transform(transform: Closure<Unit>) {
-        this.transform = transform
-    }
-
-    fun where(filter: Closure<Boolean>?) {
-        this.filter = filter
+        return filter?.call(ctClass) ?: true
     }
 }
