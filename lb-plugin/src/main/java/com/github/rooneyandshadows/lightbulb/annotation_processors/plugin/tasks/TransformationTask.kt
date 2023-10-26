@@ -21,10 +21,7 @@ abstract class TransformationTask : DefaultTask() {
         get() = classesDir.map {
             return@map project.file(it)
         }
-
-
-    @get:InputFiles
-    val classFiles: FileCollection
+    private val classFiles: FileCollection
         get() {
             return classesDir.asFileTree.filter {
                 return@filter it.extension == "class"
