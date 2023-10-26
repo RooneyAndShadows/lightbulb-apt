@@ -5,6 +5,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transf
 import groovy.lang.Closure
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -14,22 +15,24 @@ import java.nio.file.Paths
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class TransformationTask : DefaultTask() {
     private var destinationDir: Any = Paths.get(project.buildDir.toString(), "transformations", this.name).toFile()
-    private var classesDir: Any? = null
-    var transformation: IClassTransformer? = null
+    private var classesDir: FileCollection = project.files()
 
-    @get:InputFiles
-    val classpath: FileCollection = project.files()
-
-    @get:InputFiles
-    val sources: FileCollection
-        get() {
-            if (classesDir == null) {
-                return project.files()
-            }
-            val result = project.fileTree(classesDir!!)
-            result.include("**/*.class")
-            return result
+    private val classpath: List<File>
+        get() = classesDir.map {
+            return@map project.file(it)
         }
+
+
+    @get:InputFiles
+    val classFiles: FileCollection
+        get() {
+            return classesDir.asFileTree.filter {
+                return@filter it.extension == "class"
+            }
+        }
+
+    @get:Input
+    var transformation: IClassTransformer? = null
 
     @OutputDirectory
     fun getDestinationDir(): File {
@@ -38,14 +41,24 @@ abstract class TransformationTask : DefaultTask() {
 
     @TaskAction
     fun exec() {
-        val classPath: MutableCollection<File> = classpath.files
-        if (classesDir != null) {
-            classPath.add(project.file(classesDir!!))
+
+        println("classesDir===========================")
+        classesDir.forEach {
+            println(it.path)
         }
+        println("classpath===========================")
+        classpath.forEach {
+            println(it.path)
+        }
+        println("sources===========================")
+        classFiles.forEach {
+            println(it.path)
+        }
+
         val workDone = TransformationAction(
             getDestinationDir(),
-            sources.files,
-            classPath,
+            classFiles.files,
+            classpath,
             transformation,
         ).execute()
         this.didWork = workDone
@@ -55,7 +68,7 @@ abstract class TransformationTask : DefaultTask() {
         transformation = GroovyClassTransformation(transformClosure, filterClosure)
     }
 
-    fun from(dir: Any?) {
+    fun from(dir: FileCollection) {
         classesDir = dir
     }
 
@@ -64,6 +77,6 @@ abstract class TransformationTask : DefaultTask() {
     }
 
     fun eachFile(closure: Closure<*>) {
-        closure.call(sources.files)
+        closure.call(classFiles.files)
     }
 }
