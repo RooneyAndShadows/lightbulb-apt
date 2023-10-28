@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformers
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.api.IClassTransformer
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation.IClassTransformer
 import groovy.lang.Closure
 import javassist.CtClass
 

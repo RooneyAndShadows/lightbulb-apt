@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.api
+package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation
 
 import javassist.CtClass
 

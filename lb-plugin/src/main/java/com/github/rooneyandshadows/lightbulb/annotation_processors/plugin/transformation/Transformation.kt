@@ -1,42 +1,39 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
+package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.api.IClassTransformer
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.Loader
 import org.gradle.api.GradleException
+import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import java.io.*
+import java.nio.file.Paths
 import java.util.*
 
-internal class TransformationAction(
-    private val destinationDir: File?,
-    sources: Collection<File>,
-    classpath: Collection<File>,
-    transformation: IClassTransformer?,
+@Suppress("MemberVisibilityCanBePrivate")
+class Transformation(
+    private val project: Project,
+    private val transformation: IClassTransformer? = null,
+    private val classesDir: FileCollection = project.files(),
+    private val outputDir: String = "transformations",
 ) {
-    private val transformation: IClassTransformer?
-    private val sources: MutableList<File> = mutableListOf()
-    private val classpath: MutableCollection<File> = mutableListOf()
-
-    init {
-        this.sources.addAll(sources)
-        this.classpath.addAll(classpath)
-        this.transformation = transformation
-    }
-
+    private val buildDir: String = project.buildDir.toString()
+    private val destinationDir: File
+        get() = project.file(Paths.get(buildDir, outputDir).toFile())
+    private val classpath: List<File>
+        get() = classesDir.map { return@map project.file(it) }
+    private val classFiles: FileCollection
+        get() = classesDir.asFileTree.filter { return@filter it.extension == "class" }
+    private val sources: List<File>
+        get() = classFiles.files.toList()
 
     fun execute(): Boolean {
-        // no op if no transformation defined
         if (transformation == null) {
             println("No transformation defined for this task")
             return false
         }
         if (sources.isEmpty()) {
             println("No source files.")
-            return false
-        }
-        if (destinationDir == null) {
-            println("No destination directory set")
             return false
         }
         try {
@@ -54,7 +51,7 @@ internal class TransformationAction(
         val pool: ClassPool = AnnotationLoadingClassPool()
 
         // set up the classpath for the classpool
-        if (!classpath.isEmpty()) {
+        if (classpath.isNotEmpty()) {
             for (f in classpath) {
                 pool.appendClassPath(f.toString())
             }
