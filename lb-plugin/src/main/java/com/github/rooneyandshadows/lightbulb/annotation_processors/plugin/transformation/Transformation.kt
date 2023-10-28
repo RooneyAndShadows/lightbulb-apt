@@ -13,10 +13,12 @@ import java.util.*
 @Suppress("MemberVisibilityCanBePrivate")
 class Transformation(
     private val project: Project,
-    private val transformation: IClassTransformer? = null,
-    private val classesDir: FileCollection = project.files(),
+    private val inputDir: String,
     private val outputDir: File,
+    private val transformation: IClassTransformer? = null,
 ) {
+    private val classesDir: FileCollection
+        get() = project.files(inputDir)
     private val classpath: List<File>
         get() = classesDir.map { return@map project.file(it) }
     private val classFiles: FileCollection
@@ -72,7 +74,6 @@ class Transformation(
 
     private fun processClass(clazz: CtClass) {
         try {
-
             if (transformation!!.shouldTransform(clazz)) {
                 clazz.defrost()
                 transformation.applyTransformations(clazz)

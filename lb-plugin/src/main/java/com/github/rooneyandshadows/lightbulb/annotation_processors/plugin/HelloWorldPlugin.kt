@@ -1,7 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 
-import com.android.build.gradle.AppPlugin
-import com.android.build.gradle.LibraryPlugin
+import com.android.build.gradle.*
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TransformationsTask
 import org.gradle.api.Plugin
@@ -18,19 +17,17 @@ class HelloWorldPlugin : Plugin<Project> {
         if (configured) {
             val extension = project.extensions.create<HelloWorldExtension>("greeting")
             val task = project.tasks.register("hello", SayHelloTask::class.java, extension)
-            val transformationsTask = project.tasks.register("transformations", TransformationsTask::class.java).get()
+            val transformationsTask = project.tasks.register(
+                "transformations",
+                TransformationsTask::class.java
+            ).get()
 
-                project.tasks.getByName("compileJava").doLast {
-                    transformationsTask.execute()
-                    //val transformation = Transformation(project, MyTransformation(), from)
-                    //transformation.execute()
-                    // task1.get().exec()
-                }
-
-                project.tasks.getByName("compileJava").doLast {
-                    task.get().greet()
-                }
-
+            project.tasks.getByName("compileJava").doLast {
+                transformationsTask.execute()
+            }
+            project.tasks.getByName("compileJava").doLast {
+                task.get().greet()
+            }
         }
     }
 
@@ -46,6 +43,7 @@ class HelloWorldPlugin : Plugin<Project> {
         if (!isAndroidProject) {
             //throw IllegalStateException("lb-compile Gradle plugin should be only applied to an Android projects.")
         }
+
         val dependencyNotation = "com.github.rooneyandshadows.lightbulb-annotation-processors:lb-processor:%s"
         if (isKotlinProject) {
             if (!hasKaptApplied) {

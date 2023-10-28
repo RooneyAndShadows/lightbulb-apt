@@ -1,40 +1,26 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.MyTransformation
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation.Transformation
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
-import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.io.File
-import java.nio.file.Paths
 
 
 @Suppress("unused")
 abstract class TransformationsTask : DefaultTask() {
     private val transformations: Transformations
-    private val classesDir: FileCollection
-        get() {
-            val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
-            return sourceSets.asMap["main"]!!.output
-        }
+    private val outputs: SourceOutputs
+        get() = SourceOutputs(project)
 
     @get:InputFiles
-    val classFiles: FileCollection
-        get() {
-            return classesDir.asFileTree.filter { return@filter it.extension == "class" }
-        }
+    val classFiles: List<File>
+        get() = outputs.classFiles
 
     @get:OutputDirectory
     val destinationDir: File
-        get() {
-            val buildDir = project.buildDir.toString()
-            return project.file(Paths.get(buildDir, "transformations").toFile())
-        }
+        get() = outputs.destinationsDir
 
 
     init {
