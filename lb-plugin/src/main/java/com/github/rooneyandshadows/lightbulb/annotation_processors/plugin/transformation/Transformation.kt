@@ -15,11 +15,8 @@ class Transformation(
     private val project: Project,
     private val transformation: IClassTransformer? = null,
     private val classesDir: FileCollection = project.files(),
-    private val outputDir: String = "transformations",
+    private val outputDir: File,
 ) {
-    private val buildDir: String = project.buildDir.toString()
-    private val destinationDir: File
-        get() = project.file(Paths.get(buildDir, outputDir).toFile())
     private val classpath: List<File>
         get() = classesDir.map { return@map project.file(it) }
     private val classFiles: FileCollection
@@ -75,10 +72,11 @@ class Transformation(
 
     private fun processClass(clazz: CtClass) {
         try {
+
             if (transformation!!.shouldTransform(clazz)) {
                 clazz.defrost()
                 transformation.applyTransformations(clazz)
-                clazz.writeFile(destinationDir.toString())
+                clazz.writeFile(outputDir.path)
             }
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)
