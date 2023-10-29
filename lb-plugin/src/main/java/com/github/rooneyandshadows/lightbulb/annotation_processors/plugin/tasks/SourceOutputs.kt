@@ -2,21 +2,19 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
 
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.api.tasks.SourceSetOutput
 import java.io.File
-import java.nio.file.Path
 import java.nio.file.Paths
 
 class SourceOutputs(private val project: Project) {
     private val buildDir = project.buildDir.toString()
     private val destinationRoot = "transformations"
     val destinationsDir = project.file(Paths.get(buildDir, destinationRoot))
-    val outputs: Map<String, SourceSetOutput>
+    val outputs: Map<String, String>
         get() {
-            val outputs: MutableMap<String, SourceSetOutput> = mutableMapOf()
+            val outputs: MutableMap<String, String> = mutableMapOf()
             val sourceSetContainer: SourceSetContainer = project.extensions.getByType(SourceSetContainer::class.java)
-            sourceSetContainer.forEach {
-                outputs[it.name] = it.output
+            sourceSetContainer.forEach { it ->
+                outputs[it.name] = it.output.asPath
             }
             return outputs
         }
@@ -29,12 +27,12 @@ class SourceOutputs(private val project: Project) {
             }
             return classFiles;
         }
-    val destinations: Map<String, Path>
+    val destinations: Map<String, String>
         get() {
             val rootDir = "transformations"
-            val destinations: MutableMap<String, Path> = mutableMapOf()
+            val destinations: MutableMap<String, String> = mutableMapOf()
             outputs.forEach { (name, output) ->
-                val path = Paths.get(buildDir, rootDir, name)
+                val path = Paths.get(buildDir, rootDir, name).toString()
                 destinations[name] = path
             }
             return destinations
