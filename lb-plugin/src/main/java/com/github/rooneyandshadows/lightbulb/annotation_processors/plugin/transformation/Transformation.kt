@@ -1,23 +1,32 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.SourceSetTransformation
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.Loader
 import org.gradle.api.GradleException
+import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import java.io.*
+import java.nio.file.Paths
 import java.util.*
 
 @Suppress("MemberVisibilityCanBePrivate")
 class Transformation(
-    private val sourceSets: List<SourceSetTransformation>,
+    private val project: Project,
+    private val inputDir: String,
+    private val outputDir: File,
     private val transformation: IClassTransformer? = null,
 ) {
+    private val classesDir: FileCollection
+        get() = project.files(inputDir)
+    private val classpath: List<File>
+        get() = classesDir.map { return@map project.file(it) }
+    private val classFiles: FileCollection
+        get() = classesDir.asFileTree.filter { return@filter it.extension == "class" }
     private val sources: List<File>
-        get() = sourceSets.flatMap { return@flatMap it.classFiles }
+        get() = classFiles.files.toList()
 
     fun execute(): Boolean {
-        println("Executing transformations: ${transformation?.javaClass?.name}")
         if (transformation == null) {
             println("No transformation defined for this task")
             return false
@@ -26,27 +35,29 @@ class Transformation(
             println("No source files.")
             return false
         }
-        sourceSets.forEach { sourceSet ->
-            try {
-                val loadedClasses = preloadClasses(sourceSet)
-                process(loadedClasses, sourceSet.destinationDir)
-            } catch (e: Exception) {
-                throw GradleException("Could not execute transformation", e)
-            }
+        try {
+            val loadedClasses = preloadClasses()
+            process(loadedClasses)
+        } catch (e: Exception) {
+            throw GradleException("Could not execute transformation", e)
         }
         return true
     }
 
 
-    private fun preloadClasses(sourceSet: SourceSetTransformation): List<CtClass> {
+    private fun preloadClasses(): List<CtClass> {
         val loadedClasses: MutableList<CtClass> = LinkedList()
         val pool: ClassPool = AnnotationLoadingClassPool()
 
         // set up the classpath for the classpool
-        pool.appendClassPath(sourceSet.classesDir)
+        if (classpath.isNotEmpty()) {
+            for (f in classpath) {
+                pool.appendClassPath(f.toString())
+            }
+        }
 
         // add the files to process
-        sourceSet.classFiles.forEach { file ->
+        sources.forEach { file ->
             if (!file.isDirectory) {
                 loadedClasses.add(loadClassFile(pool, file))
             }
@@ -55,18 +66,18 @@ class Transformation(
         return loadedClasses
     }
 
-    private fun process(classes: Collection<CtClass>, outputDirectory: String) {
+    private fun process(classes: Collection<CtClass>) {
         for (clazz in classes) {
-            processClass(clazz, outputDirectory)
+            processClass(clazz)
         }
     }
 
-    private fun processClass(clazz: CtClass, outputDirectory: String) {
+    private fun processClass(clazz: CtClass) {
         try {
             if (transformation!!.shouldTransform(clazz)) {
                 clazz.defrost()
                 transformation.applyTransformations(clazz)
-                clazz.writeFile(outputDirectory)
+                clazz.writeFile(outputDir.path)
             }
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)
