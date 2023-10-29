@@ -10,23 +10,23 @@ import java.io.File
 
 @Suppress("unused")
 abstract class TransformationsTask : DefaultTask() {
-    private val transformations = Transformations(project)
+    private val transformations: Transformations
+    private val outputs: SourceOutputs
+        get() = SourceOutputs(project)
 
     @get:InputFiles
     val classFiles: List<File>
-        get() {
-            transformations.sourceSetTransformations.forEach {
-                println(it.name + " - >" +it.classesDir)
-            }
-            return transformations.classFiles
-        }
+        get() = outputs.classFiles
 
     @get:OutputDirectory
     val destinationDir: File
-        get() = project.file(transformations.rootDestinationDir)
+        get() = outputs.destinationsDir
+
 
     init {
-        transformations.register(MyTransformation())
+        transformations = Transformations(project, classesDir, destinationDir).apply {
+            register(MyTransformation())
+        }
     }
 
     override fun getGroup(): String {
