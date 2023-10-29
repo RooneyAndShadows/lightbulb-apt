@@ -14,12 +14,8 @@ abstract class TransformationsTask : DefaultTask() {
 
     @get:InputFiles
     val classFiles: List<File>
-        get() {
-            transformations.sourceSetTransformations.forEach {
-                println(it.name + " - >" +it.classesDir)
-            }
-            return transformations.classFiles
-        }
+        get() = transformations.classFiles
+
 
     @get:OutputDirectory
     val destinationDir: File

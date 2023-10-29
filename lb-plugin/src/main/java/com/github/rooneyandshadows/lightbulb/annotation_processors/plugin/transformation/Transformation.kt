@@ -1,73 +1,91 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.SourceSetTransformation
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.Loader
 import org.gradle.api.GradleException
+import org.gradle.api.file.FileCollection
 import java.io.*
-import java.util.*
+import java.nio.file.Paths
 
 @Suppress("MemberVisibilityCanBePrivate")
 class Transformation(
-    private val sourceSets: List<SourceSetTransformation>,
+    private val buildDir: String,
+    private val rootDestinationDir: String,
+    private val classPathDirectories: List<FileCollection>,
     private val transformation: IClassTransformer? = null,
 ) {
-    private val sources: List<File>
-        get() = sourceSets.flatMap { return@flatMap it.classFiles }
 
     fun execute(): Boolean {
         println("Executing transformations: ${transformation?.javaClass?.name}")
+
         if (transformation == null) {
             println("No transformation defined for this task")
             return false
         }
-        if (sources.isEmpty()) {
-            println("No source files.")
-            return false
-        }
-        sourceSets.forEach { sourceSet ->
-            try {
-                val loadedClasses = preloadClasses(sourceSet)
-                process(loadedClasses, sourceSet.destinationDir)
-            } catch (e: Exception) {
-                throw GradleException("Could not execute transformation", e)
+
+        try {
+            val loadedClasses = preloadClasses()
+
+            if (loadedClasses.isEmpty()) {
+                println("No source files.")
+                return false
             }
+
+            process(loadedClasses)
+        } catch (e: Exception) {
+            throw GradleException("Could not execute transformation", e)
         }
+
         return true
     }
 
 
-    private fun preloadClasses(sourceSet: SourceSetTransformation): List<CtClass> {
-        val loadedClasses: MutableList<CtClass> = LinkedList()
+    private fun preloadClasses(): Map<String, List<CtClass>> {
+        val loadedClasses: MutableMap<String, MutableList<CtClass>> = mutableMapOf()
         val pool: ClassPool = AnnotationLoadingClassPool()
 
         // set up the classpath for the classpool
-        pool.appendClassPath(sourceSet.classesDir)
+        classPathDirectories.forEach { classpath ->
+            pool.appendClassPath(classpath.asPath)
+        }
 
-        // add the files to process
-        sourceSet.classFiles.forEach { file ->
-            if (!file.isDirectory) {
-                loadedClasses.add(loadClassFile(pool, file))
+        classPathDirectories.forEach { fileCollection ->
+            val inputPath = fileCollection.asPath
+            val pathWithoutBuild = inputPath.replace(buildDir, "")
+            val outputDir = Paths.get(rootDestinationDir, pathWithoutBuild).toString()
+            val classes = loadedClasses.getOrPut(outputDir) { mutableListOf() }
+
+            val classFiles = fileCollection.asFileTree.filter { file -> return@filter file.extension == "class" }
+                .toList()
+            classFiles.forEach { file ->
+                val ctClass = loadClassFile(pool, file)
+                classes.add(ctClass)
             }
         }
+        // add the files to process
+
 
         return loadedClasses
     }
 
-    private fun process(classes: Collection<CtClass>, outputDirectory: String) {
-        for (clazz in classes) {
-            processClass(clazz, outputDirectory)
+    private fun process(classes: Map<String, List<CtClass>>) {
+        classes.forEach { (classDirectory, classesList) ->
+            classesList.forEach { clazz ->
+                processClass(clazz, classDirectory)
+            }
+
         }
     }
 
-    private fun processClass(clazz: CtClass, outputDirectory: String) {
+    private fun processClass(clazz: CtClass, outputDir: String) {
         try {
             if (transformation!!.shouldTransform(clazz)) {
                 clazz.defrost()
                 transformation.applyTransformations(clazz)
-                clazz.writeFile(outputDirectory)
+                clazz.writeFile(outputDir)
             }
+            // println("OUTPUT:" + outputDirectory)
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)
         }

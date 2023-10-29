@@ -22,9 +22,9 @@ class HelloWorldPlugin : Plugin<Project> {
                 TransformationsTask::class.java
             ).get()
 
-            project.tasks.getByName("compileJava").doLast {
-                transformationsTask.execute()
-            }
+            //project.tasks.getByName("compileJava").doLast {
+            //    transformationsTask.execute()
+            //}
             project.tasks.getByName("compileJava").doLast {
                 task.get().greet()
             }
