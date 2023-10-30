@@ -14,12 +14,12 @@ abstract class TransformationsTask : DefaultTask() {
 
     @get:InputFiles
     val classFiles: List<File>
-        get() = transformations.classFiles
+        get() = transformations.getTransformationClassFiles()
 
 
     @get:OutputDirectory
     val destinationDir: File
-        get() = project.file(transformations.rootDestinationDir)
+        get() = transformations.getRootDestinationDir()
 
     init {
         transformations.register(MyTransformation())

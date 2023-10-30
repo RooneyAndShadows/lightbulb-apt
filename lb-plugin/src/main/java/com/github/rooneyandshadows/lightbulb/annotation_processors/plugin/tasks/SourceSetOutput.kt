@@ -17,9 +17,17 @@ class SourceSetOutput(
 
     init {
         val targetOutputs = listOf(sourceSet.output.classesDirs, sourceSet.output.generatedSourcesDirs)
-        outputCollections = targetOutputs.flatMap { it.files }.map { project.files(it) }
-        classFiles = outputCollections.map {
-            it.asFileTree.filter { file -> file.extension == "class" }.toList()
+        outputCollections = mergeOutputs(targetOutputs)
+        classFiles = extractClassFiles()
+    }
+
+    private fun mergeOutputs(fileCollection: List<FileCollection>): List<FileCollection> {
+        return fileCollection.flatMap { it.files }.map { project.files(it) }
+    }
+
+    private fun extractClassFiles(): List<File> {
+        return outputCollections.map { fileCollection ->
+            fileCollection.asFileTree.filter { file -> file.extension == "class" }
         }.flatten()
     }
 
@@ -28,8 +36,12 @@ class SourceSetOutput(
             return project.extensions.getByType(SourceSetContainer::class.java).map { SourceSetOutput(project, it) }
         }
 
-        fun classFiles(vararg outputs: SourceSetOutput): List<File> {
+        fun classFiles(outputs: List<SourceSetOutput>): List<File> {
+            return outputs.map { output -> output.classFiles }.flatten()
+        }
 
+        fun outputCollections(outputs: List<SourceSetOutput>): List<FileCollection> {
+            return outputs.map { return@map it.outputCollections }.flatten()
         }
     }
 }
