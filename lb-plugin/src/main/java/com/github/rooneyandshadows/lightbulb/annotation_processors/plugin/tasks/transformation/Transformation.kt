@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation
+package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation
 
 import javassist.ClassPool
 import javassist.CtClass
@@ -13,17 +13,11 @@ class Transformation(
     private val buildDir: String,
     private val rootDestinationDir: String,
     private val classPathDirectories: List<FileCollection>,
-    private val transformation: IClassTransformer? = null,
+    private val transformation: IClassTransformer
 ) {
 
     fun execute(): Boolean {
-        println("Executing transformations: ${transformation?.javaClass?.name}")
-
-        if (transformation == null) {
-            println("No transformation defined for this task")
-            return false
-        }
-
+        println("Executing transformations: ${transformation.javaClass.name}")
         try {
             val loadedClasses = preloadClasses()
 
@@ -40,55 +34,55 @@ class Transformation(
         return true
     }
 
-
-    private fun preloadClasses(): Map<String, List<CtClass>> {
-        val loadedClasses: MutableMap<String, MutableList<CtClass>> = mutableMapOf()
-        val pool: ClassPool = AnnotationLoadingClassPool()
-
-        // set up the classpath for the classpool
-        classPathDirectories.forEach { classpath ->
-            pool.appendClassPath(classpath.asPath)
-        }
-
-        classPathDirectories.forEach { fileCollection ->
-            val inputPath = fileCollection.asPath
-            val pathWithoutBuild = inputPath.replace(buildDir, "")
-            val outputDir = Paths.get(rootDestinationDir, pathWithoutBuild).toString()
-            val classes = loadedClasses.getOrPut(outputDir) { mutableListOf() }
-
-            val classFiles = fileCollection.asFileTree.filter { file -> return@filter file.extension == "class" }
-                .toList()
-            classFiles.forEach { file ->
-                val ctClass = loadClassFile(pool, file)
-                classes.add(ctClass)
-            }
-        }
-        // add the files to process
-
-
-        return loadedClasses
-    }
-
     private fun process(classes: Map<String, List<CtClass>>) {
-        classes.forEach { (classDirectory, classesList) ->
+        classes.forEach { (outputDirectory, classesList) ->
             classesList.forEach { clazz ->
-                processClass(clazz, classDirectory)
+                processClass(clazz, outputDirectory)
             }
-
         }
     }
 
     private fun processClass(clazz: CtClass, outputDir: String) {
         try {
-            if (transformation!!.shouldTransform(clazz)) {
-                clazz.defrost()
-                transformation.applyTransformations(clazz)
-                clazz.writeFile(outputDir)
+            if (!transformation.shouldTransform(clazz)) {
+                return
             }
-            // println("OUTPUT:" + outputDirectory)
+            clazz.defrost()
+            transformation.applyTransformations(clazz)
+            clazz.writeFile(outputDir)
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)
         }
+    }
+
+    fun preloadClasses(): Map<String, List<CtClass>> {
+        val classPool: ClassPool = AnnotationLoadingClassPool()
+        // set up the classpath for the classpool
+        classPathDirectories.forEach { classpath ->
+            classPool.appendClassPath(classpath.asPath)
+        }
+        // add the files to process
+        val allLoaded = mutableMapOf<String, List<CtClass>>()
+        classPathDirectories.forEach { fileCollection ->
+            val outputDir = getOutputDirForClassPath(fileCollection)
+            val loaded = loadClassesForClassPath(classPool, fileCollection)
+            allLoaded.computeIfAbsent(outputDir) { mutableListOf() }.apply {
+                (this as MutableList<CtClass>).addAll(loaded)
+            }
+        }
+        return allLoaded
+    }
+
+    private fun loadClassesForClassPath(classPool: ClassPool, classPath: FileCollection): List<CtClass> {
+        return classPath.asFileTree.filter { file ->
+            return@filter file.extension == "class"
+        }.map { loadClassFile(classPool, it) }
+    }
+
+    private fun getOutputDirForClassPath(classPath: FileCollection): String {
+        val inputPath = classPath.asPath
+        val pathWithoutBuild = inputPath.replace(buildDir, "")
+        return Paths.get(rootDestinationDir, pathWithoutBuild).toString()
     }
 
     private fun loadClassFile(pool: ClassPool, classFile: File): CtClass {

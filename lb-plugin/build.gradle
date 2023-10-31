@@ -21,9 +21,9 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        create("com.github.rooneyandshadows.lightbulb.annotation_processors.plugin") {
-            id = "com.github.rooneyandshadows.lightbulb.annotation_processors.plugin"
-            implementationClass = "com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.HelloWorldPlugin"
+        create("lightbulb-compile-plugin") {
+            id = "lb-compile"
+            implementationClass = "com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.TransformationPlugin"
         }
     }
 }

@@ -2,12 +2,12 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 
 import com.android.build.gradle.*
 import com.android.build.gradle.api.AndroidBasePlugin
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TransformationsTask
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation.TransformationsTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.create
 
-class HelloWorldPlugin : Plugin<Project> {
+@Suppress("unused", "UNUSED_VARIABLE")
+class TransformationPlugin : Plugin<Project> {
     private val kaptPluginId: String = "org.jetbrains.kotlin.kapt"
     private val kotlinAndroidPluginId: String = "org.jetbrains.kotlin.android"
     private var configured = false
@@ -15,18 +15,9 @@ class HelloWorldPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         this.configure(project)
         if (configured) {
-            val extension = project.extensions.create<HelloWorldExtension>("greeting")
-            val task = project.tasks.register("hello", SayHelloTask::class.java, extension)
-            val transformationsTask = project.tasks.register(
-                "transformations",
-                TransformationsTask::class.java
-            ).get()
-
-            //project.tasks.getByName("compileJava").doLast {
-            //    transformationsTask.execute()
-            //}
+            val transformationsTask = project.tasks.register("transformations", TransformationsTask::class.java).get()
             project.tasks.getByName("compileJava").doLast {
-                task.get().greet()
+                transformationsTask.execute()
             }
         }
     }

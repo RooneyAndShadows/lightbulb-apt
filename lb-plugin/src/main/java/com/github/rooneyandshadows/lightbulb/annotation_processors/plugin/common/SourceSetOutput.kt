@@ -1,8 +1,7 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
+package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common
 
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import java.io.File
@@ -11,7 +10,6 @@ class SourceSetOutput(
     private val project: Project,
     private val sourceSet: SourceSet,
 ) {
-    val name: String = sourceSet.name
     val outputCollections: List<FileCollection>
     val classFiles: List<File>
 
