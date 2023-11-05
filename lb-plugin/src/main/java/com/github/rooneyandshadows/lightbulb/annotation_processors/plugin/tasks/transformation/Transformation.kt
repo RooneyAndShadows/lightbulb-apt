@@ -21,6 +21,9 @@ class Transformation(
 
         println("Executing transformations: ${transformation.javaClass.name}")
         try {
+            classPath.forEach {
+                println(it.path)
+            }
             val loadedClasses = preloadClasses(classPath)
 
             if (loadedClasses.isEmpty()) {

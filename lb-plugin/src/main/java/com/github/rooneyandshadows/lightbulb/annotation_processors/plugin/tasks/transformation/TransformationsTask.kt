@@ -3,7 +3,9 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
 import com.github.rooneyandshadows.lightbulb.annotation_processors.MyTransformation
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.VariantOutput
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -22,6 +24,9 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
     private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variantOutput.name).toString()
     private val transformationRegistry =
         TransformationRegistry(buildDir, rootDestinationDir, variantOutput.classPath)
+
+    @get:Classpath
+    abstract val classPath: ConfigurableFileCollection
 
     @get:InputFiles
     val classFiles: List<File>
