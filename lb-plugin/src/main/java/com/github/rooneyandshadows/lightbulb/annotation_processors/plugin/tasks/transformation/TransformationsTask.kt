@@ -2,13 +2,16 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.MyTransformation
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.SourceSetOutput
-import org.gradle.api.Action
 import org.gradle.api.DefaultTask
-import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 
 
 @Suppress("unused")
@@ -24,7 +27,6 @@ abstract class TransformationsTask : DefaultTask() {
     val classFiles: List<File>
         get() = SourceSetOutput.classFiles(sourceSetOutputs)
 
-
     @get:OutputDirectory
     val destinationDir: File
         get() = project.file(rootDestinationDir)
@@ -33,6 +35,7 @@ abstract class TransformationsTask : DefaultTask() {
         transformationRegistry.register(MyTransformation())
     }
 
+    @Override
     override fun getGroup(): String {
         return "lightbulb"
     }
@@ -40,9 +43,35 @@ abstract class TransformationsTask : DefaultTask() {
     @TaskAction
     fun execute() {
         transformationRegistry.execute()
+        val source = Paths.get(rootDestinationDir).toFile()
+        val target = Paths.get(buildDir).toFile()
+        copyFolder(source, target)
     }
 
-    override fun doLast(action: Action<in Task>): Task {
-        return super.doLast(action)
+    private fun copyFolder(src: File, dest: File) {
+        if (!src.isDirectory) return
+        if (dest.exists()) {
+            if (!dest.isDirectory) {
+                //System.out.println("destination not a folder " + dest);
+                return
+            }
+        } else {
+            dest.mkdir()
+        }
+        val files = src.listFiles()
+        if (files == null || files.isEmpty()) return
+        for (file in files) {
+            val fileDest = File(dest, file.name)
+            //System.out.println(fileDest.getAbsolutePath());
+            if (file.isDirectory) {
+                copyFolder(file, fileDest)
+            } else {
+                try {
+                    Files.copy(file.toPath(), fileDest.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                } catch (e: IOException) {
+                    //e.printStackTrace();
+                }
+            }
+        }
     }
 }

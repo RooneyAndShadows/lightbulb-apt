@@ -17,28 +17,31 @@ class Transformation(
 ) {
 
     fun execute(): Boolean {
+
         println("Executing transformations: ${transformation.javaClass.name}")
         try {
-            val loadedClasses = preloadClasses()
+            classPathDirectories.forEach { targetClasspath ->
+                val outputDir = getOutputDirForClassPath(targetClasspath)
+                val loadedClasses = preloadClasses(targetClasspath)
 
-            if (loadedClasses.isEmpty()) {
-                println("No source files.")
-                return false
+                if (loadedClasses.isEmpty()) {
+                    println("No source files.")
+                    return false
+                }
+
+                process(outputDir, loadedClasses)
             }
-
-            process(loadedClasses)
         } catch (e: Exception) {
+            e.printStackTrace()
             throw GradleException("Could not execute transformation", e)
         }
 
         return true
     }
 
-    private fun process(classes: Map<String, List<CtClass>>) {
-        classes.forEach { (outputDirectory, classesList) ->
-            classesList.forEach { clazz ->
-                processClass(clazz, outputDirectory)
-            }
+    private fun process(outputDir: String, classesList: List<CtClass>) {
+        classesList.forEach { clazz ->
+            processClass(clazz, outputDir)
         }
     }
 
@@ -55,22 +58,17 @@ class Transformation(
         }
     }
 
-    fun preloadClasses(): Map<String, List<CtClass>> {
+    fun preloadClasses(targetClassPath: FileCollection): List<CtClass> {
         val classPool: ClassPool = AnnotationLoadingClassPool()
         // set up the classpath for the classpool
         classPathDirectories.forEach { classpath ->
             classPool.appendClassPath(classpath.asPath)
         }
         // add the files to process
-        val allLoaded = mutableMapOf<String, List<CtClass>>()
-        classPathDirectories.forEach { fileCollection ->
-            val outputDir = getOutputDirForClassPath(fileCollection)
-            val loaded = loadClassesForClassPath(classPool, fileCollection)
-            allLoaded.computeIfAbsent(outputDir) { mutableListOf() }.apply {
-                (this as MutableList<CtClass>).addAll(loaded)
-            }
-        }
-        return allLoaded
+        val classes = mutableListOf<CtClass>()
+        val loaded = loadClassesForClassPath(classPool, targetClassPath)
+        classes.addAll(loaded)
+        return loaded
     }
 
     private fun loadClassesForClassPath(classPool: ClassPool, classPath: FileCollection): List<CtClass> {

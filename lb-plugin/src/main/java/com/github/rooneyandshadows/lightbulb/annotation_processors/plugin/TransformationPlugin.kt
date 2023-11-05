@@ -2,9 +2,12 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 
 import com.android.build.gradle.*
 import com.android.build.gradle.api.AndroidBasePlugin
+import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation.TransformationsTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.Copy
+import java.nio.file.Files
 
 @Suppress("unused", "UNUSED_VARIABLE")
 class TransformationPlugin : Plugin<Project> {
@@ -15,9 +18,14 @@ class TransformationPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         this.configure(project)
         if (configured) {
-            val transformationsTask = project.tasks.register("transformations", TransformationsTask::class.java).get()
-            project.tasks.getByName("compileJava").doLast {
-                transformationsTask.execute()
+            val transformationsTask = project.tasks.register(
+                "transformations",
+                TransformationsTask::class.java
+            ) {
+                dependsOn("compileJava")
+            }.get()
+            project.tasks.getByName("classes") {
+                dependsOn("transformations")
             }
         }
     }
