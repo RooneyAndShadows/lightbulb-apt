@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.MyTransformation
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.SourceSetOutput
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.VariantOutput
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.InputFiles
@@ -12,20 +12,20 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import javax.inject.Inject
 
 
 @Suppress("unused")
-abstract class TransformationsTask : DefaultTask() {
+abstract class TransformationsTask @Inject constructor(private val variantOutput: VariantOutput) : DefaultTask() {
     private val buildDir: String = project.buildDir.toString()
     private val destinationRoot: String = "transformations"
-    private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot).toString()
-    private val sourceSetOutputs: List<SourceSetOutput> = SourceSetOutput.from(project)
-    private val outputFileCollections: List<FileCollection> = SourceSetOutput.outputCollections(sourceSetOutputs)
-    private val transformationRegistry = TransformationRegistry(buildDir, rootDestinationDir, outputFileCollections)
+    private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variantOutput.name).toString()
+    private val transformationRegistry =
+        TransformationRegistry(buildDir, rootDestinationDir, variantOutput.classPath)
 
     @get:InputFiles
     val classFiles: List<File>
-        get() = SourceSetOutput.classFiles(sourceSetOutputs)
+        get() = variantOutput.classFiles
 
     @get:OutputDirectory
     val destinationDir: File
