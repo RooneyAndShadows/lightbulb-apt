@@ -21,9 +21,6 @@ class Transformation(
 
         println("Executing transformations: ${transformation.javaClass.name}")
         try {
-            classPath.forEach {
-                println(it.path)
-            }
             val loadedClasses = preloadClasses(classPath)
 
             if (loadedClasses.isEmpty()) {
@@ -44,7 +41,6 @@ class Transformation(
     private fun process(classesList: List<Pair<CtClass, String>>) {
         classesList.forEach { classWithInput ->
             val inputDir = classWithInput.second
-            println(inputDir)
             val clazz = classWithInput.first
             val outputDir = getOutputDirForFilePath(inputDir)
 
@@ -84,7 +80,7 @@ class Transformation(
             .map { file ->
                 val clazz = loadClassFile(classPool, file)
                 val inputDir = getRootDirOfInputClassFile(file, clazz)
-                println(inputDir)
+
                 return@map Pair(clazz, inputDir)
             }
     }
@@ -96,7 +92,6 @@ class Transformation(
             .split(".")
             .toTypedArray()
         val packageNameAsDir = Paths.get("", *packageComponents).toString()
-        println(packageNameAsDir)
 
         return inputClassFile.parent
             .normaliseLineSeparators()
@@ -105,9 +100,6 @@ class Transformation(
 
     private fun getOutputDirForFilePath(filePath: String): String {
         val pathWithoutBuild = filePath.replace(buildDir, "")
-        //println("ROOT" + rootDestinationDir)
-        //println("BUILDDIR" + buildDir)
-        //println("PATHWITHOUTBUILD" + pathWithoutBuild)
         return Paths.get(rootDestinationDir, pathWithoutBuild).toString()
     }
 

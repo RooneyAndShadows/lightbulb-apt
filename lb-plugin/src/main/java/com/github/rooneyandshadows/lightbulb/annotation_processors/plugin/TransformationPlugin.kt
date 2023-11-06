@@ -2,6 +2,7 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 
 import com.android.build.gradle.*
 import com.android.build.gradle.api.AndroidBasePlugin
+import com.android.build.gradle.internal.TaskManager
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.VariantOutput
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation.TransformationsTask
 import org.gradle.api.Plugin
@@ -22,6 +23,9 @@ class TransformationPlugin : Plugin<Project> {
             project.afterEvaluate {
                 val variantsOutput = VariantOutput.from(project)
                 variantsOutput.forEach { variant ->
+                    variant.variant.compileConfiguration.artifacts.files.forEach {
+                        println(it.path)
+                    }
                     val componentClasses = project.files(
                         project.buildDir.resolve("transformations/${variant.name}/")
                     )
@@ -31,9 +35,7 @@ class TransformationPlugin : Plugin<Project> {
                         transformationTaskName,
                         TransformationsTask::class.java,
                         variant
-                    ).get().apply {
-                        classPath.setFrom(variant.classPath)
-                    }
+                    ).get()
                     componentClasses.builtBy(transformationsTask)
                     variant.variant.registerPostJavacGeneratedBytecode(componentClasses)
                 }

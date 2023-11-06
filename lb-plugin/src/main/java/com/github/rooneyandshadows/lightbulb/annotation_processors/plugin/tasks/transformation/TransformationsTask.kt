@@ -3,7 +3,6 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
 import com.github.rooneyandshadows.lightbulb.annotation_processors.MyTransformation
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.VariantOutput
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
@@ -26,7 +25,8 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
         TransformationRegistry(buildDir, rootDestinationDir, variantOutput.classPath)
 
     @get:Classpath
-    abstract val classPath: ConfigurableFileCollection
+    val classPath: FileCollection
+        get() = variantOutput.classPath
 
     @get:InputFiles
     val classFiles: List<File>
@@ -51,6 +51,7 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
         val source = Paths.get(rootDestinationDir).toFile()
         val target = Paths.get(buildDir).toFile()
         copyFolder(source, target)
+        deleteDirectory(source)
     }
 
     private fun copyFolder(src: File, dest: File) {
@@ -78,5 +79,15 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
                 }
             }
         }
+    }
+
+    private fun deleteDirectory(directoryToBeDeleted: File): Boolean {
+        val allContents = directoryToBeDeleted.listFiles()
+        if (allContents != null) {
+            for (file in allContents) {
+                deleteDirectory(file)
+            }
+        }
+        return directoryToBeDeleted.delete()
     }
 }

@@ -7,20 +7,27 @@ import com.android.build.gradle.TestExtension
 import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.work.Incremental
 import java.io.File
 
 @Suppress("DEPRECATION")
-class VariantOutput(val variant: BaseVariant, bootClassPath: List<File>) {
+class VariantOutput(val variant: BaseVariant, private val bootClassPath: List<File>) {
     val name: String = variant.name
     val classPath: FileCollection
+        get() {
+            //TODO get kotlin output get like classPath.plus(variant.javaCompileProvider.get().outputs.files)
+            var classPath = variant.javaCompileProvider.get().classpath
+            classPath = classPath.plus(variant.javaCompileProvider.get().outputs.files)
+            classPath.plus(bootClassPath)
+            return classPath
+        }
     val classFiles: List<File>
+        get() {
+            return extractClassFiles()
+        }
 
-    init {
-        classPath = variant.javaCompileProvider.get().classpath
-        classPath.plus(bootClassPath)
-        classFiles = extractClassFiles()
-    }
 
     private fun extractClassFiles(): List<File> {
         return classPath.asFileTree.filter { file -> file.extension == "class" }.toList()

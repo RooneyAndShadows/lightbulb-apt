@@ -2,7 +2,6 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation.IClassTransformer
 import javassist.CtClass
-import javassist.CtMethod
 
 
 internal class MyTransformation : IClassTransformer {
