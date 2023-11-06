@@ -1,10 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation
 
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.VariantOutput
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.Loader
 import org.gradle.api.GradleException
-import org.gradle.api.file.FileCollection
 import org.gradle.kotlin.dsl.support.normaliseLineSeparators
 import java.io.*
 import java.nio.file.Paths
@@ -13,7 +13,7 @@ import java.nio.file.Paths
 class Transformation(
     private val buildDir: String,
     private val rootDestinationDir: String,
-    private val classPath: FileCollection,
+    private val variantOutput: VariantOutput,
     private val transformation: IClassTransformer
 ) {
 
@@ -21,7 +21,7 @@ class Transformation(
 
         println("Executing transformations: ${transformation.javaClass.name}")
         try {
-            val loadedClasses = preloadClasses(classPath)
+            val loadedClasses = preloadClasses()
 
             if (loadedClasses.isEmpty()) {
                 println("No source files.")
@@ -61,28 +61,27 @@ class Transformation(
         }
     }
 
-    fun preloadClasses(targetClassPath: FileCollection): List<Pair<CtClass, String>> {
+    fun preloadClasses(): List<Pair<CtClass, String>> {
         val classPool: ClassPool = AnnotationLoadingClassPool()
         // set up the classpath for the classpool
-        classPath.forEach { classpath ->
+        variantOutput.globalClassPath.forEach { classpath ->
             classPool.appendClassPath(classpath.path)
         }
 
         // add the files to process
         val classes = mutableListOf<Pair<CtClass, String>>()
-        val loaded = loadClassesForClassPath(classPool, targetClassPath)
+        val loaded = loadClassesForTransformations(classPool)
         classes.addAll(loaded)
         return loaded
     }
 
-    private fun loadClassesForClassPath(classPool: ClassPool, classPath: FileCollection): List<Pair<CtClass, String>> {
-        return classPath.asFileTree.filter { file -> return@filter file.extension == "class" }
-            .map { file ->
-                val clazz = loadClassFile(classPool, file)
-                val inputDir = getRootDirOfInputClassFile(file, clazz)
+    private fun loadClassesForTransformations(classPool: ClassPool): List<Pair<CtClass, String>> {
+        return variantOutput.transformationClassFiles.map { file ->
+            val clazz = loadClassFile(classPool, file)
+            val inputDir = getRootDirOfInputClassFile(file, clazz)
 
-                return@map Pair(clazz, inputDir)
-            }
+            return@map Pair(clazz, inputDir)
+        }
     }
 
     private fun getRootDirOfInputClassFile(inputClassFile: File, clazz: CtClass): String {

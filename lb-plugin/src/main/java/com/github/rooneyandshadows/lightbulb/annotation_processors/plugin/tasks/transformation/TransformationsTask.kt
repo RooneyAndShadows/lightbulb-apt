@@ -21,16 +21,15 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
     private val buildDir: String = project.buildDir.toString()
     private val destinationRoot: String = "transformations"
     private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variantOutput.name).toString()
-    private val transformationRegistry =
-        TransformationRegistry(buildDir, rootDestinationDir, variantOutput.classPath)
+    private val transformationRegistry = TransformationRegistry(buildDir, rootDestinationDir, variantOutput)
 
     @get:Classpath
     val classPath: FileCollection
-        get() = variantOutput.classPath
+        get() = variantOutput.globalClassPath
 
     @get:InputFiles
     val classFiles: List<File>
-        get() = variantOutput.classFiles
+        get() = variantOutput.transformationClassFiles
 
     @get:OutputDirectory
     val destinationDir: File

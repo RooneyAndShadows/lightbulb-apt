@@ -1,16 +1,16 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation
 
-import org.gradle.api.file.FileCollection
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.VariantOutput
 
 class TransformationRegistry(
     private val buildDir: String,
     private val rootDestinationDir: String,
-    private val outputFileCollections: FileCollection
+    private val variantOutput: VariantOutput
 ) {
     private val transformations: MutableList<Transformation> = mutableListOf()
 
     fun register(transformer: IClassTransformer) {
-        val transformation = Transformation(buildDir, rootDestinationDir, outputFileCollections, transformer)
+        val transformation = Transformation(buildDir, rootDestinationDir, variantOutput, transformer)
         transformations.add(transformation)
     }
 

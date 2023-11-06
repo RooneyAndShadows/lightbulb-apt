@@ -6,32 +6,58 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.TestExtension
 import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.SourceSetContainer
-import org.gradle.work.Incremental
+import org.gradle.configurationcache.extensions.capitalized
 import java.io.File
 
 @Suppress("DEPRECATION")
-class VariantOutput(val variant: BaseVariant, private val bootClassPath: List<File>) {
+class VariantOutput(
+    private val project: Project,
+    private val bootClassPath: List<File>,
+    val variant: BaseVariant,
+) {
     val name: String = variant.name
-    val classPath: FileCollection
-        get() {
-            //TODO get kotlin output get like classPath.plus(variant.javaCompileProvider.get().outputs.files)
-            var classPath = variant.javaCompileProvider.get().classpath
-            classPath = classPath.plus(variant.javaCompileProvider.get().outputs.files)
-            classPath.plus(bootClassPath)
-            return classPath
-        }
-    val classFiles: List<File>
-        get() {
-            return extractClassFiles()
-        }
+    val globalClassPath: FileCollection
+    val transformationsClassPath: FileCollection
+    val transformationClassFiles: List<File>
 
+    init {
+        val capitalizedVariantName = name.capitalized()
+        val ktCompileTaskForVariant = project.tasks.findByName("compile${capitalizedVariantName}Kotlin")
+        globalClassPath = createClassPoolClassPath(ktCompileTaskForVariant)
+        transformationsClassPath = createTransformationsClassPath(ktCompileTaskForVariant)
+        transformationClassFiles = extractClassFiles(transformationsClassPath)
+    }
 
-    private fun extractClassFiles(): List<File> {
+    private fun extractClassFiles(classPath: FileCollection): List<File> {
         return classPath.asFileTree.filter { file -> file.extension == "class" }.toList()
     }
+
+    private fun createClassPoolClassPath(kotlinCompileTask: Task?): FileCollection {
+        val javaCompileClassPath = variant.javaCompileProvider.get().outputs.files
+        val ktCompileClassPath = kotlinCompileTask?.outputs?.files
+        var classPath: FileCollection = project.files()
+        classPath.plus(bootClassPath)
+        classPath = classPath.plus(variant.javaCompileProvider.get().classpath)
+        classPath = classPath.plus(javaCompileClassPath)
+        ktCompileClassPath?.apply {
+            classPath = classPath.plus(ktCompileClassPath)
+        }
+        return classPath
+    }
+
+    private fun createTransformationsClassPath(kotlinCompileTask: Task?): FileCollection {
+        val javaCompileClassPath = variant.javaCompileProvider.get().outputs.files
+        val ktCompileClassPath = kotlinCompileTask?.outputs?.files
+        var classPath: FileCollection = project.files()
+        classPath = classPath.plus(javaCompileClassPath)
+        ktCompileClassPath?.apply {
+            classPath = classPath.plus(ktCompileClassPath)
+        }
+        return classPath
+    }
+
 
     companion object {
         fun from(project: Project): List<VariantOutput> {
@@ -39,43 +65,29 @@ class VariantOutput(val variant: BaseVariant, private val bootClassPath: List<Fi
             val variantOutputs = mutableListOf<VariantOutput>()
             val bootClassPath = androidExtension.bootClasspath
             androidExtension.forEachRootVariant { variant ->
-                variantOutputs.add(VariantOutput(variant, bootClassPath))
+                variantOutputs.add(VariantOutput(project, bootClassPath, variant))
             }
             return variantOutputs
         }
 
-        fun classFiles(outputs: List<VariantOutput>): List<File> {
-            return outputs.map { output -> output.classFiles }.flatten()
-        }
-
-        fun classPath(outputs: List<VariantOutput>): List<FileCollection> {
-            return outputs.map { return@map it.classPath }
-        }
-
-        private fun BaseExtension.forEachRootVariant(
-            @Suppress("DEPRECATION") block: (variant: BaseVariant) -> Unit
-        ) {
+        private fun BaseExtension.forEachRootVariant(@Suppress("DEPRECATION") block: (variant: BaseVariant) -> Unit) {
             when (this) {
                 is AppExtension -> {
-                    // For an app project we configure the app variant and both androidTest and unitTest
-                    // variants, Hilt components are generated in all of them.
-                    applicationVariants.all { block(this) }
-                    testVariants.all { block(this) }
-                    unitTestVariants.all { block(this) }
+                    applicationVariants.forEach(block)
+                    testVariants.forEach(block)
+                    unitTestVariants.forEach(block)
                 }
 
                 is LibraryExtension -> {
-                    // For a library project, only the androidTest and unitTest variant are configured since
-                    // Hilt components are not generated in a library.
-                    testVariants.all { block(this) }
-                    unitTestVariants.all { block(this) }
+                    testVariants.forEach(block)
+                    unitTestVariants.forEach(block)
                 }
 
                 is TestExtension -> {
-                    applicationVariants.all { block(this) }
+                    applicationVariants.forEach(block)
                 }
 
-                else -> error("Hilt plugin does not know how to configure '$this'")
+                else -> error("Lightbulb compile plugin does not know how to configure '$this'")
             }
         }
 

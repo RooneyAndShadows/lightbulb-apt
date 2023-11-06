@@ -1,13 +1,12 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 
-import com.android.build.gradle.*
+import com.android.build.gradle.AppPlugin
+import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
-import com.android.build.gradle.internal.TaskManager
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.VariantOutput
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation.TransformationsTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.configurationcache.extensions.capitalized
 
 @Suppress("unused", "UNUSED_VARIABLE")
@@ -22,29 +21,20 @@ class TransformationPlugin : Plugin<Project> {
         if (configured) {
             project.afterEvaluate {
                 val variantsOutput = VariantOutput.from(project)
-                variantsOutput.forEach { variant ->
-                    variant.variant.compileConfiguration.artifacts.files.forEach {
-                        println(it.path)
-                    }
-                    val componentClasses = project.files(
-                        project.buildDir.resolve("transformations/${variant.name}/")
-                    )
-                    val capitalizedVariantName = variant.name.capitalized()
+                variantsOutput.forEach { variantOutput ->
+                    val variant = variantOutput.variant
+                    val outputDir = project.files(project.buildDir.resolve("transformations/${variantOutput.name}/"))
+                    val capitalizedVariantName = variantOutput.name.capitalized()
                     val transformationTaskName = "transform${capitalizedVariantName}"
                     val transformationsTask = project.tasks.register(
                         transformationTaskName,
                         TransformationsTask::class.java,
-                        variant
+                        variantOutput
                     ).get()
-                    componentClasses.builtBy(transformationsTask)
-                    variant.variant.registerPostJavacGeneratedBytecode(componentClasses)
+                    outputDir.builtBy(transformationsTask)
+                    variantOutput.variant.registerPostJavacGeneratedBytecode(outputDir)
                 }
             }
-
-
-            //project.tasks.getByName("classes") {
-            //    dependsOn("transformations")
-            //}
         }
     }
 
@@ -61,7 +51,6 @@ class TransformationPlugin : Plugin<Project> {
         if (!isAndroidProject) {
             throw IllegalStateException("lb-compile Gradle plugin should be only applied to an Android projects.")
         }
-
 
         val dependencyNotation = "com.github.rooneyandshadows.lightbulb-annotation-processors:lb-processor:%s"
         if (isKotlinProject) {
