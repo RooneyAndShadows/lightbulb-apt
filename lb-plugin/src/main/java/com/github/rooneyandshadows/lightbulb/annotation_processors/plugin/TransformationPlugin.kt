@@ -17,22 +17,23 @@ class TransformationPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         this.configure(project)
-
         if (configured) {
             project.afterEvaluate {
                 val variantsOutput = VariantOutput.from(project)
                 variantsOutput.forEach { variantOutput ->
-                    val variant = variantOutput.variant
-                    val outputDir = project.files(project.buildDir.resolve("transformations/${variantOutput.name}/"))
                     val capitalizedVariantName = variantOutput.name.capitalized()
-                    val transformationTaskName = "transform${capitalizedVariantName}"
-                    val transformationsTask = project.tasks.register(
-                        transformationTaskName,
-                        TransformationsTask::class.java,
-                        variantOutput
-                    ).get()
-                    outputDir.builtBy(transformationsTask)
-                    variantOutput.variant.registerPostJavacGeneratedBytecode(outputDir)
+                    val taskName = "transform${capitalizedVariantName}"
+                    val taskType = TransformationsTask::class.java
+                    val transformationsTask = project.tasks.register(taskName, taskType, variantOutput).get()
+                    transformationsTask.apply {
+                        // Built by added for task dependency between the output and the task
+                        val taskOutput = project.files(destinationDir).builtBy(this)
+                        // This registers the transformation task in the Android pipeline as something that generates
+                        // byte code. This is technically designed to _add_ things to the pipeline.
+                        // Since we've replaced the actual classes with the transformed ones and
+                        // removed the java/kotlin output transformations, it's only purpose is to schedule the transformation task.
+                        variantOutput.variant.registerPostJavacGeneratedBytecode(taskOutput)
+                    }
                 }
             }
         }

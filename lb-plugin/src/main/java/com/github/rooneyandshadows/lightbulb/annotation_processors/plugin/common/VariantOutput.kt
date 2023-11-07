@@ -37,8 +37,7 @@ class VariantOutput(
     private fun createClassPoolClassPath(kotlinCompileTask: Task?): FileCollection {
         val javaCompileClassPath = variant.javaCompileProvider.get().outputs.files
         val ktCompileClassPath = kotlinCompileTask?.outputs?.files
-        var classPath: FileCollection = project.files()
-        classPath.plus(bootClassPath)
+        var classPath: FileCollection = project.files(bootClassPath)
         classPath = classPath.plus(variant.javaCompileProvider.get().classpath)
         classPath = classPath.plus(javaCompileClassPath)
         ktCompileClassPath?.apply {

@@ -15,6 +15,5 @@ internal class MyTransformation : IClassTransformer {
 
     override fun shouldTransform(ctClass: CtClass): Boolean {
         return ctClass.methods.toList().any { ctMethod -> ctMethod.name == "onCreate" }
-        return true
     }
 }

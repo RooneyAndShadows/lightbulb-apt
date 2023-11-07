@@ -23,7 +23,9 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
     private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variantOutput.name).toString()
     private val transformationRegistry = TransformationRegistry(buildDir, rootDestinationDir, variantOutput)
 
+    @get:InputFiles
     @get:Classpath
+    //This makes the task to start after all the tasks that have outputs contained in the classpath
     val classPath: FileCollection
         get() = variantOutput.globalClassPath
 
@@ -37,11 +39,6 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
 
     init {
         transformationRegistry.register(MyTransformation())
-    }
-
-    @Override
-    override fun getGroup(): String {
-        return "lightbulb"
     }
 
     @TaskAction
