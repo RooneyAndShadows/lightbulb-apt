@@ -1,5 +1,5 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
+    id 'org.jetbrains.kotlin.jvm'
     id 'java-gradle-plugin'
     id 'org.gradle.kotlin.kotlin-dsl' version '4.0.6'
 }
@@ -8,14 +8,19 @@ group 'com.github.rooneyandshadows.lightbulb-annotation-processors'
 version = '1.1.0'
 
 repositories {
-    mavenCentral()
+    //noinspection JcenterRepositoryObsolete
+    jcenter()
     google()
+    mavenCentral()
+    mavenLocal()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'com.android.application:com.android.application.gradle.plugin:8.0.2'
     implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0"
+    //classpath "com.github.rooneyandshadows.lightbulb-annotation-processors:lb-plugin:$versions.lightbulb.annotation_processors"
     implementation 'org.javassist:javassist:3.29.2-GA'
     implementation 'com.android.tools.build:gradle:0.12.2'
 }

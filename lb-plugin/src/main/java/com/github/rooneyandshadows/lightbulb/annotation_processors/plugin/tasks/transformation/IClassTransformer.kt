@@ -1,9 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation
 
+import javassist.ClassPool
 import javassist.CtClass
 
 interface IClassTransformer {
-    fun applyTransformations(ctClass: CtClass)
+    fun applyTransformations(classPool: ClassPool, ctClass: CtClass)
 
-    fun shouldTransform(ctClass: CtClass): Boolean
+    fun shouldTransform(classPool: ClassPool, ctClass: CtClass): Boolean
 }

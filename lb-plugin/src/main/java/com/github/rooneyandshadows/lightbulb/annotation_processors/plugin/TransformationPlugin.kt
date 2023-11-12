@@ -7,6 +7,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation.TransformationsTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.configurationcache.extensions.capitalized
 
 @Suppress("unused", "UNUSED_VARIABLE")
@@ -17,8 +18,15 @@ class TransformationPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         this.configure(project)
+
         if (configured) {
             project.afterEvaluate {
+                val extension = project.extensions.create("lightbulb", LightbulbExtension::class.java)
+
+                //tasks.withType(JavaCompile::class.java).all {
+                // options.compilerArgs.add("-Alightbulb.generate.root.package=shpek")
+                //}
+
                 val variantsOutput = VariantOutput.from(project)
                 variantsOutput.forEach { variantOutput ->
                     val capitalizedVariantName = variantOutput.name.capitalized()
@@ -38,7 +46,6 @@ class TransformationPlugin : Plugin<Project> {
             }
         }
     }
-
 
     private fun configure(project: Project) {
         if (configured) return

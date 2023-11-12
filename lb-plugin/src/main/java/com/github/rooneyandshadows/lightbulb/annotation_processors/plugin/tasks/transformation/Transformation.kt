@@ -21,14 +21,15 @@ class Transformation(
 
         println("Executing transformations: ${transformation.javaClass.name}")
         try {
-            val loadedClasses = preloadClasses()
+            val classPool = setupClassPool()
+            val loadedClasses = preloadClasses(classPool)
 
             if (loadedClasses.isEmpty()) {
                 println("No source files.")
                 return false
             }
 
-            process(loadedClasses)
+            process(classPool, loadedClasses)
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -38,36 +39,39 @@ class Transformation(
         return true
     }
 
-    private fun process(classesList: List<Pair<CtClass, String>>) {
+    private fun process(classPool: ClassPool, classesList: List<Pair<CtClass, String>>) {
         classesList.forEach { classWithInput ->
             val inputDir = classWithInput.second
             val clazz = classWithInput.first
             val outputDir = getOutputDirForFilePath(inputDir)
 
-            processClass(clazz, outputDir)
+            processClass(classPool, clazz, outputDir)
         }
     }
 
-    private fun processClass(clazz: CtClass, outputDir: String) {
+    private fun processClass(classPool: ClassPool, clazz: CtClass, outputDir: String) {
         try {
-            if (!transformation.shouldTransform(clazz)) {
+            if (!transformation.shouldTransform(classPool, clazz)) {
                 return
             }
             clazz.defrost()
-            transformation.applyTransformations(clazz)
+            transformation.applyTransformations(classPool, clazz)
             clazz.writeFile(outputDir)
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)
         }
     }
 
-    fun preloadClasses(): List<Pair<CtClass, String>> {
+    private fun setupClassPool(): ClassPool {
         val classPool: ClassPool = AnnotationLoadingClassPool()
         // set up the classpath for the classpool
         variantOutput.globalClassPath.forEach { classpath ->
             classPool.appendClassPath(classpath.path)
         }
+        return classPool
+    }
 
+    fun preloadClasses(classPool: ClassPool): List<Pair<CtClass, String>> {
         // add the files to process
         val classes = mutableListOf<Pair<CtClass, String>>()
         val loaded = loadClassesForTransformations(classPool)
