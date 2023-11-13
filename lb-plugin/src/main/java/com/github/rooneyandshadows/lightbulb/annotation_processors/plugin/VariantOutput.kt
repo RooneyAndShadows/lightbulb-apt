@@ -1,9 +1,7 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common
+@file:Suppress("DEPRECATION")
 
-import com.android.build.gradle.AppExtension
-import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.TestExtension
+package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
+
 import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -68,28 +66,5 @@ class VariantOutput(
             }
             return variantOutputs
         }
-
-        private fun BaseExtension.forEachRootVariant(@Suppress("DEPRECATION") block: (variant: BaseVariant) -> Unit) {
-            when (this) {
-                is AppExtension -> {
-                    applicationVariants.forEach(block)
-                    testVariants.forEach(block)
-                    unitTestVariants.forEach(block)
-                }
-
-                is LibraryExtension -> {
-                    testVariants.forEach(block)
-                    unitTestVariants.forEach(block)
-                }
-
-                is TestExtension -> {
-                    applicationVariants.forEach(block)
-                }
-
-                else -> error("Lightbulb compile plugin does not know how to configure '$this'")
-            }
-        }
-
-        private fun Project.baseExtension(): BaseExtension? = extensions.findByType(BaseExtension::class.java)
     }
 }

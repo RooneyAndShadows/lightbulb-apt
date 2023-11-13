@@ -1,6 +1,6 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors
+package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation.IClassTransformer
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation.base.IClassTransformer
 import javassist.ClassPool
 import javassist.CtClass
 

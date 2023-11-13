@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames.ROOT_PACKAGE;
+import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames.PROJECT_ROOT_PACKAGE;
 
 @SuppressWarnings("FieldCanBeLocal")
 @AutoService(Processor.class)
@@ -63,7 +63,7 @@ public class LightBulbProcessor extends AbstractProcessor {
     public Set<String> getSupportedOptions() {
         return new HashSet<String>() {
             {
-                add(ROOT_PACKAGE);
+                add(PROJECT_ROOT_PACKAGE);
             }
         };
     }
@@ -74,13 +74,13 @@ public class LightBulbProcessor extends AbstractProcessor {
     }
 
     private String getRootPackage() {
-        String rootPackage = options.get(ROOT_PACKAGE);
+        String rootPackage = options.get(PROJECT_ROOT_PACKAGE);
         if (rootPackage == null || rootPackage.equals("")) {
             String className = getClass().getSimpleName();
             String message = className.concat(": ")
                     .concat("Failed to generate sources.")
                     .concat("Please provide \"")
-                    .concat(ROOT_PACKAGE)
+                    .concat(PROJECT_ROOT_PACKAGE)
                     .concat("\" argument in annotationProcessorOptions.");
             messager.printMessage(Diagnostic.Kind.ERROR, message);
         }

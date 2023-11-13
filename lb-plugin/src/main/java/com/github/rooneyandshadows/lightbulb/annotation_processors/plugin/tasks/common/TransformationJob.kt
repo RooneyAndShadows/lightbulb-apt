@@ -1,6 +1,11 @@
-package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.transformation
+package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.common
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.common.VariantOutput
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.VariantOutput
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger.Companion.info
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger.Companion.severe
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger.Companion.warning
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation.base.IClassTransformer
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.Loader
@@ -8,24 +13,24 @@ import org.gradle.api.GradleException
 import org.gradle.kotlin.dsl.support.normaliseLineSeparators
 import java.io.*
 import java.nio.file.Paths
+import java.util.logging.Logger
 
 @Suppress("MemberVisibilityCanBePrivate")
-class Transformation(
+class TransformationJob(
     private val buildDir: String,
     private val rootDestinationDir: String,
     private val variantOutput: VariantOutput,
     private val transformation: IClassTransformer
 ) {
-
     fun execute(): Boolean {
+        info("Executing transformations: ${transformation.javaClass.name}")
 
-        println("Executing transformations: ${transformation.javaClass.name}")
         try {
             val classPool = setupClassPool()
             val loadedClasses = preloadClasses(classPool)
 
             if (loadedClasses.isEmpty()) {
-                println("No source files.")
+                warning("No source files for transformation.")
                 return false
             }
 
@@ -33,6 +38,7 @@ class Transformation(
 
         } catch (e: Exception) {
             e.printStackTrace()
+            severe("Could not execute transformation")
             throw GradleException("Could not execute transformation", e)
         }
 
