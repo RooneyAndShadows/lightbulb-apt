@@ -1,20 +1,46 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
-
+    id 'org.jetbrains.kotlin.jvm'
+    id 'maven-publish'
 }
 
-group 'com.github.rooneyandshadows.lightbulb-annotation-processors'
-version = '1.1.0'
+group "$environment.group_id"
+version = "$environment.version"
 
 repositories {
-    maven { url 'https://jitpack.io' }
+    //noinspection JcenterRepositoryObsolete
+    jcenter()
+    google()
     mavenCentral()
+    mavenLocal()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-    implementation 'com.google.auto.service:auto-service:1.0.1'
-    implementation 'com.squareup:javapoet:1.13.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    api "com.github.rooneyandshadows:java-commons:1.0.7"
+    implementation "com.google.auto.service:auto-service:$versions.google.auto_service"
+    implementation "com.squareup:javapoet:$versions.misc.javapoet"
+    api "com.github.rooneyandshadows:java-commons:$versions.misc.java_commons"
+}
+
+tasks.register('sourceJar', Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+afterEvaluate {
+    publishing {
+        repositories {
+            mavenLocal()
+        }
+        publications {
+            createProcessor(MavenPublication) {
+                groupId project.group
+                artifactId project.name
+                version project.version
+                from components.java
+                artifact sourceJar
+            }
+        }
+    }
 }

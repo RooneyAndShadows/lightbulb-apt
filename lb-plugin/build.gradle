@@ -2,10 +2,11 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'java-gradle-plugin'
     id 'org.gradle.kotlin.kotlin-dsl' version '4.0.6'
+    id 'maven-publish'
 }
 
-group 'com.github.rooneyandshadows.lightbulb-annotation-processors'
-version = '1.1.0'
+group "$environment.group_id"
+version = "$environment.version"
 
 repositories {
     //noinspection JcenterRepositoryObsolete
@@ -18,11 +19,11 @@ repositories {
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
-    implementation 'com.android.application:com.android.application.gradle.plugin:8.0.2'
-    implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0"
-    //classpath "com.github.rooneyandshadows.lightbulb-annotation-processors:lb-plugin:$versions.lightbulb.annotation_processors"
-    implementation 'org.javassist:javassist:3.29.2-GA'
-    implementation 'com.android.tools.build:gradle:0.12.2'
+    implementation "com.android.application:com.android.application.gradle.plugin:$versions.android.gradle_plugin"
+    implementation "com.android.tools.build:gradle:$versions.android.gradle_build"
+    implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
+    implementation "org.javassist:javassist:$versions.misc.javassist"
+    implementation "com.github.rooneyandshadows.lightbulb-apt:lb-processor:$versions.misc.lb_processor"
 }
 
 gradlePlugin {
@@ -30,6 +31,19 @@ gradlePlugin {
         create("lightbulb-compile-plugin") {
             id = "lb-compile"
             implementationClass = "com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.TransformationPlugin"
+        }
+    }
+}
+
+tasks.register('sourceJar', Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+afterEvaluate {
+    publishing {
+        repositories {
+            mavenLocal()
         }
     }
 }

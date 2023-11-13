@@ -1,61 +1,38 @@
-//file:noinspection VulnerableLibrariesLocal
 buildscript {
     ext {
-        group: 'com.github.rooneyandshadows'
-        artifactId: 'lightbulb-annotation-processors'
-        version: '1.0.6-RC2'
+        versions = [
+                kotlin : "1.8.10",
+                google : [
+                        auto_service: "1.0.1"
+                ],
+                android: [
+                        gradle_plugin: "8.0.2",
+                        gradle_build : "0.12.2"
+                ],
+                misc   : [
+                        java_commons: "[1.0.7,1.1.0[",
+                        javassist   : "3.29.2-GA",
+                        javapoet    : "1.13.0",
+                        lb_processor: "1.1.0",
+                ]
+        ]
+        environment = [
+                "group_id": "com.github.rooneyandshadows.lightbulb-apt",
+                "version" : "1.1.0"
+        ]
     }
-}
-
-plugins {
-    id 'java-library'
-    id 'maven-publish'
-    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
-}
-
-group 'com.github.rooneyandshadows'
-version '1.1.0'
-
-repositories {
-    maven { url 'https://jitpack.io' }
-    mavenCentral()
-}
-
-dependencies {
-    implementation 'com.google.auto.service:auto-service:1.0.1'
-    implementation 'com.squareup:javapoet:1.13.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    api "com.github.rooneyandshadows:java-commons:1.0.7"
-}
-
-subprojects {
-    afterEvaluate {
-        publishing {
-            repositories {
-                mavenLocal()
-            }
-            publications {
-                "$project.name"(MavenPublication) {
-                    groupId project.group
-                    artifactId project.name
-                    version project.version
-                    from components.java
-                }
-            }
-        }
+    repositories {
+        //noinspection JcenterRepositoryObsolete
+        jcenter()
+        google()
+        mavenCentral()
+        mavenLocal()
+        maven { url 'https://jitpack.io' }
     }
-}
-
-
-
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
+    dependencies {
+        classpath "com.android.tools.build:gradle:$versions.android.gradle_plugin"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
     }
 }
