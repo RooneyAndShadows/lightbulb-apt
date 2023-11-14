@@ -18,18 +18,12 @@ class VariantOutput(
     val name: String = variant.name
     val globalClassPath: FileCollection
     val transformationsClassPath: FileCollection
-    val transformationClassFiles: List<File>
 
     init {
         val capitalizedVariantName = name.capitalized()
         val ktCompileTaskForVariant = project.tasks.findByName("compile${capitalizedVariantName}Kotlin")
         globalClassPath = createClassPoolClassPath(ktCompileTaskForVariant)
         transformationsClassPath = createTransformationsClassPath(ktCompileTaskForVariant)
-        transformationClassFiles = extractClassFiles(transformationsClassPath)
-    }
-
-    private fun extractClassFiles(classPath: FileCollection): List<File> {
-        return classPath.asFileTree.filter { file -> file.extension == "class" }.toList()
     }
 
     private fun createClassPoolClassPath(kotlinCompileTask: Task?): FileCollection {
@@ -52,7 +46,7 @@ class VariantOutput(
         ktCompileClassPath?.apply {
             classPath = classPath.plus(ktCompileClassPath)
         }
-        return classPath
+        return classPath.filter { it.isDirectory }
     }
 
 

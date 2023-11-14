@@ -10,12 +10,8 @@ class LoggingUtil {
         var enabled: Boolean = false
 
         init {
-            val handlerObj: Handler = ConsoleHandler()
-            handlerObj.formatter = LoggerFormatter()
-            handlerObj.level = ALL
-            logger.addHandler(handlerObj)
-            logger.level = ALL
-            logger.useParentHandlers = false
+            setupHandler()
+            setupLogger()
         }
 
         fun info(message: String) {
@@ -31,6 +27,21 @@ class LoggingUtil {
         fun severe(message: String) {
             if (!enabled) return
             logger.severe(message)
+        }
+
+        private fun setupHandler() {
+            logger.handlers.forEach { handler ->
+                logger.removeHandler(handler)
+            }
+            val handlerObj: Handler = ConsoleHandler()
+            handlerObj.formatter = LoggerFormatter()
+            handlerObj.level = ALL
+            logger.addHandler(handlerObj)
+        }
+
+        private fun setupLogger() {
+            logger.level = ALL
+            logger.useParentHandlers = false
         }
     }
 

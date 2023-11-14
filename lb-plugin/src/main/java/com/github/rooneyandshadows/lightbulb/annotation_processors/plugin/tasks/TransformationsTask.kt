@@ -8,11 +8,9 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.delete
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.common.TransformationJobRegistry
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Paths
 import javax.inject.Inject
 
@@ -22,23 +20,33 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
     private val buildDir: String = project.buildDir.toString()
     private val destinationRoot: String = "transformations"
     private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variantOutput.name).toString()
-    private val transformationRegistry = TransformationJobRegistry(buildDir, rootDestinationDir, variantOutput)
+    private val transformationRegistry: TransformationJobRegistry
 
     @get:InputFiles
     @get:Classpath
     //This makes the task to start after all the tasks that have outputs contained in the classpath
-    val classPath: FileCollection
+    val globalClassPath: FileCollection
         get() = variantOutput.globalClassPath
 
     @get:InputFiles
-    val classFiles: List<File>
-        get() = variantOutput.transformationClassFiles
+    val transformationsClassPath: FileCollection
+        get() = variantOutput.transformationsClassPath
+
+    @get:OutputDirectories
+    val transformedFiles: FileCollection
+        get() = variantOutput.transformationsClassPath
 
     @get:OutputDirectory
     val destinationDir: File
         get() = project.file(rootDestinationDir)
 
     init {
+        transformationRegistry = TransformationJobRegistry(
+            buildDir,
+            rootDestinationDir,
+            globalClassPath,
+            transformationsClassPath
+        )
         transformationRegistry.register(MyTransformation())
     }
 

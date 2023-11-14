@@ -1,6 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.common
 
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.VariantOutput
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil.Companion.severe
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil.Companion.warning
@@ -9,6 +8,7 @@ import javassist.ClassPool
 import javassist.CtClass
 import javassist.Loader
 import org.gradle.api.GradleException
+import org.gradle.api.file.FileCollection
 import org.gradle.kotlin.dsl.support.normaliseLineSeparators
 import java.io.*
 import java.nio.file.Paths
@@ -17,7 +17,8 @@ import java.nio.file.Paths
 class TransformationJob(
     private val buildDir: String,
     private val rootDestinationDir: String,
-    private val variantOutput: VariantOutput,
+    private val globalClassPath: FileCollection,
+    private val transformationsClassPath: FileCollection,
     private val transformation: IClassTransformer
 ) {
     fun execute(): Boolean {
@@ -69,7 +70,7 @@ class TransformationJob(
     private fun setupClassPool(): ClassPool {
         val classPool: ClassPool = AnnotationLoadingClassPool()
         // set up the classpath for the classpool
-        variantOutput.globalClassPath.forEach { classpath ->
+        globalClassPath.forEach { classpath ->
             classPool.appendClassPath(classpath.path)
         }
         return classPool
@@ -84,7 +85,11 @@ class TransformationJob(
     }
 
     private fun loadClassesForTransformations(classPool: ClassPool): List<Pair<CtClass, String>> {
-        return variantOutput.transformationClassFiles.map { file ->
+        val filesForTransformation = transformationsClassPath.asFileTree.filter { file ->
+            file.extension == "class"
+        }.toList()
+
+        return filesForTransformation.map { file ->
             val clazz = loadClassFile(classPool, file)
             val inputDir = getRootDirOfInputClassFile(file, clazz)
 
