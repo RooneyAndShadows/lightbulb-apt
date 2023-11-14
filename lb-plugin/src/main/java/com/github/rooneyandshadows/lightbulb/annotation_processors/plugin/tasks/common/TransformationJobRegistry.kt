@@ -16,6 +16,10 @@ class TransformationJobRegistry(
     }
 
     fun execute() {
-        transformations.forEach { it.execute() }
+        try {
+            transformations.forEach { it.execute() }
+        } finally {
+            transformations.clear()
+        }
     }
 }

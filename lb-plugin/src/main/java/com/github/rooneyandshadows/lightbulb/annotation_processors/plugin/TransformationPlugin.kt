@@ -3,12 +3,11 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TransformationsTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.compile.CompileOptions
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.configurationcache.extensions.capitalized
 
@@ -30,7 +29,7 @@ class TransformationPlugin : Plugin<Project> {
     }
 
     private fun setupLogger(extension: TransformExtension) {
-        TransformationLogger.init(extension.debug)
+        LoggingUtil.enabled = extension.debug
     }
 
     private fun configureAPT(project: Project, extension: TransformExtension) {
@@ -77,9 +76,9 @@ class TransformationPlugin : Plugin<Project> {
             if (!hasKaptApplied) {
                 project.plugins.apply(KAPT_PLUGIN_ID)
             }
-            project.dependencies.add("kapt", LIGHTBULB_APT_DEPENDENCY_NOTATION)
+            //project.dependencies.add("kapt", LIGHTBULB_APT_DEPENDENCY_NOTATION)
         } else {
-            project.dependencies.add("annotationProcessor", LIGHTBULB_APT_DEPENDENCY_NOTATION)
+            //project.dependencies.add("annotationProcessor", LIGHTBULB_APT_DEPENDENCY_NOTATION)
         }
 
         project.dependencies.add("implementation", LIGHTBULB_APT_DEPENDENCY_NOTATION)

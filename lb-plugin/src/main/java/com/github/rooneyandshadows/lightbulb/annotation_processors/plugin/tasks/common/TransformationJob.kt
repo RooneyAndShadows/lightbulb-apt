@@ -1,10 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.common
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.VariantOutput
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger.Companion.info
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger.Companion.severe
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.TransformationLogger.Companion.warning
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil.Companion.info
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil.Companion.severe
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil.Companion.warning
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation.base.IClassTransformer
 import javassist.ClassPool
 import javassist.CtClass
@@ -13,7 +12,6 @@ import org.gradle.api.GradleException
 import org.gradle.kotlin.dsl.support.normaliseLineSeparators
 import java.io.*
 import java.nio.file.Paths
-import java.util.logging.Logger
 
 @Suppress("MemberVisibilityCanBePrivate")
 class TransformationJob(

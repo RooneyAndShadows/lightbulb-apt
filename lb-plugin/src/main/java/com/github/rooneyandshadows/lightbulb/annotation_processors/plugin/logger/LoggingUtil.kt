@@ -1,21 +1,17 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger
 
-import org.gradle.api.internal.tasks.compile.JavaCompilerArgumentsBuilder.LOGGER
-import java.util.logging.ConsoleHandler
-import java.util.logging.Handler
-import java.util.logging.Level
+import java.util.logging.*
 import java.util.logging.Level.*
-import java.util.logging.Logger
 
 
-class TransformationLogger {
+class LoggingUtil {
     companion object {
-        private val logger: Logger = Logger.getLogger(TransformationLogger::class.java.name)
-        private var enabled: Boolean = false
+        private val logger: Logger = Logger.getLogger(LoggingUtil::class.java.name)
+        var enabled: Boolean = false
 
-        fun init(enabled: Boolean) {
-            this.enabled = enabled
+        init {
             val handlerObj: Handler = ConsoleHandler()
+            handlerObj.formatter = LoggerFormatter()
             handlerObj.level = ALL
             logger.addHandler(handlerObj)
             logger.level = ALL
@@ -35,6 +31,15 @@ class TransformationLogger {
         fun severe(message: String) {
             if (!enabled) return
             logger.severe(message)
+        }
+    }
+
+    internal class LoggerFormatter : Formatter() {
+        override fun format(record: LogRecord): String {
+            val sb = StringBuilder()
+            sb.append(record.level).append(':')
+            sb.append(record.message).append('\n')
+            return sb.toString()
         }
     }
 }
