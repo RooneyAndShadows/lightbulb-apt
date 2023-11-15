@@ -18,7 +18,7 @@ import javax.inject.Inject
 @Suppress("unused")
 abstract class TransformationsTask @Inject constructor(private val variantOutput: VariantOutput) : DefaultTask() {
     private val buildDir: String = project.buildDir.toString()
-    private val destinationRoot: String = "transformations"
+    private val destinationRoot: String = "intermediates/lightbulb/classes"
     private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variantOutput.name).toString()
     private val transformationRegistry: TransformationJobRegistry
 
@@ -32,9 +32,9 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
     val transformationsClassPath: FileCollection
         get() = variantOutput.transformationsClassPath
 
-    @get:OutputDirectories
-    val transformedFiles: FileCollection
-        get() = variantOutput.transformationsClassPath
+    //@get:OutputDirectories
+    //val transformedFiles: FileCollection
+    //    get() = variantOutput.transformationsClassPath
 
     @get:OutputDirectory
     val destinationDir: File
@@ -60,7 +60,7 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
         transformationRegistry.execute()
         val source = Paths.get(rootDestinationDir).toFile()
         val target = Paths.get(buildDir).toFile()
-        source.copyFolder(target)
-        source.deleteDirectory()
+        //source.copyFolder(target)
+       // source.deleteDirectory()
     }
 }

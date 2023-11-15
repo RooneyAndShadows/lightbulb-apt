@@ -3,6 +3,8 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
+import com.android.build.gradle.internal.cxx.io.removeDuplicateFiles
+import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TransformationsTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames
@@ -10,6 +12,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.configurationcache.extensions.capitalized
+import org.jetbrains.kotlin.gradle.targets.js.internal.filterClassName
+import kotlin.io.path.fileVisitor
 
 @Suppress("unused", "UNUSED_VARIABLE")
 class TransformationPlugin : Plugin<Project> {
@@ -33,6 +37,14 @@ class TransformationPlugin : Plugin<Project> {
     }
 
     private fun configureAPT(project: Project, extension: TransformExtension) {
+
+        // DexArchiveBuilderTask
+        project.tasks.withType(DexArchiveBuilderTask::class.java).all {
+            inputs.files.asFileTree.forEach {
+                println(it)
+            }
+        }
+
         project.tasks.withType(JavaCompile::class.java).all {
             val rootPackageArg = ProcessorOptionNames.PROJECT_ROOT_PACKAGE
             val rootPackageValue = extension.projectRootPackage
@@ -43,6 +55,7 @@ class TransformationPlugin : Plugin<Project> {
     private fun configureTransformationTask(project: Project) {
         val variantsOutput = VariantOutput.from(project)
         variantsOutput.forEach { variantOutput ->
+            //variantOutput.variant.javaCompileProvider.get().options.addAnnotationProcessorArgument()
             val capitalizedVariantName = variantOutput.name.capitalized()
             val taskName = "transform${capitalizedVariantName}"
             val taskType = TransformationsTask::class.java
