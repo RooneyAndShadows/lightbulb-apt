@@ -1,17 +1,25 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.extension.impl.VariantSelectorImpl
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
+import com.android.build.gradle.internal.crash.afterEvaluate
 import com.android.build.gradle.internal.cxx.io.removeDuplicateFiles
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.ModifyClassesTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TransformationsTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.configurationcache.extensions.capitalized
+import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.targets.js.internal.filterClassName
 import kotlin.io.path.fileVisitor
 
@@ -29,6 +37,32 @@ class TransformationPlugin : Plugin<Project> {
                 configureAPT(project, extension)
                 configureTransformationTask(project)
             }
+
+            val ext = project.extensions.getByName(
+                "androidComponents"
+            ) as ApplicationAndroidComponentsExtension
+
+            ext.onVariants(VariantSelectorImpl().withName("debug")) { variant ->
+                println("ddddddddddd")
+                val taskProvider = project.tasks.register<ModifyClassesTask>("${variant.name}ModifyClasses")
+                variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+                    .use(taskProvider)
+                    .toTransform(
+                        ScopedArtifact.CLASSES,
+                        { it.allJars },
+                        ModifyClassesTask::allDirectories,
+                        ModifyClassesTask::output
+                    )
+            }
+        }
+
+        // DexArchiveBuilderTask
+        afterEvaluate {
+            project.tasks.withType(DexArchiveBuilderTask::class.java).all {
+                inputs.files.asFileTree.forEach {
+                    println(it)
+                }
+            }
         }
     }
 
@@ -38,10 +72,11 @@ class TransformationPlugin : Plugin<Project> {
 
     private fun configureAPT(project: Project, extension: TransformExtension) {
 
+
         // DexArchiveBuilderTask
         project.tasks.withType(DexArchiveBuilderTask::class.java).all {
-            inputs.files.asFileTree.forEach {
-                println(it)
+            inputs.files.forEach {
+                //println(it)
             }
         }
 
@@ -53,9 +88,12 @@ class TransformationPlugin : Plugin<Project> {
     }
 
     private fun configureTransformationTask(project: Project) {
-        val variantsOutput = VariantOutput.from(project)
+
+        /*val variantsOutput = VariantOutput.from(project)
+
         variantsOutput.forEach { variantOutput ->
             //variantOutput.variant.javaCompileProvider.get().options.addAnnotationProcessorArgument()
+            variantsOutput
             val capitalizedVariantName = variantOutput.name.capitalized()
             val taskName = "transform${capitalizedVariantName}"
             val taskType = TransformationsTask::class.java
@@ -63,13 +101,25 @@ class TransformationPlugin : Plugin<Project> {
             transformationsTask.apply {
                 // Built by added for task dependency between the output and the task
                 val taskOutput = project.files(destinationDir).builtBy(this)
+                doLast {
+                    println("=========================")
+                    taskOutput.asFileTree.forEach {
+                        println(it.path)
+                    }
+                    println("=========================")
+                }
+
+                // Register a task lazily to get its TaskProvider.
+
+
+
                 // This registers the transformation task in the Android pipeline as something that generates
                 // byte code. This is technically designed to _add_ things to the pipeline.
                 // Since we've replaced the actual classes with the transformed ones and
                 // removed the java/kotlin output transformations, it's only purpose is to schedule the transformation task.
                 variantOutput.variant.registerPostJavacGeneratedBytecode(taskOutput)
             }
-        }
+        }*/
     }
 
     private fun configure(project: Project) {

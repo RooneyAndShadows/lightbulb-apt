@@ -2,6 +2,7 @@
 
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
