@@ -1,7 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
 
-import com.android.build.api.variant.ScopedArtifacts
-import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.Variant
+import com.android.build.gradle.api.BaseVariant
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.VariantOutput
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.bootClasspath
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
@@ -15,11 +17,20 @@ import org.gradle.api.tasks.OutputFile
 import java.io.FileOutputStream
 import java.io.BufferedOutputStream
 import java.io.File
+import java.nio.file.Paths
 import java.util.jar.JarFile
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
+import javax.inject.Inject
 
-abstract class ModifyClassesTask: DefaultTask() {
+abstract class TestTask @Inject constructor(private val variant: Variant) : DefaultTask() {
+    private val buildDir: String = project.buildDir.toString()
+    private val destinationRoot: String = "intermediates/lightbulb/classes"
+    private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variant.name).toString()
+
+    @get:InputFiles
+    val globalClasspath
+        get() = project.bootClasspath()
 
     @get:InputFiles
     abstract val allJars: ListProperty<RegularFile>
@@ -32,11 +43,27 @@ abstract class ModifyClassesTask: DefaultTask() {
 
     @TaskAction
     fun taskAction() {
+
+
+        allDirectories.get().forEach {
+            println(it.asFile)
+        }
+
+        variant.compileClasspath.forEach {
+            println(it.path)
+        }
+
+        VariantOutput(,)
+        //output.set()
         val pool = ClassPool(ClassPool.getDefault())
 
-        val jarOutput = JarOutputStream(BufferedOutputStream(FileOutputStream(
-            output.get().asFile
-        )))
+        val jarOutput = JarOutputStream(
+            BufferedOutputStream(
+                FileOutputStream(
+                    output.get().asFile
+                )
+            )
+        )
         allJars.get().forEach { file ->
             println("handling " + file.asFile.getAbsolutePath())
             val jarFile = JarFile(file.asFile)

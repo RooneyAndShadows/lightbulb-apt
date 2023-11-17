@@ -12,6 +12,7 @@ import com.android.build.gradle.internal.cxx.io.removeDuplicateFiles
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.ModifyClassesTask
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TestTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TransformationsTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames
 import org.gradle.api.Plugin
@@ -36,6 +37,10 @@ class TransformationPlugin : Plugin<Project> {
                 setupLogger(extension)
                 configureAPT(project, extension)
                 configureTransformationTask(project)
+                val outputs = VariantOutput.from(project)
+                outputs.forEach {
+                    println(it.name)
+                }
             }
 
             val ext = project.extensions.getByName(
@@ -43,25 +48,15 @@ class TransformationPlugin : Plugin<Project> {
             ) as ApplicationAndroidComponentsExtension
 
             ext.onVariants(VariantSelectorImpl().withName("debug")) { variant ->
-                println("ddddddddddd")
-                val taskProvider = project.tasks.register<ModifyClassesTask>("${variant.name}ModifyClasses")
+                val taskProvider = project.tasks.register<TestTask>("${variant.name}ModifyClasses", variant)
                 variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
                     .use(taskProvider)
                     .toTransform(
                         ScopedArtifact.CLASSES,
                         { it.allJars },
-                        ModifyClassesTask::allDirectories,
-                        ModifyClassesTask::output
+                        TestTask::allDirectories,
+                        TestTask::output
                     )
-            }
-        }
-
-        // DexArchiveBuilderTask
-        afterEvaluate {
-            project.tasks.withType(DexArchiveBuilderTask::class.java).all {
-                inputs.files.asFileTree.forEach {
-                    println(it)
-                }
             }
         }
     }

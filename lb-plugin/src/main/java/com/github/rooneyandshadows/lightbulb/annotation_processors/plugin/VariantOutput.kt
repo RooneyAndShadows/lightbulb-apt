@@ -55,6 +55,10 @@ class VariantOutput(
             val androidExtension = project.baseExtension() ?: error("Android BaseExtension not found.")
             val variantOutputs = mutableListOf<VariantOutput>()
             val bootClassPath = androidExtension.bootClasspath
+            println("ssssssssssssssssssssssssssssssssssssssssssssssss")
+            bootClassPath.forEach {
+                println(it.path)
+            }
             androidExtension.forEachRootVariant { variant ->
                 variantOutputs.add(VariantOutput(project, bootClassPath, variant))
             }

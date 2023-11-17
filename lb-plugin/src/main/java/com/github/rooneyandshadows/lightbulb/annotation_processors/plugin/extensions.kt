@@ -2,13 +2,14 @@
 
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin
 
-import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.api.variant.Variant
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.TestExtension
 import com.android.build.gradle.api.BaseVariant
 import org.gradle.api.Project
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.compile.CompileOptions
 import java.io.File
 import java.io.IOException
@@ -27,6 +28,17 @@ fun CompileOptions.addAnnotationProcessorArgument(name: String, value: String) {
 
 fun Project.baseExtension(): BaseExtension? {
     return extensions.findByType(BaseExtension::class.java)
+}
+
+fun Project.bootClasspath(): FileCollection {
+    val bootClasspath = baseExtension()?.bootClasspath
+    return files(bootClasspath)
+}
+
+fun Project.globalClasspathForVariant(variant: Variant):FileCollection{
+    val variantClasspath = variant.compileClasspath
+    var globalClasspath = bootClasspath()
+    globalClasspath = globalClasspath.plus()
 }
 
 fun BaseExtension.forEachRootVariant(@Suppress("DEPRECATION") block: (variant: BaseVariant) -> Unit) {
