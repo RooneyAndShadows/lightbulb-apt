@@ -1,8 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
 
-import com.android.build.api.variant.ScopedArtifacts
-import com.android.build.api.artifact.ScopedArtifact
-
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.ListProperty
@@ -32,6 +29,7 @@ abstract class ModifyClassesTask: DefaultTask() {
 
     @TaskAction
     fun taskAction() {
+
         val pool = ClassPool(ClassPool.getDefault())
 
         val jarOutput = JarOutputStream(BufferedOutputStream(FileOutputStream(

@@ -35,10 +35,12 @@ fun Project.bootClasspath(): FileCollection {
     return files(bootClasspath)
 }
 
-fun Project.globalClasspathForVariant(variant: Variant):FileCollection{
+@Suppress("UnstableApiUsage")
+fun Project.globalClasspathForVariant(variant: Variant): FileCollection {
     val variantClasspath = variant.compileClasspath
     var globalClasspath = bootClasspath()
-    globalClasspath = globalClasspath.plus()
+    globalClasspath = globalClasspath.plus(variantClasspath)
+    return globalClasspath
 }
 
 fun BaseExtension.forEachRootVariant(@Suppress("DEPRECATION") block: (variant: BaseVariant) -> Unit) {

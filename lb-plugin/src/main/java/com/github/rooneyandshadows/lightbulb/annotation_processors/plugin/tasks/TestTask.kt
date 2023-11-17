@@ -4,6 +4,7 @@ import com.android.build.api.variant.Variant
 import com.android.build.gradle.api.BaseVariant
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.VariantOutput
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.bootClasspath
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.globalClasspathForVariant
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
@@ -30,7 +31,7 @@ abstract class TestTask @Inject constructor(private val variant: Variant) : Defa
 
     @get:InputFiles
     val globalClasspath
-        get() = project.bootClasspath()
+        get() = project.globalClasspathForVariant(variant)
 
     @get:InputFiles
     abstract val allJars: ListProperty<RegularFile>
@@ -43,16 +44,9 @@ abstract class TestTask @Inject constructor(private val variant: Variant) : Defa
 
     @TaskAction
     fun taskAction() {
-
-
         allDirectories.get().forEach {
             println(it.asFile)
         }
-
-        variant.compileClasspath.forEach {
-            println(it.path)
-        }
-
         VariantOutput(,)
         //output.set()
         val pool = ClassPool(ClassPool.getDefault())
