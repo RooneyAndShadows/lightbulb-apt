@@ -7,22 +7,14 @@ import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
-import com.android.build.gradle.internal.crash.afterEvaluate
-import com.android.build.gradle.internal.cxx.io.removeDuplicateFiles
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.logger.LoggingUtil
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.ModifyClassesTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TestTask
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.TransformationsTask
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.configurationcache.extensions.capitalized
 import org.gradle.kotlin.dsl.register
-import org.jetbrains.kotlin.gradle.targets.js.internal.filterClassName
-import kotlin.io.path.fileVisitor
 
 @Suppress("unused", "UNUSED_VARIABLE")
 class TransformationPlugin : Plugin<Project> {

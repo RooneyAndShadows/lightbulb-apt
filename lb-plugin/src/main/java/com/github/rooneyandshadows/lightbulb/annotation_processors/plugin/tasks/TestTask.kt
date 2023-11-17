@@ -1,10 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks
 
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.api.BaseVariant
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.VariantOutput
-import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.bootClasspath
 import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.globalClasspathForVariant
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.tasks.common.TransformationJobRegistry
+import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transformation.MyTransformation
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
@@ -12,6 +11,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
 import javassist.ClassPool
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
@@ -25,12 +25,10 @@ import java.util.jar.JarOutputStream
 import javax.inject.Inject
 
 abstract class TestTask @Inject constructor(private val variant: Variant) : DefaultTask() {
-    private val buildDir: String = project.buildDir.toString()
-    private val destinationRoot: String = "intermediates/lightbulb/classes"
-    private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variant.name).toString()
+    private val transformationRegistry: TransformationJobRegistry
 
     @get:InputFiles
-    val globalClasspath
+    val globalClasspath: FileCollection
         get() = project.globalClasspathForVariant(variant)
 
     @get:InputFiles
@@ -42,14 +40,18 @@ abstract class TestTask @Inject constructor(private val variant: Variant) : Defa
     @get:OutputFile
     abstract val output: RegularFileProperty
 
+    init {
+        transformationRegistry = TransformationJobRegistry(globalClasspath) { getTransformationsClasspath() }
+        transformationRegistry.register(MyTransformation())
+    }
+
     @TaskAction
     fun taskAction() {
-        allDirectories.get().forEach {
-            println(it.asFile)
+        val jars = allJars.get()
+
+        if (jars.size <= 0) {
+            return
         }
-        VariantOutput(,)
-        //output.set()
-        val pool = ClassPool(ClassPool.getDefault())
 
         val jarOutput = JarOutputStream(
             BufferedOutputStream(
@@ -58,56 +60,30 @@ abstract class TestTask @Inject constructor(private val variant: Variant) : Defa
                 )
             )
         )
-        allJars.get().forEach { file ->
-            println("handling " + file.asFile.getAbsolutePath())
-            val jarFile = JarFile(file.asFile)
-            jarFile.entries().iterator().forEach { jarEntry ->
-                println("Adding from jar ${jarEntry.name}")
-                jarOutput.putNextEntry(JarEntry(jarEntry.name))
-                jarFile.getInputStream(jarEntry).use {
-                    it.copyTo(jarOutput)
-                }
-                jarOutput.closeEntry()
-            }
-            jarFile.close()
-        }
-        allDirectories.get().forEach { directory ->
-            println("handling " + directory.asFile.getAbsolutePath())
-            directory.asFile.walk().forEach { file ->
-                if (file.isFile) {
-                    if (file.name.endsWith("SomeSource.class")) {
-                        println("Found $file.name")
-                        val interfaceClass = pool.makeInterface("com.android.api.tests.SomeInterface");
-                        println("Adding $interfaceClass")
-                        jarOutput.putNextEntry(JarEntry("com/android/api/tests/SomeInterface.class"))
-                        jarOutput.write(interfaceClass.toBytecode())
-                        jarOutput.closeEntry()
-                        val ctClass = file.inputStream().use {
-                            pool.makeClass(it);
-                        }
-                        ctClass.addInterface(interfaceClass)
-
-                        val m = ctClass.getDeclaredMethod("toString");
-                        if (m != null) {
-                            m.insertBefore("{ System.out.println(\"Some Extensive Tracing\"); }");
-
-                            val relativePath = directory.asFile.toURI().relativize(file.toURI()).getPath()
-                            jarOutput.putNextEntry(JarEntry(relativePath.replace(File.separatorChar, '/')))
-                            jarOutput.write(ctClass.toBytecode())
-                            jarOutput.closeEntry()
-                        } else {
-                            val relativePath = directory.asFile.toURI().relativize(file.toURI()).getPath()
-                            println("Adding from directory ${relativePath.replace(File.separatorChar, '/')}")
-                            jarOutput.putNextEntry(JarEntry(relativePath.replace(File.separatorChar, '/')))
-                            file.inputStream().use { inputStream ->
-                                inputStream.copyTo(jarOutput)
-                            }
-                            jarOutput.closeEntry()
-                        }
+        jarOutput.use {
+            jars.forEach { file ->
+                println("handling " + file.asFile.absolutePath)
+                val jarFile = JarFile(file.asFile)
+                jarFile.entries().iterator().forEach { jarEntry ->
+                    println("Adding from jar ${jarEntry.name}")
+                    jarOutput.putNextEntry(JarEntry(jarEntry.name))
+                    jarFile.getInputStream(jarEntry).use {
+                        it.copyTo(jarOutput)
                     }
+                    jarOutput.closeEntry()
                 }
+                jarFile.close()
             }
+            transformationRegistry.execute(jarOutput)
         }
-        jarOutput.close()
     }
+
+
+    private fun getTransformationsClasspath(): FileCollection {
+        val dirs = allDirectories.get().map {
+            return@map it.asFile.path
+        }
+        return project.files(dirs)
+    }
+
 }

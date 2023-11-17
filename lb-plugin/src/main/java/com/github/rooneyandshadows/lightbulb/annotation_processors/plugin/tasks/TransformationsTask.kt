@@ -20,7 +20,7 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
     private val buildDir: String = project.buildDir.toString()
     private val destinationRoot: String = "intermediates/lightbulb/classes"
     private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variantOutput.name).toString()
-    private val transformationRegistry: TransformationJobRegistry
+    //private val transformationRegistry: TransformationJobRegistry
 
     @get:InputFiles
     @get:Classpath
@@ -41,13 +41,13 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
         get() = project.file(rootDestinationDir)
 
     init {
-        transformationRegistry = TransformationJobRegistry(
-            buildDir,
-            rootDestinationDir,
-            globalClassPath,
-            transformationsClassPath
-        )
-        transformationRegistry.register(MyTransformation())
+        //transformationRegistry = TransformationJobRegistry(
+        //    buildDir,
+        //    rootDestinationDir,
+        //    globalClassPath,
+        //    transformationsClassPath
+        //)
+        //transformationRegistry.register(MyTransformation())
     }
 
     @Override
@@ -57,7 +57,7 @@ abstract class TransformationsTask @Inject constructor(private val variantOutput
 
     @TaskAction
     fun execute() {
-        transformationRegistry.execute()
+        //transformationRegistry.execute()
         val source = Paths.get(rootDestinationDir).toFile()
         val target = Paths.get(buildDir).toFile()
         //source.copyFolder(target)

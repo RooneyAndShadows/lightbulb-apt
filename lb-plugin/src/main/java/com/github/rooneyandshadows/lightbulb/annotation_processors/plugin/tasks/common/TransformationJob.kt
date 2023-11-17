@@ -9,22 +9,25 @@ import javassist.CtClass
 import javassist.Loader
 import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
-import org.gradle.kotlin.dsl.support.normaliseLineSeparators
 import java.io.*
-import java.nio.file.Paths
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
 
 @Suppress("MemberVisibilityCanBePrivate")
 class TransformationJob(
-    private val buildDir: String,
-    private val rootDestinationDir: String,
     private val globalClassPath: FileCollection,
-    private val transformationsClassPath: FileCollection,
-    private val transformation: IClassTransformer
+    private val transformationsClassPathProvider: (() -> FileCollection),
+    private val transformation: IClassTransformer,
 ) {
-    fun execute(): Boolean {
+    private val transformationsClassPath: FileCollection
+        get() = transformationsClassPathProvider.invoke()
+
+    fun execute(jarDestination: JarOutputStream): Boolean {
         info("Executing transformations: ${transformation.javaClass.name}")
 
         try {
+            println(transformationsClassPath.asPath)
             val classPool = setupClassPool()
             val loadedClasses = preloadClasses(classPool)
 
@@ -33,7 +36,7 @@ class TransformationJob(
                 return false
             }
 
-            process(classPool, loadedClasses)
+            process(classPool, loadedClasses, jarDestination)
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -44,26 +47,18 @@ class TransformationJob(
         return true
     }
 
-    private fun process(classPool: ClassPool, classesList: List<Pair<CtClass, String>>) {
-        classesList.forEach { classWithInput ->
-            val inputDir = classWithInput.second
-            val clazz = classWithInput.first
-            val outputDir = getOutputDirForFilePath(inputDir)
-
-            processClass(classPool, clazz, outputDir)
-        }
-    }
-
-    private fun processClass(classPool: ClassPool, clazz: CtClass, outputDir: String) {
-        try {
-            if (!transformation.shouldTransform(classPool, clazz)) {
-                return
+    private fun process(classPool: ClassPool, classesList: List<CtClass>, jarDestination: JarOutputStream) {
+        classesList.forEach { clazz ->
+            try {
+                val byteCode = transformation.transform(classPool, clazz)
+                val className = clazz.name
+                println("Adding to jar ${className}")
+                jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
+                jarDestination.write(byteCode)
+                jarDestination.closeEntry()
+            } catch (e: Exception) {
+                throw GradleException("An error occurred while trying to process class file ", e)
             }
-            clazz.defrost()
-            transformation.applyTransformations(classPool, clazz)
-            clazz.writeFile(outputDir)
-        } catch (e: Exception) {
-            throw GradleException("An error occurred while trying to process class file ", e)
         }
     }
 
@@ -76,43 +71,12 @@ class TransformationJob(
         return classPool
     }
 
-    fun preloadClasses(classPool: ClassPool): List<Pair<CtClass, String>> {
+    fun preloadClasses(classPool: ClassPool): List<CtClass> {
         // add the files to process
-        val classes = mutableListOf<Pair<CtClass, String>>()
-        val loaded = loadClassesForTransformations(classPool)
-        classes.addAll(loaded)
-        return loaded
-    }
-
-    private fun loadClassesForTransformations(classPool: ClassPool): List<Pair<CtClass, String>> {
         val filesForTransformation = transformationsClassPath.asFileTree.filter { file ->
             file.extension == "class"
         }.toList()
-
-        return filesForTransformation.map { file ->
-            val clazz = loadClassFile(classPool, file)
-            val inputDir = getRootDirOfInputClassFile(file, clazz)
-
-            return@map Pair(clazz, inputDir)
-        }
-    }
-
-    private fun getRootDirOfInputClassFile(inputClassFile: File, clazz: CtClass): String {
-        val fileName = inputClassFile.nameWithoutExtension
-        val packageComponents = clazz.packageName
-            .replace(".${fileName}", "")
-            .split(".")
-            .toTypedArray()
-        val packageNameAsDir = Paths.get("", *packageComponents).toString()
-
-        return inputClassFile.parent
-            .normaliseLineSeparators()
-            .replace(packageNameAsDir, "")
-    }
-
-    private fun getOutputDirForFilePath(filePath: String): String {
-        val pathWithoutBuild = filePath.replace(buildDir, "")
-        return Paths.get(rootDestinationDir, pathWithoutBuild).toString()
+        return filesForTransformation.map { file -> loadClassFile(classPool, file) }
     }
 
     private fun loadClassFile(pool: ClassPool, classFile: File): CtClass {

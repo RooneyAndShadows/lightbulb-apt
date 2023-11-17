@@ -5,7 +5,8 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.plugin.transf
 import javassist.ClassPool
 import javassist.CtClass
 
-internal class MyTransformation : IClassTransformer {
+internal class MyTransformation : IClassTransformer() {
+
     override fun applyTransformations(classPool: ClassPool, ctClass: CtClass) {
         info("Transforming class:".plus(ctClass.name))
         val superClass = classPool.getCtClass("com.example.myapplication.BaseActivity")
