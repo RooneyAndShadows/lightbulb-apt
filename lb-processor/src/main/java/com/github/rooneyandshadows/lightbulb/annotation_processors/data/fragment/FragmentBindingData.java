@@ -106,9 +106,6 @@ public class FragmentBindingData {
         Annotation annotation = element.getAnnotation();
         if (!(annotation instanceof FragmentConfiguration config)) return;
         configuration = new Configuration(
-                config.isMainScreenFragment(),
-                config.hasLeftDrawer(),
-                config.hasOptionsMenu(),
                 config.layoutName()
         );
     }

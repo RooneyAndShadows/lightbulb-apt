@@ -9,7 +9,7 @@ internal class MyTransformation : IClassTransformer() {
 
     override fun applyTransformations(classPool: ClassPool, ctClass: CtClass) {
         info("Transforming class:".plus(ctClass.name))
-        val superClass = classPool.getCtClass("com.example.myapplication.BaseActivity")
+        val superClass = classPool.getCtClass("com.example.lightbulbtest.BaseActivity")
         ctClass.superclass = superClass
         //val m: CtMethod = ctClass.getDeclaredMethod("onCreate")
         //m.insertBefore("{ System.out.println(\"asfasfasf\"); System.out.println(\"asfasasfasf\"); }")

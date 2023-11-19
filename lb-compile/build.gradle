@@ -24,6 +24,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
     implementation "org.javassist:javassist:$versions.misc.javassist"
     implementation "com.github.rooneyandshadows.lightbulb-apt:lb-processor:$versions.misc.lb_processor"
+    implementation project(path: ':lb-processor')
 }
 
 gradlePlugin {

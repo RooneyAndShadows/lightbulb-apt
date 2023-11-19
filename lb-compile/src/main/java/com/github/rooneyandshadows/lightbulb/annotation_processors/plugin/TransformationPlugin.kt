@@ -19,7 +19,6 @@ import org.gradle.kotlin.dsl.register
 @Suppress("unused", "UNUSED_VARIABLE")
 class TransformationPlugin : Plugin<Project> {
     private var configured = false
-
     override fun apply(project: Project) {
         this.configure(project)
 
@@ -58,8 +57,6 @@ class TransformationPlugin : Plugin<Project> {
     }
 
     private fun configureAPT(project: Project, extension: TransformExtension) {
-
-
         // DexArchiveBuilderTask
         project.tasks.withType(DexArchiveBuilderTask::class.java).all {
             inputs.files.forEach {
