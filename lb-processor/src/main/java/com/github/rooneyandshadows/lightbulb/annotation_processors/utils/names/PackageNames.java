@@ -6,6 +6,7 @@ public class PackageNames {
     public static final String LB_FRAGMENT = "com.github.rooneyandshadows.lightbulb.application.fragment.base";
     public static final String ROONEY_AND_SHADOWS_DATE = "com.github.rooneyandshadows.java.commons.date";
     public static final String ANDROID = "android";
+    public static final String ANDROIDX_FRAGMENT_APP = "androidx.fragment.app";
     public static final String ANDROID_OS = ANDROID.concat(".os");
     public static final String ANDROID_VIEW = ANDROID.concat(".view");
     public static final String ANDROID_CONTENT_RES = "android.content.res";

@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.LightbulbFragment;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentStatePersisted;
@@ -11,7 +11,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.C
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
 import com.squareup.javapoet.ClassName;
 
-import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
@@ -23,7 +23,9 @@ import java.util.stream.Collectors;
 @SuppressWarnings("FieldCanBeLocal")
 public class FragmentBindingData {
     private final TypeMirror type;
+    private final TypeMirror superType;
     private final ClassName className;
+    private final ClassName superClassName;
     private final ClassName bindingClassName;
     private final boolean canBeInstantiated;
     private ScreenInfo screenInfo;
@@ -31,12 +33,14 @@ public class FragmentBindingData {
     private final List<Parameter> parameters = new ArrayList<>();
     private final List<Variable> persistedVariables = new ArrayList<>();
     private final List<ViewBinding> viewBindings = new ArrayList<>();
-    private final String BINDING_CLASS_NAME_SUFFIX = "Bindings";
+    private final String BINDING_CLASS_NAME_PREFIX = "LB_";
 
-    public FragmentBindingData(Elements elements, Element fragmentClassElement, List<AnnotatedElement> annotatedElements) {
+    public FragmentBindingData(Elements elements, TypeElement fragmentClassElement, List<AnnotatedElement> annotatedElements) {
         this.type = fragmentClassElement.asType();
+        this.superType = fragmentClassElement.getSuperclass();
         this.className = ClassNames.generateClassName(fragmentClassElement, elements);
-        this.bindingClassName = ClassNames.generateClassName(fragmentClassElement, elements, BINDING_CLASS_NAME_SUFFIX);
+        this.superClassName = ClassNames.generateSuperClassName(fragmentClassElement, elements);
+        this.bindingClassName = ClassNames.generateClassNameWithPrefix(fragmentClassElement, elements, BINDING_CLASS_NAME_PREFIX);
         this.canBeInstantiated = ElementUtils.canBeInstantiated(fragmentClassElement);
         annotatedElements.forEach(element -> {
             handleFragmentConfiguration(element);
@@ -49,6 +53,10 @@ public class FragmentBindingData {
 
     public ClassName getClassName() {
         return className;
+    }
+
+    public ClassName getSuperClassName() {
+        return superClassName;
     }
 
     public ClassName getBindingClassName() {
@@ -104,10 +112,8 @@ public class FragmentBindingData {
 
     private void handleFragmentConfiguration(AnnotatedElement element) {
         Annotation annotation = element.getAnnotation();
-        if (!(annotation instanceof FragmentConfiguration config)) return;
-        configuration = new Configuration(
-                config.layoutName()
-        );
+        if (!(annotation instanceof LightbulbFragment config)) return;
+        configuration = new Configuration(config.layoutName());
     }
 
     private void handleFragmentScreen(AnnotatedElement element) {
@@ -128,7 +134,6 @@ public class FragmentBindingData {
         if (!(annotation instanceof FragmentStatePersisted statePersisted)) return;
         Variable variableInfo = new Variable(element.getElement());
         persistedVariables.add(variableInfo);
-
     }
 
     private void handleFragmentBindView(AnnotatedElement element) {

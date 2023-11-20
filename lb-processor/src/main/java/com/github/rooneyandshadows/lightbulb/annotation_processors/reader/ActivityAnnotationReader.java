@@ -10,6 +10,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ public class ActivityAnnotationReader extends AnnotationReader {
     @Override
     protected void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations, AnnotationResultsRegistry resultRegistry) {
         for (Map.Entry<Element, List<AnnotatedElement>> entry : annotations.entrySet()) {
-            Element activityClassElement = entry.getKey();
+            TypeElement activityClassElement = (TypeElement) entry.getKey();
             List<AnnotatedElement> annotatedElements = entry.getValue();
 
             ActivityBindingData bindingData = new ActivityBindingData(elements, activityClassElement, annotatedElements);

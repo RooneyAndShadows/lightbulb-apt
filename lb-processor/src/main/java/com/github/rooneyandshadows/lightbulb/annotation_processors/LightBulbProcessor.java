@@ -2,7 +2,7 @@ package com.github.rooneyandshadows.lightbulb.annotation_processors;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.ActivityConfiguration;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.LightbulbFragment;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentStatePersisted;
@@ -51,7 +51,7 @@ public class LightBulbProcessor extends AbstractProcessor {
             {
                 add(ActivityConfiguration.class.getCanonicalName());
                 add(BindView.class.getCanonicalName());
-                add(FragmentConfiguration.class.getCanonicalName());
+                add(LightbulbFragment.class.getCanonicalName());
                 add(FragmentStatePersisted.class.getCanonicalName());
                 add(FragmentParameter.class.getCanonicalName());
                 add(FragmentScreen.class.getCanonicalName());

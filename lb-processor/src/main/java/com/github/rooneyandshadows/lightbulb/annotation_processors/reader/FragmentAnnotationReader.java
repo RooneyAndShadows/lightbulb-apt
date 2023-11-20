@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.reader;
 
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentConfiguration;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.LightbulbFragment;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentStatePersisted;
@@ -14,6 +14,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -31,7 +32,7 @@ public class FragmentAnnotationReader extends AnnotationReader {
     @Override
     protected void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations, AnnotationResultsRegistry resultRegistry) {
         for (Map.Entry<Element, List<AnnotatedElement>> entry : annotations.entrySet()) {
-            Element fragmentClassElement = entry.getKey();
+            TypeElement fragmentClassElement = (TypeElement) entry.getKey();
             List<AnnotatedElement> annotatedElements = entry.getValue();
             FragmentBindingData bindingData = new FragmentBindingData(elements, fragmentClassElement, annotatedElements);
             fragmentBindings.add(bindingData);
@@ -42,7 +43,7 @@ public class FragmentAnnotationReader extends AnnotationReader {
     @Override
     protected Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets() {
         Map<Class<? extends Annotation>, ElementKind> targets = new HashMap<>();
-        targets.put(FragmentConfiguration.class, CLASS);
+        targets.put(LightbulbFragment.class, CLASS);
         targets.put(FragmentScreen.class, CLASS);
         targets.put(FragmentParameter.class, FIELD);
         targets.put(FragmentStatePersisted.class, FIELD);

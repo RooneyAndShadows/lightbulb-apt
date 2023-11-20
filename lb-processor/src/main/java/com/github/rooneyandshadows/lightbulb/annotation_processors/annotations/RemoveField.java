@@ -6,13 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
-@Target(ElementType.TYPE)
-public @interface FragmentConfiguration {
-    String layoutName() default "";
+@Target(ElementType.FIELD)
+public @interface RemoveField {
 
-    boolean isMainScreenFragment() default true;
-
-    boolean hasLeftDrawer() default false;
-
-    boolean hasOptionsMenu() default false;
 }

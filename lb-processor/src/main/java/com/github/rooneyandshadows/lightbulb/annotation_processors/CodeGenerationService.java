@@ -42,7 +42,7 @@ public class CodeGenerationService {
         generators.add(new FragmentGenerator(rootPackage, filer, resultsRegistry));
         generators.add(new RoutingGenerator(rootPackage, filer, resultsRegistry));
         generators.add(new ActivityGenerator(rootPackage, filer, resultsRegistry));
-        generators.add(new BindingRegistryGenerator(rootPackage, filer, resultsRegistry));
+      //  generators.add(new BindingRegistryGenerator(rootPackage, filer, resultsRegistry));
     }
 
     public void process() {

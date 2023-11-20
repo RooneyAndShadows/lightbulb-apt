@@ -1,13 +1,12 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.generator;
 
+import com.github.rooneyandshadows.java.commons.string.StringUtils;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.RemoveField;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.FragmentBindingData;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.Configuration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry;
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import java.io.IOException;
@@ -33,19 +32,34 @@ public class FragmentGenerator extends CodeGenerator {
     private void generateBindings(List<FragmentBindingData> fragmentBindings) {
         fragmentBindings.forEach(fragmentInfo -> {
             List<MethodSpec> methods = new ArrayList<>();
-            if (fragmentInfo.isCanBeInstantiated()) {
-                if (fragmentInfo.hasOptionalParameters()) {
-                    methods.add(generateFragmentNewInstanceMethod(fragmentInfo, false));
-                }
-                methods.add(generateFragmentNewInstanceMethod(fragmentInfo, true));
-            }
-            methods.add(generateFragmentConfigurationMethod(fragmentInfo));
-            methods.add(generateFragmentViewBindingsMethod(fragmentInfo));
-            methods.add(generateFragmentParametersMethod(fragmentInfo));
-            methods.add(generateSaveVariablesMethod(fragmentInfo));
-            methods.add(generateRestoreVariablesMethod(fragmentInfo));
+            List<FieldSpec> fields = new ArrayList<>();
+            fragmentInfo.getParameters().forEach(parameter -> {
+                FieldSpec fieldSpec = FieldSpec.builder(parameter.getType(), parameter.getName(), PROTECTED)
+                        .addAnnotation(RemoveField.class)
+                        .build();
+                fields.add(fieldSpec);
+            });
+
+            fragmentInfo.getPersistedVariables().forEach(variable -> {
+                FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), PROTECTED)
+                        .addAnnotation(RemoveField.class)
+                        .build();
+                fields.add(fieldSpec);
+            });
+
+
+            generateFragmentNewInstanceMethods(fragmentInfo, methods);
+            generateOnCreateMethod(fragmentInfo, methods);
+            generateOnCreateViewMethod(fragmentInfo, methods);
+            generateOnViewCreatedMethod(fragmentInfo, methods);
+            generateOnSaveInstanceStateMethod(fragmentInfo, methods);
+            generateFragmentParametersMethod(fragmentInfo, methods);
+            generateSaveVariablesMethod(fragmentInfo, methods);
+            generateRestoreVariablesMethod(fragmentInfo, methods);
             TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.getBindingClassName())
-                    .addModifiers(PUBLIC, FINAL)
+                    .addModifiers(PUBLIC)
+                    .addFields(fields)
+                    .superclass(fragmentInfo.getSuperClassName())
                     .addMethods(methods);
             try {
                 JavaFile.builder(fragmentInfo.getBindingClassName().packageName(), generatedClass.build())
@@ -57,115 +71,208 @@ public class FragmentGenerator extends CodeGenerator {
         });
     }
 
-    private MethodSpec generateFragmentNewInstanceMethod(FragmentBindingData fragmentInfo, boolean includeOptionalParams) {
-        MethodSpec.Builder method = MethodSpec.methodBuilder("newInstance");
-        method.addModifiers(PUBLIC, STATIC)
+    private void generateFragmentNewInstanceMethods(FragmentBindingData fragmentInfo, List<MethodSpec> destination) {
+        if (!fragmentInfo.isCanBeInstantiated()) {
+            return;
+        }
+
+        if (fragmentInfo.hasOptionalParameters()) {
+            generateFragmentNewInstanceMethod(fragmentInfo, false, destination);
+        }
+
+        generateFragmentNewInstanceMethod(fragmentInfo, true, destination);
+    }
+
+    private void generateFragmentNewInstanceMethod(
+            FragmentBindingData fragmentInfo,
+            boolean includeOptionalParams,
+            List<MethodSpec> destination
+    ) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("newInstance")
+                .addModifiers(PUBLIC, STATIC)
                 .returns(fragmentInfo.getClassName())
                 .addStatement("$T fragment = new $T()", fragmentInfo.getClassName(), fragmentInfo.getClassName())
                 .addStatement("$T arguments = new $T()", ANDROID_BUNDLE, ANDROID_BUNDLE);
+
         fragmentInfo.getFragmentParameters(includeOptionalParams).forEach(param -> {
-            method.addParameter(param.getParameterSpec());
+            builder.addParameter(param.getParameterSpec());
             CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "arguments", null);
-            method.addCode(writeStatement);
+            builder.addCode(writeStatement);
         });
-        method.addStatement("fragment.setArguments(arguments)");
-        method.addStatement("return fragment");
-        return method.build();
+
+        builder.addStatement("fragment.setArguments(arguments)");
+        builder.addStatement("return fragment");
+
+        destination.add(builder.build());
     }
 
-    private MethodSpec generateFragmentConfigurationMethod(FragmentBindingData fragment) {
-        String methodName = "generateConfiguration";
-        Configuration configuration = fragment.getConfiguration();
-        if (configuration == null) {
-            return MethodSpec.methodBuilder(methodName)
-                    .addModifiers(PUBLIC)
-                    .addParameter(fragment.getClassName(), "fragment")
-                    .returns(BASE_FRAGMENT_CONFIGURATION)
-                    .addStatement("return new $T($L,$L,$L,$L)", BASE_FRAGMENT_CONFIGURATION, -1, true, false, false)
-                    .build();
+    private void generateOnCreateMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
+        boolean hasParameters = !fragment.getParameters().isEmpty();
+        boolean hasPersistedVars = !fragment.getParameters().isEmpty();
+
+        if (!hasParameters && !hasPersistedVars) {
+            return;
         }
-        String layoutName = configuration.getLayoutName();
-        String isMainScreenFragment = String.valueOf(configuration.isMainScreenFragment());
-        String hasLeftDrawer = String.valueOf(configuration.isHasLeftDrawer());
-        String hasOptionsMenu = String.valueOf(configuration.isHasOptionsMenu());
-        return MethodSpec.methodBuilder(methodName)
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreate")
+                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .addModifiers(PUBLIC)
-                .addParameter(fragment.getClassName(), "fragment")
-                .returns(BASE_FRAGMENT_CONFIGURATION)
-                .addStatement("int layoutId = fragment.getResources().getIdentifier($S, $S, fragment.getActivity().getPackageName())", layoutName, "layout")
-                .addStatement("return new $T($L,$L,$L,$L)", BASE_FRAGMENT_CONFIGURATION, "layoutId", isMainScreenFragment, hasLeftDrawer, hasOptionsMenu)
-                .build();
+                .returns(void.class)
+                .addStatement("super.onCreate(savedInstanceState)");
+
+        if (hasParameters && hasPersistedVars) {
+            builder.beginControlFlow("if(savedInstanceState == null)")
+                    .addStatement("$T arguments = getArguments()", ANDROID_BUNDLE)
+                    .addStatement("generateParameters(arguments)")
+                    .nextControlFlow("else")
+                    .addStatement("restoreVariablesState(savedInstanceState)")
+                    .endControlFlow();
+        } else if (hasParameters) {
+            builder.beginControlFlow("if(savedInstanceState == null)")
+                    .addStatement("$T arguments = getArguments()", ANDROID_BUNDLE)
+                    .addStatement("generateParameters(arguments)")
+                    .endControlFlow();
+        } else {
+            builder.beginControlFlow("if(savedInstanceState != null)")
+                    .addStatement("restoreVariablesState(savedInstanceState)")
+                    .endControlFlow();
+        }
+
+
+        destination.add(builder.build());
     }
 
-    private MethodSpec generateFragmentViewBindingsMethod(FragmentBindingData fragment) {
-        MethodSpec.Builder method = MethodSpec.methodBuilder("generateViewBindings")
-                .addParameter(fragment.getClassName(), "fragment")
+    private void generateOnCreateViewMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
+        Configuration configuration = fragment.getConfiguration();
+        String layoutName = configuration.getLayoutName();
+
+        if (StringUtils.isNullOrEmptyString(layoutName)) {
+            return;
+        }
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreateView")
                 .addModifiers(PUBLIC)
+                .addParameter(ANDROID_LAYOUT_INFLATER, "inflater")
+                .addParameter(ANDROID_VIEW_GROUP, "container")
+                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
+                .returns(ANDROID_VIEW)
+                .addStatement("super.onCreateView(inflater,container,savedInstanceState)")
+                .addStatement("$T layout = inflater.inflate($T.layout.$L, null)", ANDROID_VIEW, ANDROID_R, layoutName)
+                .addStatement("return layout");
+
+        destination.add(builder.build());
+    }
+
+    private void generateOnViewCreatedMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
+        if (fragment.getViewBindings().isEmpty()) {
+            return;
+        }
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("onViewCreated")
+                .addParameter(ANDROID_VIEW, "fragmentView")
+                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
+                .addModifiers(PUBLIC)
+                .addStatement("super.onViewCreated(fragmentView,savedInstanceState)")
                 .returns(void.class);
+
         fragment.getViewBindings().forEach(bindingInfo -> {
             String fieldName = bindingInfo.getFieldName();
             String fieldSetterName = bindingInfo.getSetterName();
             String resourceName = bindingInfo.getResourceName();
-            method.addStatement("$T packageName = fragment.getActivity().getPackageName()", STRING);
-            method.addStatement("$T resources = fragment.getResources()", ANDROID_RESOURCES);
-            method.addStatement("$T view = fragment.getView()", ANDROID_VIEW);
+            builder.addStatement("$T view = fragment.getView()", ANDROID_VIEW);
             if (bindingInfo.hasSetter()) {
-                String statement = "fragment.$L(view.findViewById(resources.getIdentifier($S, $S, packageName)))";
-                method.addStatement(statement, fieldSetterName, resourceName, "id");
+                String statement = "fragment.$L(view.findViewById($T.id.$L))";
+                builder.addStatement(statement, fieldSetterName, ANDROID_R, resourceName);
             } else {
-                String statement = "fragment.$L = view.findViewById(resources.getIdentifier($S, $S, packageName))";
-                method.addStatement(statement, fieldName, resourceName, "id");
+                String statement = "fragment.$L = view.findViewById($T.id.$L)";
+                builder.addStatement(statement, fieldName, ANDROID_R, resourceName);
             }
         });
-        return method.build();
+
+        destination.add(builder.build());
     }
 
-    private MethodSpec generateFragmentParametersMethod(FragmentBindingData fragment) {
-        MethodSpec.Builder method = MethodSpec.methodBuilder("generateParameters")
-                .addParameter(fragment.getClassName(), "fragment")
-                .addModifiers(PUBLIC)
-                .returns(void.class);
-        method.addStatement("$T arguments = fragment.getArguments()", ANDROID_BUNDLE);
-        fragment.getParameters().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "arguments", "fragment", true);
-            method.addCode(readStatement);
-        });
-        return method.build();
-    }
+    private void generateOnSaveInstanceStateMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
+        boolean hasParameters = !fragment.getParameters().isEmpty();
+        boolean hasPersistedVars = !fragment.getParameters().isEmpty();
 
-    private MethodSpec generateSaveVariablesMethod(FragmentBindingData fragmentInfo) {
-        MethodSpec.Builder method = MethodSpec
-                .methodBuilder("saveVariablesState")
-                .addModifiers(PUBLIC)
+        if (!hasParameters && !hasPersistedVars) {
+            return;
+        }
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("onSaveInstanceState")
                 .addParameter(ANDROID_BUNDLE, "outState")
-                .addParameter(fragmentInfo.getClassName(), "fragment")
+                .addModifiers(PUBLIC)
+                .addStatement("super.onSaveInstanceState(outState)")
+                .addStatement("saveVariablesState(outState)")
                 .returns(void.class);
-        fragmentInfo.getParameters().forEach(param -> {
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", "fragment");
-            method.addCode(writeStatement);
-        });
-        fragmentInfo.getPersistedVariables().forEach(param -> {
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", "fragment");
-            method.addCode(writeStatement);
-        });
-        return method.build();
+
+        destination.add(builder.build());
     }
 
-    private MethodSpec generateRestoreVariablesMethod(FragmentBindingData fragmentInfo) {
-        MethodSpec.Builder method = MethodSpec
-                .methodBuilder("restoreVariablesState")
-                .addModifiers(PUBLIC)
-                .addParameter(ANDROID_BUNDLE, "fragmentSavedInstanceState")
-                .addParameter(fragmentInfo.getClassName(), "fragment")
+    private void generateFragmentParametersMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("generateParameters")
+                .addModifiers(PRIVATE)
+                .addParameter(ANDROID_BUNDLE, "arguments")
                 .returns(void.class);
+
+        if (fragment.getParameters().isEmpty()) {
+            return;
+        }
+
+        fragment.getParameters().forEach(param -> {
+            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "arguments", "", true);
+            builder.addCode(readStatement);
+        });
+
+        destination.add(builder.build());
+    }
+
+    private void generateSaveVariablesMethod(FragmentBindingData fragmentInfo, List<MethodSpec> destination) {
+        MethodSpec.Builder builder = MethodSpec
+                .methodBuilder("saveVariablesState")
+                .addModifiers(PRIVATE)
+                .addParameter(ANDROID_BUNDLE, "outState")
+                .returns(void.class);
+
+        if (fragmentInfo.getParameters().isEmpty() && fragmentInfo.getPersistedVariables().isEmpty()) {
+            return;
+        }
+
         fragmentInfo.getParameters().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", "fragment", false);
-            method.addCode(readStatement);
+            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", "");
+            builder.addCode(writeStatement);
         });
+
         fragmentInfo.getPersistedVariables().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", "fragment", false);
-            method.addCode(readStatement);
+            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", "");
+            builder.addCode(writeStatement);
         });
-        return method.build();
+
+        destination.add(builder.build());
+    }
+
+    private void generateRestoreVariablesMethod(FragmentBindingData fragmentInfo, List<MethodSpec> destination) {
+        MethodSpec.Builder builder = MethodSpec
+                .methodBuilder("restoreVariablesState")
+                .addModifiers(PRIVATE)
+                .addParameter(ANDROID_BUNDLE, "fragmentSavedInstanceState")
+                .returns(void.class);
+
+        if (fragmentInfo.getParameters().isEmpty() && fragmentInfo.getPersistedVariables().isEmpty()) {
+            return;
+        }
+
+        fragmentInfo.getParameters().forEach(param -> {
+            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", "", false);
+            builder.addCode(readStatement);
+        });
+
+        fragmentInfo.getPersistedVariables().forEach(param -> {
+            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", "", false);
+            builder.addCode(readStatement);
+        });
+
+        destination.add(builder.build());
     }
 }

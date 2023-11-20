@@ -6,6 +6,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.C
 import com.squareup.javapoet.ClassName;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
@@ -16,7 +17,7 @@ public class ActivityBindingData {
     private final ClassName className;
     private boolean routingEnabled;
 
-    public ActivityBindingData(Elements elements, Element activityClassElement, List<AnnotatedElement> annotatedElements) {
+    public ActivityBindingData(Elements elements, TypeElement activityClassElement, List<AnnotatedElement> annotatedElements) {
         this.type = activityClassElement.asType();
         this.className = ClassNames.generateClassName(activityClassElement, elements);
         annotatedElements.forEach(this::handleActivityConfiguration);

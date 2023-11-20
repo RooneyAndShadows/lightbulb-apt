@@ -123,9 +123,9 @@ class TransformationPlugin : Plugin<Project> {
             if (!hasKaptApplied) {
                 project.plugins.apply(KAPT_PLUGIN_ID)
             }
-            //project.dependencies.add("kapt", LIGHTBULB_APT_DEPENDENCY_NOTATION)
+            project.dependencies.add("kapt", LIGHTBULB_APT_DEPENDENCY_NOTATION)
         } else {
-            //project.dependencies.add("annotationProcessor", LIGHTBULB_APT_DEPENDENCY_NOTATION)
+            project.dependencies.add("annotationProcessor", LIGHTBULB_APT_DEPENDENCY_NOTATION)
         }
 
         project.dependencies.add("implementation", LIGHTBULB_APT_DEPENDENCY_NOTATION)

@@ -6,6 +6,9 @@ import com.squareup.javapoet.TypeName;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 public class ElementUtils {
@@ -22,6 +25,11 @@ public class ElementUtils {
         return elements.getPackageOf(element)
                 .getQualifiedName()
                 .toString();
+    }
+
+    public static TypeElement getSuperType(TypeElement element) {
+        TypeMirror superClassTypeMirror = element.getSuperclass();
+        return (TypeElement) ((DeclaredType) superClassTypeMirror).asElement();
     }
 
     public static String getSimpleName(Element element) {
