@@ -9,6 +9,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.ElementUtils;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.PackageNames;
 import com.squareup.javapoet.ClassName;
 
 import javax.lang.model.element.TypeElement;
@@ -26,21 +27,21 @@ public class FragmentBindingData {
     private final TypeMirror superType;
     private final ClassName className;
     private final ClassName superClassName;
-    private final ClassName bindingClassName;
+    private final ClassName instrumentedClassName;
     private final boolean canBeInstantiated;
     private ScreenInfo screenInfo;
     private Configuration configuration;
     private final List<Parameter> parameters = new ArrayList<>();
     private final List<Variable> persistedVariables = new ArrayList<>();
     private final List<ViewBinding> viewBindings = new ArrayList<>();
-    private final String BINDING_CLASS_NAME_PREFIX = "LB_";
+    private final String BINDING_CLASS_NAME_PREFIX = "Lightbulb_";
 
     public FragmentBindingData(Elements elements, TypeElement fragmentClassElement, List<AnnotatedElement> annotatedElements) {
         this.type = fragmentClassElement.asType();
         this.superType = fragmentClassElement.getSuperclass();
         this.className = ClassNames.generateClassName(fragmentClassElement, elements);
         this.superClassName = ClassNames.generateSuperClassName(fragmentClassElement, elements);
-        this.bindingClassName = ClassNames.generateClassNameWithPrefix(fragmentClassElement, elements, BINDING_CLASS_NAME_PREFIX);
+        this.instrumentedClassName = ClassNames.generateClassNameWithPrefix(PackageNames.getFragmentsPackage(), className.simpleName(), BINDING_CLASS_NAME_PREFIX);
         this.canBeInstantiated = ElementUtils.canBeInstantiated(fragmentClassElement);
         annotatedElements.forEach(element -> {
             handleFragmentConfiguration(element);
@@ -51,6 +52,10 @@ public class FragmentBindingData {
         });
     }
 
+    public String getSimpleClassName() {
+        return className.simpleName();
+    }
+
     public ClassName getClassName() {
         return className;
     }
@@ -59,8 +64,8 @@ public class FragmentBindingData {
         return superClassName;
     }
 
-    public ClassName getBindingClassName() {
-        return bindingClassName;
+    public ClassName getInstrumentedClassName() {
+        return instrumentedClassName;
     }
 
     public boolean isCanBeInstantiated() {
@@ -119,7 +124,7 @@ public class FragmentBindingData {
     private void handleFragmentScreen(AnnotatedElement element) {
         Annotation annotation = element.getAnnotation();
         if (!(annotation instanceof FragmentScreen screen)) return;
-        screenInfo = new ScreenInfo(screen.screenName(), screen.screenGroup());
+        screenInfo = new ScreenInfo(screen.screenGroup(), screen.screenName());
     }
 
     private void handleFragmentParameter(AnnotatedElement element) {

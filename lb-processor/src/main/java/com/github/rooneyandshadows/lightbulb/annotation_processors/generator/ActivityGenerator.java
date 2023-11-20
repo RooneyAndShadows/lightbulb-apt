@@ -7,8 +7,8 @@ import javax.annotation.processing.Filer;
 
 public class ActivityGenerator extends CodeGenerator {
 
-    public ActivityGenerator(String rootPackage, Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(rootPackage, filer, annotationResultsRegistry);
+    public ActivityGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, annotationResultsRegistry);
     }
 
     @Override

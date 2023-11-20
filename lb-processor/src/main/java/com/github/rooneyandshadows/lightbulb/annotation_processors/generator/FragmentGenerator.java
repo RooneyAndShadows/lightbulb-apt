@@ -6,6 +6,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment
 import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.inner.Configuration;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -18,22 +19,25 @@ import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.
 import static javax.lang.model.element.Modifier.*;
 
 public class FragmentGenerator extends CodeGenerator {
+    protected final ClassName ANDROID_R;
 
-    public FragmentGenerator(String rootPackage, Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(rootPackage, filer, annotationResultsRegistry);
+    public FragmentGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, annotationResultsRegistry);
+        this.ANDROID_R = ClassNames.androidResources();
     }
 
     @Override
     public void generate() {
         List<FragmentBindingData> fragmentBindings = annotationResultsRegistry.getResult(FRAGMENT_BINDINGS);
-        generateBindings(fragmentBindings);
+        generateFragments(fragmentBindings);
     }
 
-    private void generateBindings(List<FragmentBindingData> fragmentBindings) {
+    private void generateFragments(List<FragmentBindingData> fragmentBindings) {
         fragmentBindings.forEach(fragmentInfo -> {
             List<MethodSpec> methods = new ArrayList<>();
             List<FieldSpec> fields = new ArrayList<>();
             fragmentInfo.getParameters().forEach(parameter -> {
+                //TODO CHANGE ACCESS MODIFIER (PUBLIC IF NECESSARY and AT LEASE PROTECTED)
                 FieldSpec fieldSpec = FieldSpec.builder(parameter.getType(), parameter.getName(), PROTECTED)
                         .addAnnotation(RemoveField.class)
                         .build();
@@ -47,8 +51,6 @@ public class FragmentGenerator extends CodeGenerator {
                 fields.add(fieldSpec);
             });
 
-
-            generateFragmentNewInstanceMethods(fragmentInfo, methods);
             generateOnCreateMethod(fragmentInfo, methods);
             generateOnCreateViewMethod(fragmentInfo, methods);
             generateOnViewCreatedMethod(fragmentInfo, methods);
@@ -56,54 +58,19 @@ public class FragmentGenerator extends CodeGenerator {
             generateFragmentParametersMethod(fragmentInfo, methods);
             generateSaveVariablesMethod(fragmentInfo, methods);
             generateRestoreVariablesMethod(fragmentInfo, methods);
-            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.getBindingClassName())
+            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.getInstrumentedClassName())
                     .addModifiers(PUBLIC)
                     .addFields(fields)
                     .superclass(fragmentInfo.getSuperClassName())
                     .addMethods(methods);
             try {
-                JavaFile.builder(fragmentInfo.getBindingClassName().packageName(), generatedClass.build())
+                JavaFile.builder(fragmentInfo.getInstrumentedClassName().packageName(), generatedClass.build())
                         .build()
                         .writeTo(filer);
             } catch (IOException e) {
                 //e.printStackTrace();
             }
         });
-    }
-
-    private void generateFragmentNewInstanceMethods(FragmentBindingData fragmentInfo, List<MethodSpec> destination) {
-        if (!fragmentInfo.isCanBeInstantiated()) {
-            return;
-        }
-
-        if (fragmentInfo.hasOptionalParameters()) {
-            generateFragmentNewInstanceMethod(fragmentInfo, false, destination);
-        }
-
-        generateFragmentNewInstanceMethod(fragmentInfo, true, destination);
-    }
-
-    private void generateFragmentNewInstanceMethod(
-            FragmentBindingData fragmentInfo,
-            boolean includeOptionalParams,
-            List<MethodSpec> destination
-    ) {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("newInstance")
-                .addModifiers(PUBLIC, STATIC)
-                .returns(fragmentInfo.getClassName())
-                .addStatement("$T fragment = new $T()", fragmentInfo.getClassName(), fragmentInfo.getClassName())
-                .addStatement("$T arguments = new $T()", ANDROID_BUNDLE, ANDROID_BUNDLE);
-
-        fragmentInfo.getFragmentParameters(includeOptionalParams).forEach(param -> {
-            builder.addParameter(param.getParameterSpec());
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "arguments", null);
-            builder.addCode(writeStatement);
-        });
-
-        builder.addStatement("fragment.setArguments(arguments)");
-        builder.addStatement("return fragment");
-
-        destination.add(builder.build());
     }
 
     private void generateOnCreateMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
@@ -115,8 +82,9 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreate")
-                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .returns(void.class)
                 .addStatement("super.onCreate(savedInstanceState)");
 
@@ -152,6 +120,7 @@ public class FragmentGenerator extends CodeGenerator {
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreateView")
                 .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
                 .addParameter(ANDROID_LAYOUT_INFLATER, "inflater")
                 .addParameter(ANDROID_VIEW_GROUP, "container")
                 .addParameter(ANDROID_BUNDLE, "savedInstanceState")
@@ -169,9 +138,10 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onViewCreated")
+                .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
                 .addParameter(ANDROID_VIEW, "fragmentView")
                 .addParameter(ANDROID_BUNDLE, "savedInstanceState")
-                .addModifiers(PUBLIC)
                 .addStatement("super.onViewCreated(fragmentView,savedInstanceState)")
                 .returns(void.class);
 
@@ -201,8 +171,9 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onSaveInstanceState")
-                .addParameter(ANDROID_BUNDLE, "outState")
                 .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(ANDROID_BUNDLE, "outState")
                 .addStatement("super.onSaveInstanceState(outState)")
                 .addStatement("saveVariablesState(outState)")
                 .returns(void.class);

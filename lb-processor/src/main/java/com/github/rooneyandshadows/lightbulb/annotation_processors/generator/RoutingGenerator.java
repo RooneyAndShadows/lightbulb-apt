@@ -4,6 +4,8 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.data.activity
 import com.github.rooneyandshadows.lightbulb.annotation_processors.data.fragment.FragmentBindingData;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.PackageNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -19,16 +21,12 @@ import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.
 
 @SuppressWarnings("DuplicatedCode")
 public class RoutingGenerator extends CodeGenerator {
-    private final Filer filer;
-    private final String routingPackage;
     private final String screensPackage;
     private final ClassName screensClassName;
 
-    public RoutingGenerator(String rootPackage, Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(rootPackage, filer, annotationResultsRegistry);
-        this.filer = filer;
-        routingPackage = rootPackage.concat(".routing");
-        screensPackage = routingPackage.concat(".screens");
+    public RoutingGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, annotationResultsRegistry);
+        screensPackage = PackageNames.getRoutingScreensPackage();
         screensClassName = ClassName.get(screensPackage, "Screens");
     }
 
@@ -234,7 +232,7 @@ public class RoutingGenerator extends CodeGenerator {
                 });
                 screenClass.addMethod(notOptionalScreenConstructor.build());
             }
-            getFragmentMethod.addStatement("return $T.newInstance(" + allParams + ")", fragmentInfo.getBindingClassName());
+            getFragmentMethod.addStatement("return $T.$L.newInstance(" + allParams + ")", ClassNames.getFragmentFactoryClassName(), fragmentInfo.getSimpleClassName());
             screenClass.addMethod(getFragmentMethod.build());
             groupClass.addType(screenClass.build());
         });

@@ -16,7 +16,6 @@ import java.util.UUID;
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.PackageNames.*;
 
 public class ClassNames {
-
     public static final ClassName BASE_ACTIVITY = ClassName.get(LB_ACTIVITY, "BaseActivity");
     public static final ClassName BASE_ROUTER = ClassName.get(LB_ROUTING, "BaseActivityRouter");
     public static final ClassName DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_DATE, "DateUtils");
@@ -37,24 +36,23 @@ public class ClassNames {
     public static final ClassName MAP = ClassName.get(Map.class);
     public static final ClassName HASH_MAP = ClassName.get(HashMap.class);
     public static final ClassName ILLEGAL_ARGUMENT_EXCEPTION = ClassName.get(IllegalArgumentException.class);
+    public static final String FRAGMENT_FACTORY_CLASS_NAME = "Fragments";
 
 
-    public static ClassName androidResources(String rootPackage) {
-        return ClassName.get(rootPackage, "R");
+    public static ClassName androidResources() {
+        return ClassName.get(PackageNames.getRootPackage(), "R");
     }
 
     public static String getClassPackage(Elements elements, TypeElement element) {
         return ElementUtils.getPackage(elements, element);
     }
 
-    public static ClassName generateClassNameWithSuffix(TypeElement element, Elements elements, String classNameSuffix) {
-        String classPackage = ElementUtils.getPackage(elements, element);
-        return ClassName.get(classPackage, element.getSimpleName().toString().concat(classNameSuffix));
+    public static ClassName generateClassNameWithSuffix(String classPackage, String className, String classNameSuffix) {
+        return ClassName.get(classPackage, className.concat(classNameSuffix));
     }
 
-    public static ClassName generateClassNameWithPrefix(TypeElement element, Elements elements, String classNamePrefix) {
-        String classPackage = ElementUtils.getPackage(elements, element);
-        return ClassName.get(classPackage, classNamePrefix.concat(element.getSimpleName().toString()));
+    public static ClassName generateClassNameWithPrefix(String classPackage, String className, String classNamePrefix) {
+        return ClassName.get(classPackage, classNamePrefix.concat(className));
     }
 
     public static ClassName generateClassName(TypeElement element, Elements elements) {
@@ -69,5 +67,9 @@ public class ClassNames {
 
     public static ClassName generateVersionCodeClassName(String versionCode) {
         return ClassName.get(ANDROID_BUILD_VERSION_CODES, versionCode);
+    }
+
+    public static ClassName getFragmentFactoryClassName() {
+        return ClassName.get(PackageNames.getFragmentsFactoryPackage(), FRAGMENT_FACTORY_CLASS_NAME);
     }
 }

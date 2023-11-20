@@ -16,16 +16,13 @@ import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.
 import static com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ClassNames.OFFSET_DATE_UTILS;
 
 public abstract class CodeGenerator {
-    protected final String rootPackage;
     protected final Filer filer;
     protected final AnnotationResultsRegistry annotationResultsRegistry;
-    protected final ClassName ANDROID_R;
 
-    public CodeGenerator(String rootPackage, Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        this.rootPackage = rootPackage;
+
+    public CodeGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
         this.filer = filer;
         this.annotationResultsRegistry = annotationResultsRegistry;
-        this.ANDROID_R = ClassNames.androidResources(rootPackage);
     }
 
     public abstract void generate();
@@ -92,30 +89,30 @@ public abstract class CodeGenerator {
         }
         if (isSimpleType(typeString)) {
             if (isString(typeString)) {
-                String bundleExp = "$T $L = " .concat(String.format("%s.getString($S,\"\")", bundleVariableName));
+                String bundleExp = "$T $L = ".concat(String.format("%s.getString($S,\"\")", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             } else if (isUUID(typeString)) {
                 String bundleExp = String.format("$T $L = $T.fromString(%s.getString($S,\"\"))", bundleVariableName);
                 codeBlock.addStatement(bundleExp, UUID, parameterName, UUID, parameterName);
             } else if (isInt(typeString)) {
-                String bundleExp = "$T $L = " .concat(String.format("%s.getInt($S)", bundleVariableName));
+                String bundleExp = "$T $L = ".concat(String.format("%s.getInt($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             } else if (isBoolean(typeString)) {
-                String bundleExp = "$T $L = " .concat(String.format("%s.getBoolean($S)", bundleVariableName));
+                String bundleExp = "$T $L = ".concat(String.format("%s.getBoolean($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             } else if (isFloat(typeString)) {
-                String bundleExp = "$T $L = " .concat(String.format("%s.getFloat($S)", bundleVariableName));
+                String bundleExp = "$T $L = ".concat(String.format("%s.getFloat($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             } else if (isLong(typeString)) {
-                String bundleExp = "$T $L = " .concat(String.format("%s.getLong($S)", bundleVariableName));
+                String bundleExp = "$T $L = ".concat(String.format("%s.getLong($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             } else if (isDouble(typeString)) {
-                String bundleExp = "$T $L = " .concat(String.format("%s.getDouble($S)", bundleVariableName));
+                String bundleExp = "$T $L = ".concat(String.format("%s.getDouble($S)", bundleVariableName));
                 codeBlock.addStatement(bundleExp, paramType, parameterName, parameterName);
             }
         } else if (isDate(typeString)) {
             String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
-            codeBlock.addStatement("$T $LDateString = " .concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
+            codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
             codeBlock.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", DATE, parameterName, DATE_UTILS, DATE_UTILS, "defaultFormat", parameterName.concat("DateString"));
             if (validateParameters) {
                 String errorString = String.format("Argument %s is provided but date could not be parsed.", parameterName);
@@ -125,7 +122,7 @@ public abstract class CodeGenerator {
             }
         } else if (isOffsetDate(typeString)) {
             String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
-            codeBlock.addStatement("$T $LDateString = " .concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
+            codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
             codeBlock.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", OFFSET_DATE_TIME, parameterName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", parameterName.concat("DateString"));
             if (validateParameters) {
                 String errorString = String.format("Argument %s is provided but date could not be parsed.", parameterName);
@@ -136,9 +133,9 @@ public abstract class CodeGenerator {
         } else {
             codeBlock.addStatement("$T $L", paramType, parameterName);
             codeBlock.beginControlFlow("if($L >= $L)", SDK_INT, ClassNames.generateVersionCodeClassName("TIRAMISU"))
-                    .addStatement("$L = " .concat(String.format("%s.getParcelable($S,$L)", bundleVariableName)), parameterName, parameterName, paramType.toString().concat(".class"))
+                    .addStatement("$L = ".concat(String.format("%s.getParcelable($S,$L)", bundleVariableName)), parameterName, parameterName, paramType.toString().concat(".class"))
                     .nextControlFlow("else")
-                    .addStatement("$L = " .concat(String.format("%s.getParcelable($S)", bundleVariableName)), parameterName, parameterName)
+                    .addStatement("$L = ".concat(String.format("%s.getParcelable($S)", bundleVariableName)), parameterName, parameterName)
                     .endControlFlow();
             if (validateParameters) {
                 String errorString = String.format("Argument %s is not nullable, but null value received from bundle.", parameterName);

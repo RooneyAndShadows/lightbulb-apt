@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names;
 
 public class PackageNames {
+    private static String rootPackage = null;
     public static final String LB_ROUTING = "com.github.rooneyandshadows.lightbulb.application.activity.routing";
     public static final String LB_ACTIVITY = "com.github.rooneyandshadows.lightbulb.application.activity";
     public static final String LB_FRAGMENT = "com.github.rooneyandshadows.lightbulb.application.fragment.base";
@@ -12,7 +13,34 @@ public class PackageNames {
     public static final String ANDROID_CONTENT_RES = "android.content.res";
     public static final String ANDROID_BUILD_VERSION = ANDROID_OS.concat(".Build.VERSION");
     public static final String ANDROID_BUILD_VERSION_CODES = ANDROID_OS.concat(".Build.VERSION_CODES");
-    public static final String JAVA_UTIL = "java.util";
-    public static final String JAVA_LANG = "java.lang";
-    public static final String JAVA_TIME = "java.time";
+
+    public static void setRootPackage(String rootPackage) {
+        PackageNames.rootPackage = rootPackage;
+    }
+
+    public static String getRootPackage() {
+        if (rootPackage == null) throw new IllegalStateException("root package cannot be null");
+        return PackageNames.rootPackage;
+    }
+
+    public static String getRoutingScreensPackage() {
+        return resolve(getRootPackage(), "routing", "screens");
+    }
+
+
+    public static String getFragmentsFactoryPackage() {
+        return resolve(getRootPackage(), "fragments", "factory");
+    }
+
+    public static String getFragmentsPackage() {
+        return resolve(getRootPackage(), "fragments");
+    }
+
+    public static String resolve(String first, String... other) {
+        String packageString = first;
+        for (String packagePart : other) {
+            packageString = packageString.concat(".").concat(packagePart);
+        }
+        return packageString;
+    }
 }

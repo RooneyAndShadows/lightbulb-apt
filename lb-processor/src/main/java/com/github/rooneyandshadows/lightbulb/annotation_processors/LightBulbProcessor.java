@@ -6,6 +6,7 @@ import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.L
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.annotation_processors.annotations.FragmentStatePersisted;
+import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.PackageNames;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.*;
@@ -39,8 +40,9 @@ public class LightBulbProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        rootPackage = getRootPackage();
-        CodeGenerationService generationService = new CodeGenerationService(rootPackage, filer, messager, elements, roundEnvironment);
+        String rootPackage = getRootPackage();
+        PackageNames.setRootPackage(rootPackage);
+        CodeGenerationService generationService = new CodeGenerationService(filer, messager, elements, roundEnvironment);
         generationService.process();
         return false;
     }
