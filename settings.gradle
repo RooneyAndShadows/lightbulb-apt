@@ -1,4 +1,4 @@
-rootProject.name = 'lightbulb-annotation-processors'
-include 'lb-processor'
-include 'lb-compile'
-
+rootProject.name = 'lightbulb-apt'
+include 'lb-apt-processor'
+include 'lb-apt-compile'
+include ':lb-apt-core'

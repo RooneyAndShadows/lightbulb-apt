@@ -7,7 +7,8 @@ buildscript {
                 ],
                 android: [
                         gradle_plugin: "8.0.2",
-                        gradle_build : "0.12.2"
+                        gradle_build : "0.12.2",
+                        appcompat    : "1.6.1",
                 ],
                 misc   : [
                         java_commons: "[1.0.7,1.1.0[",
@@ -18,6 +19,7 @@ buildscript {
         ]
         environment = [
                 "group_id": "com.github.rooneyandshadows.lightbulb-apt",
+                "android_core_namespace": 'com.github.rooneyandshadows.lightbulb.apt.core',
                 "version" : "1.1.0"
         ]
     }
@@ -34,5 +36,17 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        //noinspection JcenterRepositoryObsolete
+        jcenter()
+        google()
+        mavenLocal()
+        maven {
+            url "https://jitpack.io"
+        }
     }
 }
