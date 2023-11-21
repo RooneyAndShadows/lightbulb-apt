@@ -1,19 +1,21 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.java.commons.string.StringUtils;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.RemoveField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.FragmentBindingData;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Configuration;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO ADD ANNOTATIONS FOR BYTECODE TRANSFORMATIONS
 import static javax.lang.model.element.Modifier.*;
 
 public class FragmentGenerator extends CodeGenerator {
@@ -30,25 +32,24 @@ public class FragmentGenerator extends CodeGenerator {
         generateFragments(fragmentBindings);
     }
 
+    private void generateFields(FragmentBindingData fragment, List<FieldSpec> destination) {
+        List<Variable> fields = new ArrayList<>();
+        fields.addAll(fragment.getParameters());
+        fields.addAll(fragment.getPersistedVariables());
+        fields.forEach(variable -> {
+            Modifier modifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
+            FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), modifier)
+                    .build();
+            destination.add(fieldSpec);
+        });
+    }
+
     private void generateFragments(List<FragmentBindingData> fragmentBindings) {
         fragmentBindings.forEach(fragmentInfo -> {
             List<MethodSpec> methods = new ArrayList<>();
             List<FieldSpec> fields = new ArrayList<>();
-            fragmentInfo.getParameters().forEach(parameter -> {
-                //TODO CHANGE ACCESS MODIFIER (PUBLIC IF NECESSARY and AT LEASE PROTECTED)
-                FieldSpec fieldSpec = FieldSpec.builder(parameter.getType(), parameter.getName(), PROTECTED)
-                        .addAnnotation(RemoveField.class)
-                        .build();
-                fields.add(fieldSpec);
-            });
 
-            fragmentInfo.getPersistedVariables().forEach(variable -> {
-                FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), PROTECTED)
-                        .addAnnotation(RemoveField.class)
-                        .build();
-                fields.add(fieldSpec);
-            });
-
+            generateFields(fragmentInfo, fields);
             generateOnCreateMethod(fragmentInfo, methods);
             generateOnCreateViewMethod(fragmentInfo, methods);
             generateOnViewCreatedMethod(fragmentInfo, methods);

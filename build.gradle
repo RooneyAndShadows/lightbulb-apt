@@ -14,13 +14,13 @@ buildscript {
                         java_commons: "[1.0.7,1.1.0[",
                         javassist   : "3.29.2-GA",
                         javapoet    : "1.13.0",
-                        lb_processor: "1.1.0",
+                        lb_processor: "2.0.0",
                 ]
         ]
         environment = [
                 "group_id": "com.github.rooneyandshadows.lightbulb-apt",
                 "android_core_namespace": 'com.github.rooneyandshadows.lightbulb.apt.core',
-                "version" : "1.1.0"
+                "version" : "2.0.0"
         ]
     }
     repositories {

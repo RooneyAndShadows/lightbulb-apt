@@ -24,12 +24,10 @@ public class PackageNames {
     public static final String ANDROID_BUILD_VERSION_CODES = resolve(ANDROID_OS, "Build", "VERSION_CODES");
 
     public static void init(String projectRoot) {
-        System.out.println("==================================="+projectRoot);
         rootPackage = projectRoot;
     }
 
     public static String getRootPackage() {
-        System.out.println("sssssssssssssssssssssssssssssssssssssssss");
         if (rootPackage == null) throw new IllegalStateException("root package cannot be null");
         return rootPackage;
     }

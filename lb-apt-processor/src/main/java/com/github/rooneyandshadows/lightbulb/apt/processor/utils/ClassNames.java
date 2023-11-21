@@ -17,6 +17,7 @@ public class ClassNames {
     /**
      * Result names
      */
+    public static final String GENERATED_FRAGMENTS_CLASS_NAME_PREFIX = "Lightbulb_";
     public static final String FRAGMENT_FACTORY_CLASS_NAME = "Fragments";
     public static final String ROUTING_SCREENS_CLASS_NAME = "Screens";
     public static final String ROUTING_ACTIVITY_ROUTER_CLASS_NAME_SUFFIX = "Router";

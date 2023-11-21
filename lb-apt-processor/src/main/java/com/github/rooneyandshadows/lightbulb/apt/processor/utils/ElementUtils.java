@@ -63,6 +63,15 @@ public class ElementUtils {
                 });
     }
 
+    public static Modifier getAccessModifier(Element element) {
+        return element.getModifiers()
+                .stream()
+                .filter(modifier -> {
+                    return modifier == Modifier.PUBLIC || modifier == Modifier.PROTECTED || modifier == Modifier.PRIVATE;
+                }).findFirst()
+                .orElse(null);
+    }
+
     private static String capitalizeFirstLetter(String target) {
         return target.substring(0, 1).toUpperCase() + target.substring(1);
     }

@@ -1,66 +1,88 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks
 
-import com.github.rooneyandshadows.lightbulb.apt.plugin.PLUGIN_TASK_GROUP
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.MyTransformation
-import com.github.rooneyandshadows.lightbulb.apt.plugin.VariantOutput
-import com.github.rooneyandshadows.lightbulb.apt.plugin.copyFolder
-import com.github.rooneyandshadows.lightbulb.apt.plugin.deleteDirectory
+import com.android.build.api.variant.Variant
+import com.github.rooneyandshadows.lightbulb.apt.plugin.globalClasspathForVariant
+import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil
+import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.common.TransformationJobRegistry
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeSuperclassTransformation
+
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.TaskAction
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.*
-import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.OutputFile
+import java.io.FileOutputStream
+import java.io.BufferedOutputStream
+import java.util.jar.JarFile
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
 import javax.inject.Inject
 
-
-@Suppress("unused")
-abstract class TransformationsTask @Inject constructor(private val variantOutput: VariantOutput) : DefaultTask() {
-    private val buildDir: String = project.buildDir.toString()
-    private val destinationRoot: String = "intermediates/lightbulb/classes"
-    private val rootDestinationDir: String = Paths.get(buildDir, destinationRoot, variantOutput.name).toString()
-    //private val transformationRegistry: TransformationJobRegistry
+abstract class TransformationsTask @Inject constructor(private val variant: Variant) : DefaultTask() {
+    private val transformationRegistry: TransformationJobRegistry
 
     @get:InputFiles
-    @get:Classpath
-    //This makes the task to start after all the tasks that have outputs contained in the classpath
-    val globalClassPath: FileCollection
-        get() = variantOutput.globalClassPath
+    val globalClasspath: FileCollection
+        get() = project.globalClasspathForVariant(variant)
 
     @get:InputFiles
-    val transformationsClassPath: FileCollection
-        get() = variantOutput.transformationsClassPath
+    abstract val allJars: ListProperty<RegularFile>
 
-    //@get:OutputDirectories
-    //val transformedFiles: FileCollection
-    //    get() = variantOutput.transformationsClassPath
+    @get:InputFiles
+    abstract val allDirectories: ListProperty<Directory>
 
-    @get:OutputDirectory
-    val destinationDir: File
-        get() = project.file(rootDestinationDir)
+    @get:OutputFile
+    abstract val output: RegularFileProperty
 
     init {
-        //transformationRegistry = TransformationJobRegistry(
-        //    buildDir,
-        //    rootDestinationDir,
-        //    globalClassPath,
-        //    transformationsClassPath
-        //)
-        //transformationRegistry.register(MyTransformation())
-    }
-
-    @Override
-    override fun getGroup(): String {
-        return PLUGIN_TASK_GROUP
+        transformationRegistry = TransformationJobRegistry(globalClasspath) { getTransformationsClasspath() }
+        transformationRegistry.register(ChangeSuperclassTransformation())
     }
 
     @TaskAction
-    fun execute() {
-        //transformationRegistry.execute()
-        val source = Paths.get(rootDestinationDir).toFile()
-        val target = Paths.get(buildDir).toFile()
-        //source.copyFolder(target)
-       // source.deleteDirectory()
+    fun taskAction() {
+        val jars = allJars.get()
+
+        if (jars.size <= 0) {
+            return
+        }
+
+        val jarOutput = JarOutputStream(
+            BufferedOutputStream(
+                FileOutputStream(
+                    output.get().asFile
+                )
+            )
+        )
+        jarOutput.use {
+            jars.forEach { file ->
+                info("handling " + file.asFile.absolutePath)
+                val jarFile = JarFile(file.asFile)
+                jarFile.entries().iterator().forEach { jarEntry ->
+                    info("Adding from jar ${jarEntry.name}")
+                    jarOutput.putNextEntry(JarEntry(jarEntry.name))
+                    jarFile.getInputStream(jarEntry).use {
+                        it.copyTo(jarOutput)
+                    }
+                    jarOutput.closeEntry()
+                }
+                jarFile.close()
+            }
+            transformationRegistry.execute(jarOutput)
+        }
     }
+
+
+    private fun getTransformationsClasspath(): FileCollection {
+        val dirs = allDirectories.get().map {
+            return@map it.asFile.path
+        }
+        return project.files(dirs)
+    }
+
 }

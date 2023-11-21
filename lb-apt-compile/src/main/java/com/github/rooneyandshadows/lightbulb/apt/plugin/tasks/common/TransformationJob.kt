@@ -27,7 +27,6 @@ class TransformationJob(
         info("Executing transformations: ${transformation.javaClass.name}")
 
         try {
-            println(transformationsClassPath.asPath)
             val classPool = setupClassPool()
             val loadedClasses = preloadClasses(classPool)
 
@@ -52,7 +51,7 @@ class TransformationJob(
             try {
                 val byteCode = transformation.transform(classPool, clazz)
                 val className = clazz.name
-                println("Adding to jar ${className}")
+                info("Adding to jar ${className}")
                 jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
                 jarDestination.write(byteCode)
                 jarDestination.closeEntry()

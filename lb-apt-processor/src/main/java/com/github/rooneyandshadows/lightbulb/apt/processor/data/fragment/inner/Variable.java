@@ -5,6 +5,7 @@ import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
 
 
 @SuppressWarnings("DuplicatedCode")
@@ -14,6 +15,7 @@ public class Variable {
     protected final String setterName;
     protected final String getterName;
     protected final Element element;
+    protected final Modifier accessModifier;
     protected final boolean isNullable;
 
     public Variable(Element fieldElement) {
@@ -23,7 +25,17 @@ public class Variable {
         this.type = ElementUtils.getTypeOfFieldElement(fieldElement);
         this.setterName = ElementUtils.scanForSetter(classElement, name);
         this.getterName = ElementUtils.scanForGetter(classElement, name);
+        this.accessModifier = ElementUtils.getAccessModifier(fieldElement);
         this.isNullable = fieldElement.getAnnotation(Nullable.class) != null;
+    }
+
+    public boolean accessModifierAtLeast(Modifier target) {
+
+        if (target == null || accessModifier == null) {
+            return false;
+        }
+
+        return accessModifier.ordinal() <= target.ordinal();
     }
 
     public String getName() {
@@ -52,5 +64,9 @@ public class Variable {
 
     public boolean isNullable() {
         return isNullable;
+    }
+
+    public Modifier getAccessModifier() {
+        return accessModifier;
     }
 }

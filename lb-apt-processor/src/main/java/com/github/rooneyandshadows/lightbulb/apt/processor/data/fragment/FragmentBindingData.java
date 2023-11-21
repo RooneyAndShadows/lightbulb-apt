@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.GENERATED_FRAGMENTS_CLASS_NAME_PREFIX;
+
 @SuppressWarnings("FieldCanBeLocal")
 public class FragmentBindingData {
     private final TypeMirror type;
@@ -34,14 +36,13 @@ public class FragmentBindingData {
     private final List<Parameter> parameters = new ArrayList<>();
     private final List<Variable> persistedVariables = new ArrayList<>();
     private final List<ViewBinding> viewBindings = new ArrayList<>();
-    private final String BINDING_CLASS_NAME_PREFIX = "Lightbulb_";
 
     public FragmentBindingData(Elements elements, TypeElement fragmentClassElement, List<AnnotatedElement> annotatedElements) {
         this.type = fragmentClassElement.asType();
         this.superType = fragmentClassElement.getSuperclass();
         this.className = ClassNames.generateClassName(fragmentClassElement, elements);
         this.superClassName = ClassNames.generateSuperClassName(fragmentClassElement, elements);
-        this.instrumentedClassName = ClassNames.generateClassNameWithPrefix(PackageNames.getFragmentsPackage(), className.simpleName(), BINDING_CLASS_NAME_PREFIX);
+        this.instrumentedClassName = ClassNames.generateClassNameWithPrefix(PackageNames.getFragmentsPackage(), className.simpleName(), GENERATED_FRAGMENTS_CLASS_NAME_PREFIX);
         this.canBeInstantiated = ElementUtils.canBeInstantiated(fragmentClassElement);
         annotatedElements.forEach(element -> {
             handleFragmentConfiguration(element);

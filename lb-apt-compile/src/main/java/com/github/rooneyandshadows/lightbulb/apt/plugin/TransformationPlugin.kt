@@ -10,12 +10,13 @@ import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.github.rooneyandshadows.lightbulb.annotation_processors.utils.names.ProcessorOptionNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil
-import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TestTask
+import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TransformationsTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.configurationcache.extensions.capitalized
 import org.gradle.kotlin.dsl.register
 
-@Suppress("unused", "UNUSED_VARIABLE", "UnstableApiUsage")
+@Suppress("unused", "UNUSED_VARIABLE")
 class TransformationPlugin : Plugin<Project> {
     private var configured = false
     override fun apply(project: Project) {
@@ -23,31 +24,8 @@ class TransformationPlugin : Plugin<Project> {
 
         if (configured) {
             val extension = project.extensions.create(PLUGIN_EXTENSION_NAME, TransformExtension::class.java)
-            project.afterEvaluate {
-                setupLogger(extension)
-                configureTransformationTask(project)
-                val outputs = VariantOutput.from(project)
-                outputs.forEach {
-                    println(it.name)
-                }
-            }
-
-            val ext = project.extensions.getByName(
-                "androidComponents"
-            ) as ApplicationAndroidComponentsExtension
-
-            ext.onVariants(VariantSelectorImpl().withName("debug")) { variant ->
-                configureAPT(extension, variant)
-                val taskProvider = project.tasks.register<TestTask>("${variant.name}ModifyClasses", variant)
-                variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
-                    .use(taskProvider)
-                    .toTransform(
-                        ScopedArtifact.CLASSES,
-                        { it.allJars },
-                        TestTask::allDirectories,
-                        TestTask::output
-                    )
-            }
+            setupLogger(extension)
+            configureTransformationTask(project, extension)
         }
     }
 
@@ -58,42 +36,27 @@ class TransformationPlugin : Plugin<Project> {
     private fun configureAPT(extension: TransformExtension, variant: Variant) {
         val rootPackageArg = ProcessorOptionNames.PROJECT_ROOT_PACKAGE
         val rootPackageValue = extension.projectRootPackage
-        variant.javaCompilation.annotationProcessor.arguments.put(rootPackageArg, rootPackageValue)
+        variant.addAnnotationProcessorArgument(rootPackageArg, rootPackageValue)
     }
 
-    private fun configureTransformationTask(project: Project) {
+    private fun configureTransformationTask(project: Project, extension: TransformExtension) {
+        val ext = project.androidComponents()
 
-        /*val variantsOutput = VariantOutput.from(project)
-
-        variantsOutput.forEach { variantOutput ->
-            variantOutput.variant.javaCompileProvider.get().options.addAnnotationProcessorArgument()
-            variantsOutput
-            val capitalizedVariantName = variantOutput.name.capitalized()
+        ext.onVariants(VariantSelectorImpl().withName("debug")) { variant ->
+            configureAPT(extension, variant)
+            val capitalizedVariantName = variant.name.capitalized()
             val taskName = "transform${capitalizedVariantName}"
             val taskType = TransformationsTask::class.java
-            val transformationsTask = project.tasks.register(taskName, taskType, variantOutput).get()
-            transformationsTask.apply {
-                // Built by added for task dependency between the output and the task
-                val taskOutput = project.files(destinationDir).builtBy(this)
-                doLast {
-                    println("=========================")
-                    taskOutput.asFileTree.forEach {
-                        println(it.path)
-                    }
-                    println("=========================")
-                }
-
-                // Register a task lazily to get its TaskProvider.
-
-
-
-                // This registers the transformation task in the Android pipeline as something that generates
-                // byte code. This is technically designed to _add_ things to the pipeline.
-                // Since we've replaced the actual classes with the transformed ones and
-                // removed the java/kotlin output transformations, it's only purpose is to schedule the transformation task.
-                variantOutput.variant.registerPostJavacGeneratedBytecode(taskOutput)
-            }
-        }*/
+            val taskProvider = project.tasks.register<TransformationsTask>(taskName, variant)
+            variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+                .use(taskProvider)
+                .toTransform(
+                    ScopedArtifact.CLASSES,
+                    { it.allJars },
+                    TransformationsTask::allDirectories,
+                    TransformationsTask::output
+                )
+        }
     }
 
     private fun configure(project: Project) {
