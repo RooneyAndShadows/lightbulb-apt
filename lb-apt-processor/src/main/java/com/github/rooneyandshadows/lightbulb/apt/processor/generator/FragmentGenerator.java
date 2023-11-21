@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.java.commons.string.StringUtils;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbTransformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.FragmentBindingData;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Configuration;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Variable;
@@ -12,10 +13,12 @@ import com.squareup.javapoet.*;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
 //TODO ADD ANNOTATIONS FOR BYTECODE TRANSFORMATIONS
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.LB_TRANSFORMATION_ANNOTATION;
 import static javax.lang.model.element.Modifier.*;
 
 public class FragmentGenerator extends CodeGenerator {
@@ -57,8 +60,14 @@ public class FragmentGenerator extends CodeGenerator {
             generateFragmentParametersMethod(fragmentInfo, methods);
             generateSaveVariablesMethod(fragmentInfo, methods);
             generateRestoreVariablesMethod(fragmentInfo, methods);
+
+            AnnotationSpec annotationSpec =  AnnotationSpec.builder(LB_TRANSFORMATION_ANNOTATION)
+                    .addMember("target", "$T.class", fragmentInfo.getClassName())
+                    .build();
+
             TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.getInstrumentedClassName())
                     .addModifiers(PUBLIC)
+                    .addAnnotation(annotationSpec)
                     .addFields(fields)
                     .superclass(fragmentInfo.getSuperClassName())
                     .addMethods(methods);

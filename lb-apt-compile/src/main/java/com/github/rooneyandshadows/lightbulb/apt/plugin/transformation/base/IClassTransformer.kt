@@ -9,8 +9,8 @@ abstract class IClassTransformer {
         if (shouldTransform(classPool, ctClass)) {
             applyTransformations(classPool, ctClass)
         }
+        ctClass.freeze()
         return ctClass.toBytecode()
-        //ctClass.writeFile(outputDir)
     }
 
     protected abstract fun applyTransformations(classPool: ClassPool, ctClass: CtClass)

@@ -11,7 +11,6 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
 import java.io.*
 import java.util.jar.JarEntry
-import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 
 @Suppress("MemberVisibilityCanBePrivate")

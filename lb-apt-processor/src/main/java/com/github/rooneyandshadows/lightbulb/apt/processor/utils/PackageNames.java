@@ -10,6 +10,8 @@ public class PackageNames {
     public static final String LB_APT_CORE = resolve(ROONEY_AND_SHADOWS, "lightbulb", "apt", "android", "core");
     public static final String LB_APT_CORE_ROUTING = resolve(LB_APT_CORE, "routing");
     public static final String LB_APT_CORE_UTILS = resolve(LB_APT_CORE, "utils");
+    public static final String LB_APT_PROCESSOR = resolve(ROONEY_AND_SHADOWS, "lightbulb", "apt", "processor");
+    public static final String LB_APT_ANNOTATIONS = resolve(LB_APT_PROCESSOR, "annotations");
     /**
      * Android
      */
@@ -24,12 +26,14 @@ public class PackageNames {
     public static final String ANDROID_BUILD_VERSION_CODES = resolve(ANDROID_OS, "Build", "VERSION_CODES");
 
     public static void init(String projectRoot) {
-        rootPackage = projectRoot;
+        PackageNames.rootPackage = projectRoot;
+        System.out.println(projectRoot + "sssssssssssssssssssssssssssssssssss");
     }
 
     public static String getRootPackage() {
-        if (rootPackage == null) throw new IllegalStateException("root package cannot be null");
-        return rootPackage;
+        System.out.println(rootPackage + "+++++++++++++++++++++++++++");
+        if (PackageNames.rootPackage == null) throw new IllegalStateException("root package cannot be null");
+        return PackageNames.rootPackage;
     }
 
     public static String getRoutingPackage() {

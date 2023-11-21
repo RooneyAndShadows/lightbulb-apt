@@ -36,12 +36,13 @@ public class LightBulbProcessor extends AbstractProcessor {
         this.messager = processingEnvironment.getMessager();
         this.elements = processingEnvironment.getElementUtils();
         this.options = processingEnvironment.getOptions();
+        String rootPackage = getRootPackage();
+        PackageNames.init(rootPackage);
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        String rootPackage = getRootPackage();
-        PackageNames.init(rootPackage);
+
         CodeGenerationService generationService = new CodeGenerationService(filer, messager, elements, roundEnvironment);
         generationService.process();
         return false;
