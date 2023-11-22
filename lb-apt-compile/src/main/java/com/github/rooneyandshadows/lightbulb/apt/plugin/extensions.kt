@@ -1,4 +1,4 @@
-@file:Suppress("SpellCheckingInspection", "DEPRECATION")
+@file:Suppress("SpellCheckingInspection", "DEPRECATION", "UnstableApiUsage", "UNCHECKED_CAST")
 
 package com.github.rooneyandshadows.lightbulb.apt.plugin
 
@@ -9,11 +9,14 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.TestExtension
 import com.android.build.gradle.api.BaseVariant
+import javassist.CtClass
+import javassist.bytecode.annotation.AnnotationImpl
+import javassist.bytecode.annotation.Annotation
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.compile.CompileOptions
 import java.io.File
 import java.io.IOException
+import java.lang.reflect.Proxy
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
@@ -21,11 +24,9 @@ const val PLUGIN_EXTENSION_NAME = "lightbulb"
 const val PLUGIN_TASK_GROUP = "lightbulb"
 const val KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
 const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
-const val LIGHTBULB_APT_PROCESSOR_DEPENDENCY_NOTATION =
-    "com.github.rooneyandshadows.lightbulb-apt:lb-apt-processor:2.0.0"
+const val LIGHTBULB_APT_PROCESSOR_DEPENDENCY_NOTATION = "com.github.rooneyandshadows.lightbulb-apt:lb-apt-processor:2.0.0"
 const val LIGHTBULB_APT_CORE_DEPENDENCY_NOTATION = "com.github.rooneyandshadows.lightbulb-apt:lb-apt-core:2.0.0"
 
-@Suppress("UnstableApiUsage")
 fun Variant.addAnnotationProcessorArgument(name: String, value: String) {
     javaCompilation.annotationProcessor.arguments.put(name, value)
 }
@@ -43,7 +44,15 @@ fun Project.bootClasspath(): FileCollection {
     return files(bootClasspath)
 }
 
-@Suppress("UnstableApiUsage")
+fun <T : kotlin.Annotation> CtClass.getAnnotationHandler(annotationClass: Class<T>): Annotation? {
+    val proxiedAnnotation: T = getAnnotation(annotationClass) as T? ?: return null
+    if (!Proxy.isProxyClass(proxiedAnnotation.javaClass)) {
+        return null
+    }
+    val impl = Proxy.getInvocationHandler(proxiedAnnotation) as AnnotationImpl
+    return impl.annotation
+}
+
 fun Project.globalClasspathForVariant(variant: Variant): FileCollection {
     val variantClasspath = variant.compileClasspath
     var globalClasspath = bootClasspath()

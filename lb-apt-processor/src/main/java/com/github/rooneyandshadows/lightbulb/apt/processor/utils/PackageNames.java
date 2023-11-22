@@ -27,11 +27,9 @@ public class PackageNames {
 
     public static void init(String projectRoot) {
         PackageNames.rootPackage = projectRoot;
-        System.out.println(projectRoot + "sssssssssssssssssssssssssssssssssss");
     }
 
     public static String getRootPackage() {
-        System.out.println(rootPackage + "+++++++++++++++++++++++++++");
         if (PackageNames.rootPackage == null) throw new IllegalStateException("root package cannot be null");
         return PackageNames.rootPackage;
     }

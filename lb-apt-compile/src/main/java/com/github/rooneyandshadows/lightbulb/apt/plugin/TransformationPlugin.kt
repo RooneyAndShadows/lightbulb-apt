@@ -23,13 +23,15 @@ class TransformationPlugin : Plugin<Project> {
 
         if (configured) {
             val extension = project.extensions.create(PLUGIN_EXTENSION_NAME, TransformExtension::class.java)
-            setupLogger(extension)
+            setupLogger(project, extension)
             configureTransformationTask(project, extension)
         }
     }
 
-    private fun setupLogger(extension: TransformExtension) {
-        LoggingUtil.enabled = extension.debug
+    private fun setupLogger(project: Project, extension: TransformExtension) {
+        project.afterEvaluate {
+            LoggingUtil.enabled = extension.debug
+        }
     }
 
     private fun configureAPT(extension: TransformExtension, variant: Variant) {
