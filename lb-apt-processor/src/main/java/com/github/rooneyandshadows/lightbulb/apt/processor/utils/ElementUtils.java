@@ -72,6 +72,32 @@ public class ElementUtils {
                 .orElse(null);
     }
 
+    public static Modifier getMethodAccessModifier(Element classElement, String methodName) {
+        if (methodName == null || methodName.isBlank()) {
+            return null;
+        }
+
+        Element method = classElement.getEnclosedElements()
+                .stream()
+                .filter(target -> {
+                    String targetName = target.getSimpleName().toString();
+                    return target.getKind() == ElementKind.METHOD && targetName.equals(methodName);
+                }).findFirst()
+                .orElse(null);
+
+        if (method == null) {
+            return null;
+        }
+
+        return getAccessModifier(method);
+    }
+
+    public static boolean isFinal(Element element) {
+        return element.getModifiers()
+                .stream()
+                .anyMatch(modifier -> modifier == Modifier.FINAL);
+    }
+
     private static String capitalizeFirstLetter(String target) {
         return target.substring(0, 1).toUpperCase() + target.substring(1);
     }

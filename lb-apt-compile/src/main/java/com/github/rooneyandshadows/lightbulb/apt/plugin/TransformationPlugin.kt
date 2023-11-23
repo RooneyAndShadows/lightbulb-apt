@@ -9,6 +9,7 @@ import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TransformationsTask
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ProcessorOptionNames
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -23,6 +24,7 @@ class TransformationPlugin : Plugin<Project> {
 
         if (configured) {
             val extension = project.extensions.create(PLUGIN_EXTENSION_NAME, TransformExtension::class.java)
+            setupPackages(project, extension)
             setupLogger(project, extension)
             configureTransformationTask(project, extension)
         }
@@ -31,6 +33,12 @@ class TransformationPlugin : Plugin<Project> {
     private fun setupLogger(project: Project, extension: TransformExtension) {
         project.afterEvaluate {
             LoggingUtil.enabled = extension.debug
+        }
+    }
+
+    private fun setupPackages(project: Project, extension: TransformExtension) {
+        project.afterEvaluate {
+            PackageNames.init(extension.projectRootPackage)
         }
     }
 

@@ -1,10 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.java.commons.string.StringUtils;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbTransformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.FragmentBindingData;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Configuration;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Variable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.ClassField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
@@ -13,12 +11,10 @@ import com.squareup.javapoet.*;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
 //TODO ADD ANNOTATIONS FOR BYTECODE TRANSFORMATIONS
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.LB_TRANSFORMATION_ANNOTATION;
 import static javax.lang.model.element.Modifier.*;
 
 public class FragmentGenerator extends CodeGenerator {
@@ -35,15 +31,61 @@ public class FragmentGenerator extends CodeGenerator {
         generateFragments(fragmentBindings);
     }
 
-    private void generateFields(FragmentBindingData fragment, List<FieldSpec> destination) {
-        List<Variable> fields = new ArrayList<>();
+    private void generateFields(FragmentBindingData fragment, List<FieldSpec> destination, List<MethodSpec> methods) {
+        List<ClassField> fields = new ArrayList<>();
         fields.addAll(fragment.getParameters());
         fields.addAll(fragment.getPersistedVariables());
         fields.forEach(variable -> {
-            Modifier modifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
-            FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), modifier)
-                    .build();
-            destination.add(fieldSpec);
+            boolean hasSetter = variable.getSetterName() != null;
+            boolean hasGetter = variable.getGetterName() != null;
+            if (!hasSetter && !hasGetter) {
+                Modifier accessModifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
+                FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), accessModifier)
+                        .build();
+                destination.add(fieldSpec);
+            } else {
+                Modifier fieldAccessModifier = variable.getAccessModifier();
+                FieldSpec.Builder fieldSpecBuilder = FieldSpec.builder(variable.getType(), variable.getName());
+
+                if (fieldAccessModifier != null) {
+                    fieldSpecBuilder.addModifiers(fieldAccessModifier);
+                }
+
+                FieldSpec fieldSpec = fieldSpecBuilder.build();
+                destination.add(fieldSpec);
+
+                if (hasGetter) {
+                    Modifier access = variable.getGetterAccessModifier();
+
+                    if (access == PRIVATE) {
+                        access = PROTECTED;
+                    }
+
+                    MethodSpec getter = MethodSpec.methodBuilder(variable.getGetterName())
+                            .returns(variable.getType())
+                            .addModifiers(access, ABSTRACT)
+                            .build();
+
+                    methods.add(getter);
+                }
+
+                if (hasSetter) {
+                    Modifier access = variable.getSetterAccessModifier();
+
+                    if (access == PRIVATE) {
+                        access = PROTECTED;
+                    }
+
+                    MethodSpec setter = MethodSpec.methodBuilder(variable.getSetterName())
+                            .addParameter(variable.getType(), "value")
+                            .returns(variable.getType())
+                            .addModifiers(access, ABSTRACT)
+                            .build();
+
+                    methods.add(setter);
+                }
+
+            }
         });
     }
 
@@ -52,7 +94,7 @@ public class FragmentGenerator extends CodeGenerator {
             List<MethodSpec> methods = new ArrayList<>();
             List<FieldSpec> fields = new ArrayList<>();
 
-            generateFields(fragmentInfo, fields);
+            generateFields(fragmentInfo, fields, methods);
             generateOnCreateMethod(fragmentInfo, methods);
             generateOnCreateViewMethod(fragmentInfo, methods);
             generateOnViewCreatedMethod(fragmentInfo, methods);
@@ -61,13 +103,8 @@ public class FragmentGenerator extends CodeGenerator {
             generateSaveVariablesMethod(fragmentInfo, methods);
             generateRestoreVariablesMethod(fragmentInfo, methods);
 
-            AnnotationSpec annotationSpec =  AnnotationSpec.builder(LB_TRANSFORMATION_ANNOTATION)
-                    .addMember("target", "$T.class", fragmentInfo.getClassName())
-                    .build();
-
             TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.getInstrumentedClassName())
-                    .addModifiers(PUBLIC)
-                    .addAnnotation(annotationSpec)
+                    .addModifiers(PUBLIC, ABSTRACT)
                     .addFields(fields)
                     .superclass(fragmentInfo.getSuperClassName())
                     .addMethods(methods);
@@ -122,7 +159,7 @@ public class FragmentGenerator extends CodeGenerator {
         Configuration configuration = fragment.getConfiguration();
         String layoutName = configuration.getLayoutName();
 
-        if (StringUtils.isNullOrEmptyString(layoutName)) {
+        if (layoutName == null || layoutName.isBlank()) {
             return;
         }
 
@@ -219,12 +256,12 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         fragmentInfo.getParameters().forEach(param -> {
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", "");
+            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", true);
             builder.addCode(writeStatement);
         });
 
         fragmentInfo.getPersistedVariables().forEach(param -> {
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", "");
+            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", true);
             builder.addCode(writeStatement);
         });
 

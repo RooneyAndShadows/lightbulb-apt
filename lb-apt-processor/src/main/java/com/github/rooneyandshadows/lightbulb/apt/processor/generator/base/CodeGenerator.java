@@ -1,14 +1,15 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
-import com.github.rooneyandshadows.java.commons.string.StringUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Variable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.ClassField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.Modifier;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.TypeUtils.*;
 
@@ -24,15 +25,10 @@ public abstract class CodeGenerator {
 
     public abstract void generate();
 
-
-    protected CodeBlock generatePutIntoBundleBlockForParam(Variable target, String bundleVarName, String parameterEnclosingVarName) {
+    protected CodeBlock generatePutIntoBundleBlockForParam(ClassField target, String bundleVarName, boolean useGetter) {
         String typeString = target.getType().toString();
         String parameterName = target.getName();
-        String parameterAccessor = target.hasGetter() ? target.getGetterName().concat("()") : parameterName;
-
-        if (parameterEnclosingVarName != null && !parameterEnclosingVarName.isEmpty()) {
-            parameterAccessor = String.format("%s.%s", parameterEnclosingVarName, parameterAccessor);
-        }
+        String parameterAccessor = (target.hasGetter() && useGetter) ? target.getGetterName().concat("()") : parameterName;
 
         CodeBlock.Builder codeBlock = CodeBlock.builder();
         boolean checkForNull = !target.getType().isPrimitive();
@@ -66,7 +62,7 @@ public abstract class CodeGenerator {
         return codeBlock.build();
     }
 
-    protected CodeBlock generateReadFromBundleBlockForParam(Variable parameter, String bundleVariableName, String enclosingVarName, boolean validateParameters) {
+    protected CodeBlock generateReadFromBundleBlockForParam(ClassField parameter, String bundleVariableName, String enclosingVarName, boolean validateParameters) {
         String typeString = parameter.getType().toString();
         TypeName paramType = parameter.getType();
         String parameterName = parameter.getName();
@@ -74,7 +70,7 @@ public abstract class CodeGenerator {
         boolean isPrimitive = parameter.getType().isPrimitive();
         boolean needsValidation = !isPrimitive && validateParameters && !isNullable;
 
-        if (StringUtils.isNullOrEmptyString(enclosingVarName)) {
+        if (enclosingVarName == null || enclosingVarName.isEmpty()) {
             enclosingVarName = "this";
         }
 

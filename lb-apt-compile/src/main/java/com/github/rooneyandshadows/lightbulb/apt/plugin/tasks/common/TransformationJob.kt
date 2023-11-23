@@ -61,7 +61,7 @@ class TransformationJob(
     }
 
     private fun setupClassPool(): ClassPool {
-        val classPool: ClassPool = AnnotationLoadingClassPool()
+        val classPool: ClassPool = ClassPool(true)
         // set up the classpath for the classpool
         globalClassPath.forEach { classpath ->
             classPool.appendClassPath(classpath.path)
@@ -74,6 +74,9 @@ class TransformationJob(
         val filesForTransformation = transformationsClassPath.asFileTree.filter { file ->
             file.extension == "class"
         }.toList()
+        filesForTransformation.forEach {
+            println(it.absolutePath)
+        }
         return filesForTransformation.map { file -> loadClassFile(classPool, file) }
     }
 

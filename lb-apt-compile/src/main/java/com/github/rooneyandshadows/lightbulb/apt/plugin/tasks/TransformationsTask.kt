@@ -61,7 +61,7 @@ abstract class TransformationsTask @Inject constructor(private val variant: Vari
         )
         jarOutput.use {
             jars.forEach { file ->
-                info("handling " + file.asFile.absolutePath)
+                //info("handling " + file.asFile.absolutePath)
                 val jarFile = JarFile(file.asFile)
                 jarFile.entries().iterator().forEach { jarEntry ->
                     info("Adding from jar ${jarEntry.name}")

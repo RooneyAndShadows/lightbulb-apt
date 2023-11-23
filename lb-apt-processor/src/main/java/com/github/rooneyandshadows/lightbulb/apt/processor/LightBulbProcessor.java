@@ -42,7 +42,6 @@ public class LightBulbProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-
         CodeGenerationService generationService = new CodeGenerationService(filer, messager, elements, roundEnvironment);
         generationService.process();
         return false;

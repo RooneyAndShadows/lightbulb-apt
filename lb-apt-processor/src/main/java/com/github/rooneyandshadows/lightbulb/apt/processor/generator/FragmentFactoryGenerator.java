@@ -83,7 +83,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
 
         fragmentInfo.getFragmentParameters(includeOptionalParams).forEach(param -> {
             builder.addParameter(param.getParameterSpec());
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "arguments", null);
+            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "arguments", false);
             builder.addCode(writeStatement);
         });
 

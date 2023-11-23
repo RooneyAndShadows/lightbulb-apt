@@ -9,16 +9,19 @@ import javax.lang.model.element.Modifier;
 
 
 @SuppressWarnings("DuplicatedCode")
-public class Variable {
+public class ClassField {
     protected final String name;
     protected final TypeName type;
     protected final String setterName;
     protected final String getterName;
     protected final Element element;
     protected final Modifier accessModifier;
+    protected final Modifier setterAccessModifier;
+    protected final Modifier getterAccessModifier;
+    protected final boolean isFinal;
     protected final boolean isNullable;
 
-    public Variable(Element fieldElement) {
+    public ClassField(Element fieldElement) {
         Element classElement = fieldElement.getEnclosingElement();
         this.element = fieldElement;
         this.name = ElementUtils.getSimpleName(fieldElement);
@@ -26,6 +29,9 @@ public class Variable {
         this.setterName = ElementUtils.scanForSetter(classElement, name);
         this.getterName = ElementUtils.scanForGetter(classElement, name);
         this.accessModifier = ElementUtils.getAccessModifier(fieldElement);
+        this.setterAccessModifier = ElementUtils.getMethodAccessModifier(classElement, setterName);
+        this.getterAccessModifier = ElementUtils.getMethodAccessModifier(classElement, getterName);
+        this.isFinal = ElementUtils.isFinal(fieldElement);
         this.isNullable = fieldElement.getAnnotation(Nullable.class) != null;
     }
 
@@ -66,7 +72,19 @@ public class Variable {
         return isNullable;
     }
 
+    public boolean isFinal() {
+        return isFinal;
+    }
+
     public Modifier getAccessModifier() {
         return accessModifier;
+    }
+
+    public Modifier getSetterAccessModifier() {
+        return setterAccessModifier;
+    }
+
+    public Modifier getGetterAccessModifier() {
+        return getterAccessModifier;
     }
 }
