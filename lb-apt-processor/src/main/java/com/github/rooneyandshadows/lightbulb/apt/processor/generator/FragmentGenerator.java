@@ -31,6 +31,35 @@ public class FragmentGenerator extends CodeGenerator {
         generateFragments(fragmentBindings);
     }
 
+    private void generateFragments(List<FragmentBindingData> fragmentBindings) {
+        fragmentBindings.forEach(fragmentInfo -> {
+            List<FieldSpec> fields = new ArrayList<>();
+            List<MethodSpec> methods = new ArrayList<>();
+
+            generateFields(fragmentInfo, fields, methods);
+            generateOnCreateMethod(fragmentInfo, methods);
+            generateOnCreateViewMethod(fragmentInfo, methods);
+            generateOnViewCreatedMethod(fragmentInfo, methods);
+            generateOnSaveInstanceStateMethod(fragmentInfo, methods);
+            generateFragmentParametersMethod(fragmentInfo, methods);
+            generateSaveVariablesMethod(fragmentInfo, methods);
+            generateRestoreVariablesMethod(fragmentInfo, methods);
+
+            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.getInstrumentedClassName())
+                    .addModifiers(PUBLIC, ABSTRACT)
+                    .addFields(fields)
+                    .superclass(fragmentInfo.getSuperClassName())
+                    .addMethods(methods);
+            try {
+                JavaFile.builder(fragmentInfo.getInstrumentedClassName().packageName(), generatedClass.build())
+                        .build()
+                        .writeTo(filer);
+            } catch (IOException e) {
+                //e.printStackTrace();
+            }
+        });
+    }
+
     private void generateFields(FragmentBindingData fragment, List<FieldSpec> destination, List<MethodSpec> methods) {
         List<ClassField> fields = new ArrayList<>();
         fields.addAll(fragment.getParameters());
@@ -75,35 +104,6 @@ public class FragmentGenerator extends CodeGenerator {
                         .build();
 
                 methods.add(setter);
-            }
-        });
-    }
-
-    private void generateFragments(List<FragmentBindingData> fragmentBindings) {
-        fragmentBindings.forEach(fragmentInfo -> {
-            List<MethodSpec> methods = new ArrayList<>();
-            List<FieldSpec> fields = new ArrayList<>();
-
-            generateFields(fragmentInfo, fields, methods);
-            generateOnCreateMethod(fragmentInfo, methods);
-            generateOnCreateViewMethod(fragmentInfo, methods);
-            generateOnViewCreatedMethod(fragmentInfo, methods);
-            generateOnSaveInstanceStateMethod(fragmentInfo, methods);
-            generateFragmentParametersMethod(fragmentInfo, methods);
-            generateSaveVariablesMethod(fragmentInfo, methods);
-            generateRestoreVariablesMethod(fragmentInfo, methods);
-
-            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.getInstrumentedClassName())
-                    .addModifiers(PUBLIC, ABSTRACT)
-                    .addFields(fields)
-                    .superclass(fragmentInfo.getSuperClassName())
-                    .addMethods(methods);
-            try {
-                JavaFile.builder(fragmentInfo.getInstrumentedClassName().packageName(), generatedClass.build())
-                        .build()
-                        .writeTo(filer);
-            } catch (IOException e) {
-                //e.printStackTrace();
             }
         });
     }
@@ -227,7 +227,7 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         fragment.getParameters().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "arguments", "", true);
+            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "arguments", true);
             builder.addCode(readStatement);
         });
 
@@ -270,12 +270,12 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         fragmentInfo.getParameters().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", "", false);
+            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", false);
             builder.addCode(readStatement);
         });
 
         fragmentInfo.getPersistedVariables().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", "", false);
+            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", false);
             builder.addCode(readStatement);
         });
 

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.GENERATED_FRAGMENTS_CLASS_NAME_PREFIX;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.GENERATED_CLASS_NAME_PREFIX;
 
 @SuppressWarnings("FieldCanBeLocal")
 public class FragmentBindingData {
@@ -42,7 +42,7 @@ public class FragmentBindingData {
         this.superType = fragmentClassElement.getSuperclass();
         this.className = ClassNames.generateClassName(fragmentClassElement, elements);
         this.superClassName = ClassNames.generateSuperClassName(fragmentClassElement, elements);
-        this.instrumentedClassName = ClassNames.generateClassNameWithPrefix(PackageNames.getFragmentsPackage(), className.simpleName(), GENERATED_FRAGMENTS_CLASS_NAME_PREFIX);
+        this.instrumentedClassName = ClassNames.generateClassNameWithPrefix(PackageNames.getFragmentsPackage(), className.simpleName(), GENERATED_CLASS_NAME_PREFIX);
         this.canBeInstantiated = ElementUtils.canBeInstantiated(fragmentClassElement);
         annotatedElements.forEach(element -> {
             handleFragmentConfiguration(element);

@@ -50,7 +50,7 @@ class TransformationJob(
             try {
                 val byteCode = transformation.transform(classPool, clazz)
                 val className = clazz.name
-                info("Adding to jar ${className}")
+                info("Adding to jar $className")
                 jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
                 jarDestination.write(byteCode)
                 jarDestination.closeEntry()
@@ -61,8 +61,8 @@ class TransformationJob(
     }
 
     private fun setupClassPool(): ClassPool {
-        val classPool: ClassPool = ClassPool(true)
-        // set up the classpath for the classpool
+        val classPool = AnnotationLoadingClassPool()
+        // set up the classpath for the classPool
         globalClassPath.forEach { classpath ->
             classPool.appendClassPath(classpath.path)
         }

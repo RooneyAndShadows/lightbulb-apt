@@ -17,7 +17,7 @@ public class ClassNames {
     /**
      * Result names
      */
-    public static final String GENERATED_FRAGMENTS_CLASS_NAME_PREFIX = "Lightbulb_";
+    public static final String GENERATED_CLASS_NAME_PREFIX = "Lightbulb_";
     public static final String FRAGMENT_FACTORY_CLASS_NAME = "Fragments";
     public static final String ROUTING_SCREENS_CLASS_NAME = "Screens";
     public static final String ROUTING_ACTIVITY_ROUTER_CLASS_NAME_SUFFIX = "Router";
@@ -26,8 +26,8 @@ public class ClassNames {
      * Lightbulb
      */
     public static final ClassName BASE_ROUTER = ClassName.get(LB_APT_CORE_ROUTING, "BaseActivityRouter");
-    public static final ClassName DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_DATE, "DateUtils");
-    public static final ClassName OFFSET_DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_DATE, "DateUtilsOffsetDate");
+    public static final ClassName DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_JAVA_COMMONS_DATE, "DateUtils");
+    public static final ClassName OFFSET_DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_JAVA_COMMONS_DATE, "DateUtilsOffsetDate");
     public static final ClassName LB_TRANSFORMATION_ANNOTATION = ClassName.get(LB_APT_ANNOTATIONS, "LightbulbTransformation");
     /**
      * Android

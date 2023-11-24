@@ -2,10 +2,9 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks
 
 import com.android.build.api.variant.Variant
 import com.github.rooneyandshadows.lightbulb.apt.plugin.globalClasspathForVariant
-import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.common.TransformationJobRegistry
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeSuperclassTransformation
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeFragmentSuperclassTransformation
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
@@ -41,7 +40,7 @@ abstract class TransformationsTask @Inject constructor(private val variant: Vari
 
     init {
         transformationRegistry = TransformationJobRegistry(globalClasspath) { getTransformationsClasspath() }
-        transformationRegistry.register(ChangeSuperclassTransformation())
+        transformationRegistry.register(ChangeFragmentSuperclassTransformation())
     }
 
     @TaskAction

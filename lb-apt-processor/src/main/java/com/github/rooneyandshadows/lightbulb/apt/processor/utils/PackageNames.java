@@ -6,7 +6,8 @@ public class PackageNames {
      * Lightbulb
      */
     public static final String ROONEY_AND_SHADOWS = "com.github.rooneyandshadows";
-    public static final String ROONEY_AND_SHADOWS_DATE = resolve(ROONEY_AND_SHADOWS, "date");
+    public static final String ROONEY_AND_SHADOWS_JAVA_COMMONS = resolve(ROONEY_AND_SHADOWS, "java", "commons");
+    public static final String ROONEY_AND_SHADOWS_JAVA_COMMONS_DATE = resolve(ROONEY_AND_SHADOWS_JAVA_COMMONS, "date");
     public static final String LB_APT_CORE = resolve(ROONEY_AND_SHADOWS, "lightbulb", "apt", "android", "core");
     public static final String LB_APT_CORE_ROUTING = resolve(LB_APT_CORE, "routing");
     public static final String LB_APT_CORE_UTILS = resolve(LB_APT_CORE, "utils");
@@ -35,19 +36,23 @@ public class PackageNames {
     }
 
     public static String getRoutingPackage() {
-        return resolve(getRootPackage(), "routing");
+        return resolve(getRootPackage(), "lightbulb", "routing");
     }
 
     public static String getRoutingScreensPackage() {
-        return resolve(getRootPackage(), "routing", "screens");
+        return resolve(getRootPackage(), "lightbulb", "routing", "screens");
     }
 
     public static String getFragmentsFactoryPackage() {
-        return resolve(getRootPackage(), "fragments", "factory");
+        return resolve(getRootPackage(), "lightbulb", "fragments", "factory");
     }
 
     public static String getFragmentsPackage() {
-        return resolve(getRootPackage(), "fragments");
+        return resolve(getRootPackage(), "lightbulb", "fragments");
+    }
+
+    public static String getActivitiesPackage() {
+        return resolve(getRootPackage(), "lightbulb", "fragments");
     }
 
     public static String resolve(String first, String... other) {

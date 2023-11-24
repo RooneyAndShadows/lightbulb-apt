@@ -5,12 +5,11 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.C
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 
 import javax.annotation.processing.Filer;
-import javax.lang.model.element.Modifier;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.TypeUtils.*;
 
 public abstract class CodeGenerator {
@@ -29,9 +28,10 @@ public abstract class CodeGenerator {
         String typeString = target.getType().toString();
         String parameterName = target.getName();
         String parameterAccessor = (target.hasGetter() && useGetter) ? target.getGetterName().concat("()") : parameterName;
-
         CodeBlock.Builder codeBlock = CodeBlock.builder();
+
         boolean checkForNull = !target.getType().isPrimitive();
+
         if (checkForNull)
             codeBlock.beginControlFlow("if($L != null)", parameterAccessor);
         if (isString(typeString)) {
@@ -49,10 +49,10 @@ public abstract class CodeGenerator {
         } else if (isDouble(typeString)) {
             codeBlock.addStatement(String.format("%s.putDouble($S,$L)", bundleVarName), parameterName, parameterAccessor);
         } else if (isDate(typeString)) {
-            codeBlock.addStatement("$T $LDateString = $T.getDateString($T.$L,$L);", ClassNames.STRING, parameterName, ClassNames.DATE_UTILS, ClassNames.DATE_UTILS, "defaultFormat", parameterAccessor);
+            codeBlock.addStatement("$T $LDateString = $T.getDateString($T.$L,$L);", STRING, parameterName, DATE_UTILS, DATE_UTILS, "defaultFormat", parameterAccessor);
             codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVarName), parameterName, parameterName.concat("DateString"));
         } else if (isOffsetDate(typeString)) {
-            codeBlock.addStatement("$T $LDateString = $T.getDateString($T.$L,$L);", ClassNames.STRING, parameterName, ClassNames.OFFSET_DATE_UTILS, ClassNames.OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", parameterAccessor);
+            codeBlock.addStatement("$T $LDateString = $T.getDateString($T.$L,$L);", STRING, parameterName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", parameterAccessor);
             codeBlock.addStatement(String.format("%s.putString($S,$L)", bundleVarName), parameterName, parameterName.concat("DateString"));
         } else {
             codeBlock.addStatement(String.format("%s.putParcelable($S,$L)", bundleVarName), parameterName, parameterAccessor);
@@ -62,7 +62,7 @@ public abstract class CodeGenerator {
         return codeBlock.build();
     }
 
-    protected CodeBlock generateReadFromBundleBlockForParam(ClassField parameter, String bundleVariableName, String enclosingVarName, boolean validateParameters) {
+    protected CodeBlock generateReadFromBundleBlockForParam(ClassField parameter, String bundleVariableName, boolean validateParameters) {
         String typeString = parameter.getType().toString();
         TypeName paramType = parameter.getType();
         String parameterName = parameter.getName();
@@ -70,16 +70,17 @@ public abstract class CodeGenerator {
         boolean isPrimitive = parameter.getType().isPrimitive();
         boolean needsValidation = !isPrimitive && validateParameters && !isNullable;
 
-        if (enclosingVarName == null || enclosingVarName.isEmpty()) {
-            enclosingVarName = "this";
+        CodeBlock.Builder codeBlock = CodeBlock.builder();
+
+        if (!needsValidation) {
+            codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, parameterName);
+        } else {
+            String errorMessage = String.format("Argument %s is not optional.", parameterName);
+            codeBlock.beginControlFlow("if(!$L.containsKey($S))", bundleVariableName, parameterName)
+                    .addStatement("throw new $T($S)", ClassNames.ILLEGAL_ARGUMENT_EXCEPTION, errorMessage)
+                    .endControlFlow();
         }
 
-        CodeBlock.Builder codeBlock = CodeBlock.builder();
-        if (needsValidation) {
-            addBundleEntryValidationExpression(bundleVariableName, parameterName, codeBlock);
-        } else {
-            codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, parameterName);
-        }
         if (isSimpleType(typeString)) {
             if (isString(typeString)) {
                 String bundleExp = "$T $L = ".concat(String.format("%s.getString($S,\"\")", bundleVariableName));
@@ -105,8 +106,8 @@ public abstract class CodeGenerator {
             }
         } else if (isDate(typeString)) {
             String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
-            codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), ClassNames.STRING, parameterName, parameterName);
-            codeBlock.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", ClassNames.DATE, parameterName, ClassNames.DATE_UTILS, ClassNames.DATE_UTILS, "defaultFormat", parameterName.concat("DateString"));
+            codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
+            codeBlock.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", ClassNames.DATE, parameterName, DATE_UTILS, DATE_UTILS, "defaultFormat", parameterName.concat("DateString"));
             if (validateParameters) {
                 String errorString = String.format("Argument %s is provided but date could not be parsed.", parameterName);
                 codeBlock.beginControlFlow("if($L == null)", parameterName)
@@ -115,8 +116,8 @@ public abstract class CodeGenerator {
             }
         } else if (isOffsetDate(typeString)) {
             String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
-            codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), ClassNames.STRING, parameterName, parameterName);
-            codeBlock.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", ClassNames.OFFSET_DATE_TIME, parameterName, ClassNames.OFFSET_DATE_UTILS, ClassNames.OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", parameterName.concat("DateString"));
+            codeBlock.addStatement("$T $LDateString = ".concat(getDateStringExpression).concat(""), STRING, parameterName, parameterName);
+            codeBlock.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", ClassNames.OFFSET_DATE_TIME, parameterName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", parameterName.concat("DateString"));
             if (validateParameters) {
                 String errorString = String.format("Argument %s is provided but date could not be parsed.", parameterName);
                 codeBlock.beginControlFlow("if($L == null)", parameterName)
@@ -139,18 +140,11 @@ public abstract class CodeGenerator {
         }
 
         if (parameter.hasSetter()) {
-            codeBlock.addStatement("$L.$L($L)", enclosingVarName, parameter.getSetterName(), parameterName);
+            codeBlock.addStatement("$L($L)", parameter.getSetterName(), parameterName);
         } else {
-            codeBlock.addStatement("$L.$L = $L", enclosingVarName, parameterName, parameterName);
+            codeBlock.addStatement("$L = $L", parameterName, parameterName);
         }
         if (!needsValidation) codeBlock.endControlFlow();
         return codeBlock.build();
-    }
-
-    private void addBundleEntryValidationExpression(String bundleVariableName, String paramName, CodeBlock.Builder codeBlock) {
-        String errorMessage = String.format("Argument %s is not optional.", paramName);
-        codeBlock.beginControlFlow("if(!$L.containsKey($S))", bundleVariableName, paramName)
-                .addStatement("throw new $T($S)", ClassNames.ILLEGAL_ARGUMENT_EXCEPTION, errorMessage)
-                .endControlFlow();
     }
 }
