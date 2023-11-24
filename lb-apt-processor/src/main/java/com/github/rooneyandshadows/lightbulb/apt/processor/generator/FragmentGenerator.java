@@ -38,53 +38,39 @@ public class FragmentGenerator extends CodeGenerator {
         fields.forEach(variable -> {
             boolean hasSetter = variable.getSetterName() != null;
             boolean hasGetter = variable.getGetterName() != null;
-            if (!hasSetter && !hasGetter) {
-                Modifier accessModifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
-                FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), accessModifier)
+            Modifier fieldAccessModifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
+            FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), fieldAccessModifier)
+                    .build();
+            destination.add(fieldSpec);
+
+            if (hasGetter) {
+                Modifier access = variable.getGetterAccessModifier();
+
+                if (access == PRIVATE) {
+                    access = PROTECTED;
+                }
+
+                MethodSpec getter = MethodSpec.methodBuilder(variable.getGetterName())
+                        .returns(variable.getType())
+                        .addModifiers(access, ABSTRACT)
                         .build();
-                destination.add(fieldSpec);
-            } else {
-                Modifier fieldAccessModifier = variable.getAccessModifier();
-                FieldSpec.Builder fieldSpecBuilder = FieldSpec.builder(variable.getType(), variable.getName());
 
-                if (fieldAccessModifier != null) {
-                    fieldSpecBuilder.addModifiers(fieldAccessModifier);
+                methods.add(getter);
+            }
+
+            if (hasSetter) {
+                Modifier access = variable.getSetterAccessModifier();
+
+                if (access == PRIVATE) {
+                    access = PROTECTED;
                 }
 
-                FieldSpec fieldSpec = fieldSpecBuilder.build();
-                destination.add(fieldSpec);
+                MethodSpec setter = MethodSpec.methodBuilder(variable.getSetterName())
+                        .addParameter(variable.getType(), "value")
+                        .addModifiers(access, ABSTRACT)
+                        .build();
 
-                if (hasGetter) {
-                    Modifier access = variable.getGetterAccessModifier();
-
-                    if (access == PRIVATE) {
-                        access = PROTECTED;
-                    }
-
-                    MethodSpec getter = MethodSpec.methodBuilder(variable.getGetterName())
-                            .returns(variable.getType())
-                            .addModifiers(access, ABSTRACT)
-                            .build();
-
-                    methods.add(getter);
-                }
-
-                if (hasSetter) {
-                    Modifier access = variable.getSetterAccessModifier();
-
-                    if (access == PRIVATE) {
-                        access = PROTECTED;
-                    }
-
-                    MethodSpec setter = MethodSpec.methodBuilder(variable.getSetterName())
-                            .addParameter(variable.getType(), "value")
-                            .returns(variable.getType())
-                            .addModifiers(access, ABSTRACT)
-                            .build();
-
-                    methods.add(setter);
-                }
-
+                methods.add(setter);
             }
         });
     }

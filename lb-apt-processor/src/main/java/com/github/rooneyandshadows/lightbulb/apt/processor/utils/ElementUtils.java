@@ -10,6 +10,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ElementUtils {
 
@@ -44,23 +46,28 @@ public class ElementUtils {
 
     public static String scanForSetter(Element classElement, String fieldName) {
         String setterName = "set".concat(capitalizeFirstLetter(fieldName));
-        return methodExists(classElement, setterName) ? setterName : null;
+        return methodExists(classElement, setterName);
     }
 
     public static String scanForGetter(Element classElement, String fieldName) {
         String getterName = "get".concat(capitalizeFirstLetter(fieldName));
-        return methodExists(classElement, getterName) ? getterName : null;
+        return methodExists(classElement, getterName);
     }
 
-    private static boolean methodExists(Element classElement, String methodName) {
-        if (classElement.getKind() != ElementKind.CLASS) return false;
+    private static String methodExists(Element classElement, String methodName) {
+        if (classElement.getKind() != ElementKind.CLASS) return null;
+        Pattern pattern = Pattern.compile(methodName.concat("(\\$.*)?"), Pattern.CASE_INSENSITIVE);
         return classElement.getEnclosedElements().stream()
-                .anyMatch(target -> {
+                .filter(target -> {
                     String targetName = target.getSimpleName().toString();
                     boolean take = target.getKind() == ElementKind.METHOD;
-                    take &= targetName.equals(methodName);
+                    Matcher matcher = pattern.matcher(targetName);
+                    take &= matcher.find();
                     return take;
-                });
+                })
+                .map(element -> element.getSimpleName().toString())
+                .findFirst()
+                .orElse(null);
     }
 
     public static Modifier getAccessModifier(Element element) {
