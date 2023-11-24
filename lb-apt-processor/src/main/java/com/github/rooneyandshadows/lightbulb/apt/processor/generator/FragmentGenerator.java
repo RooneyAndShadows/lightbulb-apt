@@ -35,13 +35,17 @@ public class FragmentGenerator extends CodeGenerator {
         List<ClassField> fields = new ArrayList<>();
         fields.addAll(fragment.getParameters());
         fields.addAll(fragment.getPersistedVariables());
+        fields.addAll(fragment.getViewBindings());
         fields.forEach(variable -> {
             boolean hasSetter = variable.getSetterName() != null;
             boolean hasGetter = variable.getGetterName() != null;
-            Modifier fieldAccessModifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
-            FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), fieldAccessModifier)
-                    .build();
-            destination.add(fieldSpec);
+
+            if (!hasGetter || !hasSetter) {
+                Modifier fieldAccessModifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
+                FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), fieldAccessModifier)
+                        .build();
+                destination.add(fieldSpec);
+            }
 
             if (hasGetter) {
                 Modifier access = variable.getGetterAccessModifier();
@@ -177,15 +181,15 @@ public class FragmentGenerator extends CodeGenerator {
                 .returns(void.class);
 
         fragment.getViewBindings().forEach(bindingInfo -> {
-            String fieldName = bindingInfo.getFieldName();
+            String fieldName = bindingInfo.getName();
             String fieldSetterName = bindingInfo.getSetterName();
             String resourceName = bindingInfo.getResourceName();
-            builder.addStatement("$T view = fragment.getView()", ClassNames.ANDROID_VIEW);
+            builder.addStatement("$T view = getView()", ClassNames.ANDROID_VIEW);
             if (bindingInfo.hasSetter()) {
-                String statement = "fragment.$L(view.findViewById($T.id.$L))";
+                String statement = "$L(view.findViewById($T.id.$L))";
                 builder.addStatement(statement, fieldSetterName, ANDROID_R, resourceName);
             } else {
-                String statement = "fragment.$L = view.findViewById($T.id.$L)";
+                String statement = "$L = view.findViewById($T.id.$L)";
                 builder.addStatement(statement, fieldName, ANDROID_R, resourceName);
             }
         });

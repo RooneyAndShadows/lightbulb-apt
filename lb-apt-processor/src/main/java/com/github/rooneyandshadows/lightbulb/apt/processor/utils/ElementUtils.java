@@ -56,7 +56,7 @@ public class ElementUtils {
 
     private static String methodExists(Element classElement, String methodName) {
         if (classElement.getKind() != ElementKind.CLASS) return null;
-        Pattern pattern = Pattern.compile(methodName.concat("(\\$.*)?"), Pattern.CASE_INSENSITIVE);
+        Pattern pattern = Pattern.compile("^".concat(methodName).concat("(\\$.*)?$"), Pattern.CASE_INSENSITIVE);
         return classElement.getEnclosedElements().stream()
                 .filter(target -> {
                     String targetName = target.getSimpleName().toString();

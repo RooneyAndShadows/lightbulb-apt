@@ -92,7 +92,6 @@ fun File.copyFolder(dest: File) {
     if (files == null || files.isEmpty()) return
     for (file in files) {
         val fileDest = File(dest, file.name)
-        //System.out.println(fileDest.getAbsolutePath());
         if (file.isDirectory) {
             file.copyFolder(fileDest)
         } else {

@@ -74,9 +74,6 @@ class TransformationJob(
         val filesForTransformation = transformationsClassPath.asFileTree.filter { file ->
             file.extension == "class"
         }.toList()
-        filesForTransformation.forEach {
-            println(it.absolutePath)
-        }
         return filesForTransformation.map { file -> loadClassFile(classPool, file) }
     }
 
