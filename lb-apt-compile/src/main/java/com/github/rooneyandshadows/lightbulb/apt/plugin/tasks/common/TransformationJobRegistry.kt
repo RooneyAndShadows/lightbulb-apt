@@ -8,14 +8,14 @@ class TransformationJobRegistry(
     private val globalClassPath: FileCollection,
     private val transformationsClassPath: (() -> FileCollection),
 ) {
-    private val transformations: MutableList<TransformationJob> = mutableListOf()
+    private val transformations: MutableList<IClassTransformer> = mutableListOf()
 
     fun register(transformer: IClassTransformer) {
-        val transformation = TransformationJob(globalClassPath, transformationsClassPath, transformer)
-        transformations.add(transformation)
+        transformations.add(transformer)
     }
 
     fun execute(jarDestination: JarOutputStream) {
-        transformations.forEach { it.execute(jarDestination) }
+        val executor = TransformationExecutor(globalClassPath, transformationsClassPath, transformations)
+        executor.execute(jarDestination)
     }
 }

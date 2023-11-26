@@ -1,16 +1,18 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base
 
+import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil
 import javassist.ClassPool
 import javassist.CtClass
 
 abstract class IClassTransformer {
-    fun transform(classPool: ClassPool, ctClass: CtClass): ByteArray {
-        ctClass.defrost()
+    fun transform(classPool: ClassPool, ctClass: CtClass): CtClass {
         if (shouldTransform(classPool, ctClass)) {
+            LoggingUtil.info("Executing transformation: ${javaClass.name} for class ${ctClass.name}")
+            ctClass.defrost()
             applyTransformations(classPool, ctClass)
+            ctClass.freeze()
         }
-        ctClass.freeze()
-        return ctClass.toBytecode()
+        return ctClass
     }
 
     protected abstract fun applyTransformations(classPool: ClassPool, ctClass: CtClass)

@@ -14,49 +14,51 @@ import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 
 @Suppress("MemberVisibilityCanBePrivate")
-class TransformationJob(
+class TransformationExecutor(
     private val globalClassPath: FileCollection,
     private val transformationsClassPathProvider: (() -> FileCollection),
-    private val transformation: IClassTransformer,
+    private val transformations: List<IClassTransformer>,
 ) {
     private val transformationsClassPath: FileCollection
         get() = transformationsClassPathProvider.invoke()
 
     fun execute(jarDestination: JarOutputStream): Boolean {
-        info("Executing transformations: ${transformation.javaClass.name}")
+        var result = false
 
-        try {
-            val classPool = setupClassPool()
-            val loadedClasses = preloadClasses(classPool)
+        val classPool = setupClassPool()
+        val loadedClasses = preloadClasses(classPool)
 
-            if (loadedClasses.isEmpty()) {
-                warning("No source files for transformation.")
-                return false
-            }
-
-            process(classPool, loadedClasses, jarDestination)
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            severe("Could not execute transformation")
-            throw GradleException("Could not execute transformation", e)
+        if (loadedClasses.isEmpty()) {
+            warning("No source files for transformation.")
         }
 
-        return true
+        loadedClasses.forEach { ctClass ->
+            transformations.forEach { transformation ->
+                try {
+                    transformation.transform(classPool, ctClass)
+                    result = true
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    severe("Could not execute transformation")
+                    throw GradleException("Could not execute transformation", e)
+                }
+            }
+
+            sendToDestination(ctClass, jarDestination)
+        }
+
+        return result
     }
 
-    private fun process(classPool: ClassPool, classesList: List<CtClass>, jarDestination: JarOutputStream) {
-        classesList.forEach { clazz ->
-            try {
-                val byteCode = transformation.transform(classPool, clazz)
-                val className = clazz.name
-                info("Adding to jar $className")
-                jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
-                jarDestination.write(byteCode)
-                jarDestination.closeEntry()
-            } catch (e: Exception) {
-                throw GradleException("An error occurred while trying to process class file ", e)
-            }
+    private fun sendToDestination(targetClass: CtClass, jarDestination: JarOutputStream) {
+        try {
+            val className = targetClass.name
+            info("Adding to jar $className")
+            jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
+            jarDestination.write(targetClass.toBytecode())
+            jarDestination.closeEntry()
+        } catch (e: Exception) {
+            throw GradleException("An error occurred while trying to process class file ", e)
         }
     }
 
