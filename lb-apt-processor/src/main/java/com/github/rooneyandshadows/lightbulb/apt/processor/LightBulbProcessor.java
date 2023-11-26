@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbActivity;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbFragment;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentScreen;
@@ -51,7 +51,7 @@ public class LightBulbProcessor extends AbstractProcessor {
     public Set<String> getSupportedAnnotationTypes() {
         return new HashSet<String>() {
             {
-                add(ActivityConfiguration.class.getCanonicalName());
+                add(LightbulbActivity.class.getCanonicalName());
                 add(BindView.class.getCanonicalName());
                 add(LightbulbFragment.class.getCanonicalName());
                 add(FragmentStatePersisted.class.getCanonicalName());

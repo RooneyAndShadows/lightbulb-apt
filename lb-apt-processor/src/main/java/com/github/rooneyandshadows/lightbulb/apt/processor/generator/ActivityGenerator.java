@@ -4,10 +4,8 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.data.activity.Activit
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.TypeUtils;
+import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import java.io.IOException;
@@ -15,10 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.BASE_ROUTER;
 import static javax.lang.model.element.Modifier.*;
 
+//TODO ADD ON BACK PRESSED METHOD
 public class ActivityGenerator extends CodeGenerator {
+    private final String ROUTER_FIELD_NAME = "router";
 
     public ActivityGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, annotationResultsRegistry);
@@ -37,11 +36,13 @@ public class ActivityGenerator extends CodeGenerator {
 
             generateFields(activityInfo, fields);
             generateOnCreateMethod(activityInfo, methods);
+            generateOnSaveInstanceStateMethod(activityInfo, methods);
+            generateOnDestroyMethod(activityInfo, methods);
 
             TypeSpec.Builder generatedClass = TypeSpec.classBuilder(activityInfo.getInstrumentedClassName())
                     .addModifiers(PUBLIC, ABSTRACT)
-                    .addFields(fields)
                     .superclass(activityInfo.getSuperClassName())
+                    .addFields(fields)
                     .addMethods(methods);
             try {
                 JavaFile.builder(activityInfo.getInstrumentedClassName().packageName(), generatedClass.build())
@@ -54,14 +55,20 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     private void generateFields(ActivityBindingData activityBindingData, List<FieldSpec> destination) {
-        if (activityBindingData.isRoutingEnabled()) {
-            FieldSpec fieldSpec = FieldSpec.builder(BASE_ROUTER, "router", PRIVATE).build();
+        boolean routingEnabled = activityBindingData.isRoutingEnabled();
+
+        if (routingEnabled) {
+            ClassName appRouterClassName = ClassNames.getAppRouterClassName();
+            FieldSpec fieldSpec = FieldSpec.builder(appRouterClassName, ROUTER_FIELD_NAME, PRIVATE).build();
             destination.add(fieldSpec);
         }
     }
 
+    @SuppressWarnings("ConstantValue")
     private void generateOnCreateMethod(ActivityBindingData activityBindingData, List<MethodSpec> destination) {
-        if (!activityBindingData.isRoutingEnabled()) {
+        boolean routingEnabled = activityBindingData.isRoutingEnabled();
+
+        if (!routingEnabled) {
             return;
         }
 
@@ -70,10 +77,65 @@ public class ActivityGenerator extends CodeGenerator {
                 .addAnnotation(Override.class)
                 .addParameter(ClassNames.ANDROID_BUNDLE, "savedInstanceState")
                 .returns(void.class)
-                .addStatement("super.onCreate(savedInstanceState)")
-                .beginControlFlow("if(savedInstanceState != null)")
-                .addStatement("restoreVariablesState(savedInstanceState)")
-                .endControlFlow();
+                .addStatement("super.onCreate(savedInstanceState)");
+
+        if (routingEnabled) {
+            ClassName routerClassName = ClassNames.getAppRouterClassName();
+            ClassName appNavigatorClassName = ClassNames.getAppNavigatorClassName();
+            ClassName RClassName = ClassNames.androidResources();
+            String fragmentContainerId = activityBindingData.getFragmentContainerId();
+
+            builder.addStatement("$T $L = $T.id.$L", ClassNames.INTEGER, "fragmentContainerId", RClassName, fragmentContainerId);
+            builder.addStatement("$L = new $T($L,$L)", ROUTER_FIELD_NAME, routerClassName, "this", "fragmentContainerId");
+            builder.beginControlFlow("if(savedInstanceState != null)")
+                    .addStatement("$L.restoreState(savedInstanceState)", ROUTER_FIELD_NAME)
+                    .endControlFlow();
+            builder.addStatement("$L.getInstance().bind($L)", appNavigatorClassName, ROUTER_FIELD_NAME);
+        }
+
+        destination.add(builder.build());
+    }
+
+    @SuppressWarnings("ConstantValue")
+    private void generateOnSaveInstanceStateMethod(ActivityBindingData activityBindingData, List<MethodSpec> destination) {
+        boolean routingEnabled = activityBindingData.isRoutingEnabled();
+
+        if (!routingEnabled) {
+            return;
+        }
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("onSaveInstanceState")
+                .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(ClassNames.ANDROID_BUNDLE, "outState")
+                .returns(void.class)
+                .addStatement("super.onSaveInstanceState(outState)");
+
+        if (routingEnabled) {
+            builder.addStatement("$L.saveState(outState)", ROUTER_FIELD_NAME);
+        }
+
+        destination.add(builder.build());
+    }
+
+    @SuppressWarnings("ConstantValue")
+    private void generateOnDestroyMethod(ActivityBindingData activityBindingData, List<MethodSpec> destination) {
+        boolean routingEnabled = activityBindingData.isRoutingEnabled();
+
+        if (!routingEnabled) {
+            return;
+        }
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("onDestroy")
+                .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(void.class)
+                .addStatement("super.onDestroy()");
+
+        if (routingEnabled) {
+            ClassName appNavigatorClassName = ClassNames.getAppNavigatorClassName();
+            builder.addStatement("$L.getInstance().unBind()", appNavigatorClassName);
+        }
 
         destination.add(builder.build());
     }

@@ -5,7 +5,6 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.Fragmen
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -29,60 +28,18 @@ public class RoutingGenerator extends CodeGenerator {
     public void generate() {
         List<FragmentBindingData> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS);
         List<ActivityBindingData> activityBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS);
-        generateRoutingScreens(fragmentBindings);
-        activityBindings.stream()
-                .filter(ActivityBindingData::isRoutingEnabled)
-                .forEach(activityInfo -> {
-                    generateRouterClass(activityInfo.getClassName(), fragmentBindings);
-                });
-    }
 
-    private void generateActivityNavigatorSingleton(ClassName activityClassName, ClassName routerClassName) {
-        ClassName navigatorClassName = ClassNames.getActivityNavigatorClassName(activityClassName);
-        TypeSpec.Builder singletonClass = TypeSpec
-                .classBuilder(navigatorClassName)
-                .addModifiers(Modifier.PUBLIC)
-                .addField(navigatorClassName, "instance", Modifier.PRIVATE, Modifier.STATIC)
-                .addField(routerClassName, "router", Modifier.PRIVATE)
-                .addMethod(MethodSpec.methodBuilder("getInstance")
-                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.SYNCHRONIZED)
-                        .returns(navigatorClassName)
-                        .beginControlFlow("if(instance == null)")
-                        .addStatement("instance = new $T()", navigatorClassName)
-                        .endControlFlow()
-                        .addStatement("return instance")
-                        .build()
-                ).addMethod(MethodSpec.methodBuilder("getRouter")
-                        .addModifiers(Modifier.PUBLIC)
-                        .returns(routerClassName)
-                        .addStatement("return router")
-                        .build()
-                ).addMethod(MethodSpec.methodBuilder("route")
-                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                        .returns(routerClassName)
-                        .addStatement("return getInstance().getRouter()")
-                        .build()
-                ).addMethod(MethodSpec.methodBuilder("initializeRouter")
-                        .addParameter(ClassNames.ANDROID_ACTIVITY, "activity")
-                        .addParameter(int.class, "fragmentContainerId")
-                        .returns(routerClassName)
-                        .addStatement("this.router = new $T($L,$L)", routerClassName, "activity", "fragmentContainerId")
-                        .addStatement("return this.router")
-                        .build()
-                ).addMethod(MethodSpec.methodBuilder("unBind")
-                        .returns(void.class)
-                        .addStatement("this.router = null")
-                        .build()
-                );
-        try {
-            JavaFile.builder(navigatorClassName.packageName(), singletonClass.build()).build().writeTo(filer);
-        } catch (IOException e) {
-            //e.printStackTrace();
+        if (!hasScreens(fragmentBindings) && !hasRoutingEnabled(activityBindings)) {
+            return;
         }
+
+        generateRoutingScreens(fragmentBindings);
+        generateAppRouter(fragmentBindings);
+        generateAppNavigatorSingleton();
     }
 
-    private void generateRouterClass(ClassName activityClassName, List<FragmentBindingData> fragmentBindings) {
-        ClassName routerClassName = ClassNames.getActivityRouterClassName(activityClassName);
+    private void generateAppRouter(List<FragmentBindingData> fragmentBindings) {
+        ClassName routerClassName = ClassNames.getAppRouterClassName();
         TypeSpec.Builder routerClass = TypeSpec
                 .classBuilder(routerClassName)
                 .superclass(ClassNames.BASE_ROUTER)
@@ -107,7 +64,51 @@ public class RoutingGenerator extends CodeGenerator {
         } catch (IOException e) {
             //e.printStackTrace();
         }
-        generateActivityNavigatorSingleton(activityClassName, routerClassName);
+    }
+
+    private void generateAppNavigatorSingleton() {
+        ClassName routerClassName = ClassNames.getAppRouterClassName();
+        ClassName navigatorClassName = ClassNames.getAppNavigatorClassName();
+        TypeSpec.Builder singletonClass = TypeSpec
+                .classBuilder(navigatorClassName)
+                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addField(navigatorClassName, "instance", Modifier.PRIVATE, Modifier.STATIC)
+                .addField(routerClassName, "router", Modifier.PRIVATE)
+                .addMethod(MethodSpec.methodBuilder("getInstance")
+                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.SYNCHRONIZED)
+                        .returns(navigatorClassName)
+                        .beginControlFlow("if(instance == null)")
+                        .addStatement("instance = new $T()", navigatorClassName)
+                        .endControlFlow()
+                        .addStatement("return instance")
+                        .build()
+                ).addMethod(MethodSpec.methodBuilder("getRouter")
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(routerClassName)
+                        .addStatement("return router")
+                        .build()
+                ).addMethod(MethodSpec.methodBuilder("route")
+                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                        .returns(routerClassName)
+                        .addStatement("return getInstance().getRouter()")
+                        .build()
+                ).addMethod(MethodSpec.methodBuilder("bind")
+                        .addModifiers(Modifier.PUBLIC)
+                        .addParameter(routerClassName, "router")
+                        .returns(void.class)
+                        .addStatement("this.router = router")
+                        .build()
+                ).addMethod(MethodSpec.methodBuilder("unBind")
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(void.class)
+                        .addStatement("this.router = null")
+                        .build()
+                );
+        try {
+            JavaFile.builder(navigatorClassName.packageName(), singletonClass.build()).build().writeTo(filer);
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
     }
 
     private void generateRoutingScreens(List<FragmentBindingData> fragmentBindings) {
@@ -267,5 +268,15 @@ public class RoutingGenerator extends CodeGenerator {
                 .returns(void.class);
         methodBuilder.addStatement("$L.forward(screen)", routerClassName.concat(".this"));
         return methodBuilder.build();
+    }
+
+    private boolean hasScreens(List<FragmentBindingData> fragmentBindings) {
+        return fragmentBindings.stream()
+                .anyMatch(fragmentBindingData -> fragmentBindingData.getScreenInfo() != null);
+    }
+
+    private boolean hasRoutingEnabled(List<ActivityBindingData> activityBindings) {
+        return activityBindings.stream()
+                .anyMatch(ActivityBindingData::isRoutingEnabled);
     }
 }

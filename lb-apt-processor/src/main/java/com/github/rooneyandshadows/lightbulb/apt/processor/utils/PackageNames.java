@@ -52,7 +52,7 @@ public class PackageNames {
     }
 
     public static String getActivitiesPackage() {
-        return resolve(getRootPackage(), "lightbulb", "fragments");
+        return resolve(getRootPackage(), "lightbulb", "activities");
     }
 
     public static String resolve(String first, String... other) {

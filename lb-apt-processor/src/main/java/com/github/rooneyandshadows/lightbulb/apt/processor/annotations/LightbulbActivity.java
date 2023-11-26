@@ -7,6 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface ActivityConfiguration {
+public @interface LightbulbActivity {
     boolean enableRouterGeneration() default true;
+
+    String fragmentContainerId() default "fragmentContainer";
 }

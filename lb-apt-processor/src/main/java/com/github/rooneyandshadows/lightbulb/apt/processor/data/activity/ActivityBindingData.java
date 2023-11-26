@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.data.activity;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbActivity;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
@@ -20,6 +20,7 @@ public class ActivityBindingData {
     private final ClassName superClassName;
     private final ClassName instrumentedClassName;
     private boolean routingEnabled;
+    private String fragmentContainerId;
 
     public ActivityBindingData(Elements elements, TypeElement activityClassElement, List<AnnotatedElement> annotatedElements) {
         this.type = activityClassElement.asType();
@@ -45,9 +46,14 @@ public class ActivityBindingData {
         return routingEnabled;
     }
 
+    public String getFragmentContainerId() {
+        return fragmentContainerId;
+    }
+
     private void handleActivityConfiguration(AnnotatedElement element) {
         Annotation annotation = element.getAnnotation();
-        if (!(annotation instanceof ActivityConfiguration config)) return;
+        if (!(annotation instanceof LightbulbActivity config)) return;
         routingEnabled = config.enableRouterGeneration();
+        fragmentContainerId = config.fragmentContainerId();
     }
 }

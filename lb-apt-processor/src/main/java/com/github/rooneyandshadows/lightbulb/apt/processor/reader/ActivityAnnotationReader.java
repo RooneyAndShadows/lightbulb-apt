@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.ActivityConfiguration;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbActivity;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.activity.ActivityBindingData;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
@@ -40,7 +40,7 @@ public class ActivityAnnotationReader extends AnnotationReader {
     @Override
     protected Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets() {
         Map<Class<? extends Annotation>, ElementKind> targets = new HashMap<>();
-        targets.put(ActivityConfiguration.class, ElementKind.CLASS);
+        targets.put(LightbulbActivity.class, ElementKind.CLASS);
         return targets;
     }
 }
