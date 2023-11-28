@@ -2,7 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner;
 
 import javax.lang.model.element.Element;
 
-public class ViewBinding extends ClassField {
+public class ViewBinding extends Variable {
     private final String resourceName;
 
     public ViewBinding(Element fieldElement, String resourceName) {

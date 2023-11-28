@@ -2,7 +2,8 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.FragmentBindingData;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Configuration;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.ClassField;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
@@ -61,7 +62,7 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private void generateFields(FragmentBindingData fragment, List<FieldSpec> destination, List<MethodSpec> methods) {
-        List<ClassField> fields = new ArrayList<>();
+        List<Variable> fields = new ArrayList<>();
         fields.addAll(fragment.getParameters());
         fields.addAll(fragment.getPersistedVariables());
         fields.addAll(fragment.getViewBindings());
@@ -227,7 +228,7 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         fragment.getParameters().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "arguments", true);
+            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "arguments", "this", true);
             builder.addCode(readStatement);
         });
 
@@ -241,17 +242,16 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ClassNames.ANDROID_BUNDLE, "outState")
                 .returns(void.class);
 
-        if (fragmentInfo.getParameters().isEmpty() && fragmentInfo.getPersistedVariables().isEmpty()) {
+        List<Variable> fieldsToSave = new ArrayList<>();
+        fieldsToSave.addAll(fragmentInfo.getPersistedVariables());
+        fieldsToSave.addAll(fragmentInfo.getParameters());
+
+        if (fieldsToSave.isEmpty()) {
             return;
         }
 
-        fragmentInfo.getParameters().forEach(param -> {
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", true);
-            builder.addCode(writeStatement);
-        });
-
-        fragmentInfo.getPersistedVariables().forEach(param -> {
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(param, "outState", true);
+        fieldsToSave.forEach(field -> {
+            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(field, "outState", "this", true);
             builder.addCode(writeStatement);
         });
 
@@ -269,13 +269,12 @@ public class FragmentGenerator extends CodeGenerator {
             return;
         }
 
-        fragmentInfo.getParameters().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", false);
-            builder.addCode(readStatement);
-        });
+        List<Variable> fieldsToRestore = new ArrayList<>();
+        fieldsToRestore.addAll(fragmentInfo.getParameters());
+        fieldsToRestore.addAll(fragmentInfo.getPersistedVariables());
 
-        fragmentInfo.getPersistedVariables().forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "fragmentSavedInstanceState", false);
+        fieldsToRestore.forEach(field -> {
+            CodeBlock readStatement = generateReadFromBundleBlockForParam(field, "fragmentSavedInstanceState", "this", false);
             builder.addCode(readStatement);
         });
 

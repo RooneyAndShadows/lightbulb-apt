@@ -34,7 +34,7 @@ public class FragmentBindingData {
     private ScreenInfo screenInfo;
     private Configuration configuration;
     private final List<Parameter> parameters = new ArrayList<>();
-    private final List<ClassField> persistedVariables = new ArrayList<>();
+    private final List<Variable> persistedVariables = new ArrayList<>();
     private final List<ViewBinding> viewBindings = new ArrayList<>();
 
     public FragmentBindingData(Elements elements, TypeElement fragmentClassElement, List<AnnotatedElement> annotatedElements) {
@@ -85,7 +85,7 @@ public class FragmentBindingData {
         return parameters;
     }
 
-    public List<ClassField> getPersistedVariables() {
+    public List<Variable> getPersistedVariables() {
         return persistedVariables;
     }
 
@@ -138,7 +138,7 @@ public class FragmentBindingData {
     private void handleFragmentStatePersisted(AnnotatedElement element) {
         Annotation annotation = element.getAnnotation();
         if (!(annotation instanceof FragmentStatePersisted statePersisted)) return;
-        ClassField variableInfo = new ClassField(element.getElement());
+        Variable variableInfo = new Variable(element.getElement());
         persistedVariables.add(variableInfo);
     }
 
