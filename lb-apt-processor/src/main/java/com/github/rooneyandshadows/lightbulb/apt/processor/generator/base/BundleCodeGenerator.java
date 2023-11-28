@@ -9,24 +9,24 @@ import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.TypeUtil
 
 public class BundleCodeGenerator {
 
-    public static void generateWriteStatement(TypeName paramType, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableName, String key) {
+    public static void generateWriteStatement(TypeName paramType, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         String typeString = paramType.toString();
         boolean checkForNull = !paramType.isPrimitive();
 
         if (checkForNull) {
-            cbBuilder.beginControlFlow("if($L != null)", variableName);
+            cbBuilder.beginControlFlow("if($L != null)", variableAccessor);
         }
 
-        if (isString(typeString)) writeString(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else if (isUUID(typeString)) writeUUID(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else if (isInt(typeString)) writeInt(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else if (isBoolean(typeString)) writeBoolean(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else if (isFloat(typeString)) writeFloat(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else if (isLong(typeString)) writeLong(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else if (isDouble(typeString)) writeDouble(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else if (isDate(typeString)) writeDate(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else if (isOffsetDate(typeString)) writeOffsetDate(cbBuilder, paramType, bundleVariableName, variableName, key);
-        else writeParcelable(cbBuilder, paramType, bundleVariableName, variableName, key);
+        if (isString(typeString)) writeString(cbBuilder, bundleVariableName, variableAccessor, key);
+        else if (isUUID(typeString)) writeUUID(cbBuilder, bundleVariableName, variableAccessor, key);
+        else if (isInt(typeString)) writeInt(cbBuilder, bundleVariableName, variableAccessor, key);
+        else if (isBoolean(typeString)) writeBoolean(cbBuilder, bundleVariableName, variableAccessor, key);
+        else if (isFloat(typeString)) writeFloat(cbBuilder, bundleVariableName, variableAccessor, key);
+        else if (isLong(typeString)) writeLong(cbBuilder, bundleVariableName, variableAccessor, key);
+        else if (isDouble(typeString)) writeDouble(cbBuilder, bundleVariableName, variableAccessor, key);
+        else if (isDate(typeString)) writeDate(cbBuilder, bundleVariableName, variableAccessor, key);
+        else if (isOffsetDate(typeString)) writeOffsetDate(cbBuilder, bundleVariableName, variableAccessor, key);
+        else writeParcelable(cbBuilder, bundleVariableName, variableAccessor, key);
 
         if (checkForNull) {
             cbBuilder.endControlFlow();
@@ -52,7 +52,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement(bundleExp, paramType, variableName, key);
     }
 
-    private static void writeString(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeString(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         cbBuilder.addStatement("$L.putString($S,$L)", bundleVariableName, key, variableAccessor);
     }
 
@@ -61,7 +61,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement(bundleExp, paramType, variableName, paramType, key);
     }
 
-    private static void writeUUID(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeUUID(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         cbBuilder.addStatement("$L.putString($S,$L.toString())", bundleVariableName, key, variableAccessor);
     }
 
@@ -70,7 +70,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement(bundleExp, paramType, variableName, key);
     }
 
-    private static void writeInt(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeInt(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         cbBuilder.addStatement("$L.putInt($S,$L)", bundleVariableName, key, variableAccessor);
     }
 
@@ -79,7 +79,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement(bundleExp, paramType, variableName, key);
     }
 
-    private static void writeBoolean(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeBoolean(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         cbBuilder.addStatement("$L.putBoolean($S,$L)", bundleVariableName, key, variableAccessor);
     }
 
@@ -88,7 +88,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement(bundleExp, paramType, variableName, key);
     }
 
-    private static void writeFloat(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeFloat(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         cbBuilder.addStatement("$L.putFloat($S,$L)", bundleVariableName, key, variableAccessor);
     }
 
@@ -97,7 +97,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement(bundleExp, paramType, variableName, key);
     }
 
-    private static void writeLong(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeLong(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         cbBuilder.addStatement("$L.putLong($S,$L)", bundleVariableName, key, variableAccessor);
     }
 
@@ -106,7 +106,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement(bundleExp, paramType, variableName, key);
     }
 
-    private static void writeDouble(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeDouble(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         cbBuilder.addStatement("$L.putDouble($S,$L)", bundleVariableName, key, variableAccessor);
     }
 
@@ -117,7 +117,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", paramType, variableName, DATE_UTILS, DATE_UTILS, "defaultFormat", tmpVarName);
     }
 
-    private static void writeDate(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeDate(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         String tmpVarName = key.concat("DateString");
         cbBuilder.addStatement("$T $L = $T.getDateString($T.$L,$L);", STRING, tmpVarName, DATE_UTILS, DATE_UTILS, "defaultFormat", variableAccessor);
         cbBuilder.addStatement("$L.putString($S,$L)", bundleVariableName, key, tmpVarName);
@@ -130,7 +130,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", paramType, variableName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", tmpVarName);
     }
 
-    private static void writeOffsetDate(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeOffsetDate(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         String tmpVarName = key.concat("DateString");
         cbBuilder.addStatement("$T $L = $T.getDateString($T.$L,$L);", STRING, tmpVarName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", variableAccessor);
         cbBuilder.addStatement("$L.putString($S,$L)", bundleVariableName, key, tmpVarName);
@@ -145,7 +145,7 @@ public class BundleCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void writeParcelable(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableAccessor, String key) {
+    private static void writeParcelable(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         cbBuilder.addStatement("$L.putParcelable($S,$L)", bundleVariableName, key, variableAccessor);
     }
 }

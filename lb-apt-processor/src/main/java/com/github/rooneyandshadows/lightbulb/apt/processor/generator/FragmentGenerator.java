@@ -223,11 +223,13 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ClassNames.ANDROID_BUNDLE, "arguments")
                 .returns(void.class);
 
-        if (fragment.getParameters().isEmpty()) {
+        List<Variable> params = new ArrayList<>(fragment.getParameters());
+
+        if (params.isEmpty()) {
             return;
         }
 
-        fragment.getParameters().forEach(param -> {
+        params.forEach(param -> {
             CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "arguments", "this", true);
             builder.addCode(readStatement);
         });

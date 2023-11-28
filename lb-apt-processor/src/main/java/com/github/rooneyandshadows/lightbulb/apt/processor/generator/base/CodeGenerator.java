@@ -8,9 +8,11 @@ import com.squareup.javapoet.TypeName;
 
 import javax.annotation.processing.Filer;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator.*;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.TypeUtils.*;
 
+@SuppressWarnings("SameParameterValue")
 public abstract class CodeGenerator {
     protected final Filer filer;
     protected final AnnotationResultsRegistry annotationResultsRegistry;
@@ -37,7 +39,7 @@ public abstract class CodeGenerator {
         String variableAccessor = contextStatement.concat(accessorStatement);
         CodeBlock.Builder codeBlock = CodeBlock.builder();
 
-        BundleCodeGenerator.generateWriteStatement(typeName, codeBlock, bundleVarName, variableAccessor, parameterName);
+        generateWriteStatement(typeName, codeBlock, bundleVarName, variableAccessor, parameterName);
 
         return codeBlock.build();
     }
@@ -61,22 +63,20 @@ public abstract class CodeGenerator {
         CodeBlock.Builder codeBlock = CodeBlock.builder();
 
         if (needsValidation) {
-            String errorMessage = String.format("Argument %s is not optional.", varName);
             codeBlock.beginControlFlow("if(!$L.containsKey($S))", bundleVariableName, varName)
-                    .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, errorMessage)
+                    .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, String.format("Argument %s is not optional.", varName))
                     .endControlFlow();
+
+            generateReadStatement(paramType, codeBlock, bundleVariableName, tmpVarName, varName);
+
+            codeBlock.beginControlFlow("if($L == null)", tmpVarName)
+                    .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, String.format("%s can not be null but null value received from bundle.", varName))
+                    .endControlFlow();
+
         } else {
             codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, varName);
-        }
-
-        BundleCodeGenerator.generateReadStatement(paramType, codeBlock, bundleVariableName, tmpVarName, varName);
-
-        if (needsValidation) {
-            String errorString = String.format("%s can not be null, but null value received from bundle.", varName);
-            codeBlock.beginControlFlow("if($L == null)", tmpVarName)
-                    .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, errorString)
-                    .endControlFlow();
-
+            generateReadStatement(paramType, codeBlock, bundleVariableName, tmpVarName, varName);
+            codeBlock.endControlFlow();
         }
 
         String accessorStatement = hasContext ? variableContext.concat(".") : "";
@@ -85,10 +85,6 @@ public abstract class CodeGenerator {
             codeBlock.addStatement("$L$L($L)", accessorStatement, variable.getSetterName(), tmpVarName);
         } else {
             codeBlock.addStatement("$L$L = $L", accessorStatement, varName, tmpVarName);
-        }
-
-        if (!needsValidation) {
-            codeBlock.endControlFlow();
         }
 
         return codeBlock.build();
