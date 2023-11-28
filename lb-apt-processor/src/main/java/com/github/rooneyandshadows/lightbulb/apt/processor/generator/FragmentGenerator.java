@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 //TODO ADD ANNOTATIONS FOR BYTECODE TRANSFORMATIONS
+import static com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator.generateReadStatement;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ILLEGAL_ARGUMENT_EXCEPTION;
 import static javax.lang.model.element.Modifier.*;
 
 public class FragmentGenerator extends CodeGenerator {
@@ -218,19 +220,19 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private void generateFragmentParametersMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
+        String argumentsParameterName = "arguments";
+
         MethodSpec.Builder builder = MethodSpec.methodBuilder("generateParameters")
                 .addModifiers(PRIVATE)
-                .addParameter(ClassNames.ANDROID_BUNDLE, "arguments")
+                .addParameter(ClassNames.ANDROID_BUNDLE, argumentsParameterName)
                 .returns(void.class);
 
-        List<Variable> params = new ArrayList<>(fragment.getParameters());
-
-        if (params.isEmpty()) {
+        if (fragment.getParameters().isEmpty()) {
             return;
         }
 
-        params.forEach(param -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(param, "arguments", "this", true);
+        fragment.getParameters().forEach(param -> {
+            CodeBlock readStatement = generateReadParameterFromBundle(param, argumentsParameterName);
             builder.addCode(readStatement);
         });
 
@@ -253,7 +255,7 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         fieldsToSave.forEach(field -> {
-            CodeBlock writeStatement = generatePutIntoBundleBlockForParam(field, "outState", "this", true);
+            CodeBlock writeStatement = generateWriteIntoBundleBlock(field, "outState", "this", true);
             builder.addCode(writeStatement);
         });
 
@@ -276,10 +278,41 @@ public class FragmentGenerator extends CodeGenerator {
         fieldsToRestore.addAll(fragmentInfo.getPersistedVariables());
 
         fieldsToRestore.forEach(field -> {
-            CodeBlock readStatement = generateReadFromBundleBlockForParam(field, "fragmentSavedInstanceState", "this", false);
+            CodeBlock readStatement = generateReadFromBundleBlock(field, "fragmentSavedInstanceState", "this", true);
             builder.addCode(readStatement);
         });
 
         destination.add(builder.build());
+    }
+
+    private CodeBlock generateReadParameterFromBundle(Parameter parameter, String bundleVariableName) {
+        TypeName paramType = parameter.getType();
+        String varName = parameter.getName();
+        String tmpVarName = varName.concat("FromBundle");
+        boolean isOptional = parameter.isOptional();
+        boolean isNullable = parameter.isNullable();
+        boolean isNullableOrOptional = isNullable || isOptional;
+        boolean isPrimitive = parameter.getType().isPrimitive();
+        CodeBlock.Builder codeBlock = CodeBlock.builder();
+
+        if (!isPrimitive && !isNullableOrOptional) {
+            codeBlock.beginControlFlow("if(!$L.containsKey($S))", bundleVariableName, varName)
+                    .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, String.format("%s is not optional.", varName))
+                    .endControlFlow();
+
+            generateReadStatement(paramType, codeBlock, bundleVariableName, tmpVarName, varName);
+            generateVariableSetValueStatement(codeBlock, parameter, "this", tmpVarName, true);
+
+            codeBlock.beginControlFlow("if($L == null)", tmpVarName)
+                    .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, String.format("%s can not be null but null value received from bundle.", varName))
+                    .endControlFlow();
+        } else {
+            codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, varName);
+            generateReadStatement(paramType, codeBlock, bundleVariableName, tmpVarName, varName);
+            generateVariableSetValueStatement(codeBlock, parameter, "this", tmpVarName, true);
+            codeBlock.endControlFlow();
+        }
+        
+        return codeBlock.build();
     }
 }
