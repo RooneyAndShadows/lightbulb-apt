@@ -97,10 +97,12 @@ public class RoutingGenerator extends CodeGenerator {
                         .addParameter(routerClassName, "router")
                         .returns(void.class)
                         .addStatement("this.router = router")
+                        .addStatement("this.router.attach()")
                         .build()
                 ).addMethod(MethodSpec.methodBuilder("unBind")
                         .addModifiers(Modifier.PUBLIC)
                         .returns(void.class)
+                        .addStatement("this.router.detach()")
                         .addStatement("this.router = null")
                         .build()
                 );

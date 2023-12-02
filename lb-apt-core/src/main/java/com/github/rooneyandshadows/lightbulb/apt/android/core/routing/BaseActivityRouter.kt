@@ -2,21 +2,30 @@ package com.github.rooneyandshadows.lightbulb.apt.android.core.routing
 
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.github.rooneyandshadows.lightbulb.apt.android.core.utils.BundleUtils
 import com.github.rooneyandshadows.lightbulb.apt.core.R
 import java.util.*
 
+
 @Suppress("CanBePrimaryConstructorProperty", "unused", "MemberVisibilityCanBePrivate")
-open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContainerId: Int) {
+open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContainerId: Int) : DefaultLifecycleObserver {
     protected val contextActivity: AppCompatActivity = contextActivity
     private val fragmentContainerId: Int = fragmentContainerId
     private val fragmentManager: FragmentManager
     private val logTag: String
     private var backStack = ActivityRouterBackStack()
+    private val onBackPressedCallback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            back()
+        }
+    }
 
     companion object {
         private const val ACTIVITY_ROUTER_BACKSTACK = "ACTIVITY_ROUTER_BACKSTACK"
@@ -25,6 +34,26 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     init {
         fragmentManager = contextActivity.supportFragmentManager
         logTag = "[".plus(javaClass.simpleName).plus("]")
+    }
+
+    override fun onCreate(owner: LifecycleOwner) {
+        super.onCreate(owner)
+        onBackPressedCallback.remove()
+        contextActivity.onBackPressedDispatcher.addCallback(onBackPressedCallback)
+    }
+
+    override fun onDestroy(owner: LifecycleOwner) {
+        super.onDestroy(owner)
+        onBackPressedCallback.remove()
+    }
+
+    fun attach() {
+        contextActivity.lifecycle.removeObserver(this)
+        contextActivity.lifecycle.addObserver(this)
+    }
+
+    fun detach() {
+        contextActivity.lifecycle.removeObserver(this)
     }
 
     fun saveState(activityBundle: Bundle) {
@@ -181,6 +210,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     }
 
     private fun startTransaction(transition: TransitionTypes?): FragmentTransaction {
+        fragmentManager.executePendingTransactions()
         val transaction = fragmentManager.beginTransaction().apply {
             setReorderingAllowed(false)
             when (transition) {
@@ -190,12 +220,14 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
                     R.anim.enter_from_left,
                     R.anim.exit_to_right
                 )
+
                 TransitionTypes.EXIT -> setCustomAnimations(
                     R.anim.enter_from_left,
                     R.anim.exit_to_right,
                     R.anim.enter_from_right,
                     R.anim.exit_to_left
                 )
+
                 else -> {}
             }
         }

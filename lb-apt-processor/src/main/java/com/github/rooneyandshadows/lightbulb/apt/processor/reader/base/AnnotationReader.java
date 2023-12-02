@@ -29,18 +29,17 @@ public abstract class AnnotationReader {
 
     protected abstract Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets();
 
-    public final boolean readAnnotations() {
+    public final void readAnnotations() {
         Map<Element, List<AnnotatedElement>> annotatedElements = new HashMap<>();
         for (Map.Entry<Class<? extends Annotation>, ElementKind> entry : targets.entrySet()) {
             Class<? extends Annotation> annotationClass = entry.getKey();
             ElementKind elementKind = entry.getValue();
             boolean result = obtainAnnotations(annotationClass, elementKind, annotatedElements);
             if (!result) {
-                return false;
+                return;
             }
         }
         onAnnotationsExtracted(annotatedElements, resultsRegistry);
-        return true;
     }
 
     private <T extends Annotation> boolean obtainAnnotations(Class<T> annotationClass, ElementKind requiredKind, Map<Element, List<AnnotatedElement>> annotatedElements) {
