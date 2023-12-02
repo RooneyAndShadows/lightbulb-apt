@@ -171,24 +171,11 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     }
 
     fun newRootChain(vararg screens: FragmentScreen) {
-        startTransaction(null).apply {
-            while (backStack.getEntriesCount() > 0) {
-                val fragToRemove = popCurrentFragment()
-                remove(fragToRemove!!)
-            }
-            screens.forEachIndexed { index, fragmentScreen ->
-                val isLast = index == screens.size - 1
-                val backStackName = UUID.randomUUID().toString()
-                val fragmentToAdd = fragmentScreen.getFragment()
-                add(fragmentContainerId, fragmentToAdd, backStackName)
-                if (!isLast)
-                    detach(fragmentToAdd)
-                runOnCommit {
-                    backStack.add(backStackName)
-                }
-            }
-            commitNow()
-        }
+        newChain(true, *screens)
+    }
+
+    fun addChain(vararg screens: FragmentScreen) {
+        newChain(false, *screens)
     }
 
     fun newRootScreen(newRootScreen: FragmentScreen) {
@@ -209,8 +196,34 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
         return fragmentManager.findFragmentByTag(currentTag)
     }
 
+    private fun newChain(root: Boolean, vararg screens: FragmentScreen) {
+        startTransaction(null).apply {
+            if (root) {
+                while (backStack.getEntriesCount() > 0) {
+                    val fragToRemove = popCurrentFragment()
+                    remove(fragToRemove!!)
+                }
+            } else {
+                val fragToDetach = getCurrentFragment()
+                detach(fragToDetach!!)
+            }
+            screens.forEachIndexed { index, fragmentScreen ->
+                val isLast = index == screens.size - 1
+                val backStackName = UUID.randomUUID().toString()
+                val fragmentToAdd = fragmentScreen.getFragment()
+                add(fragmentContainerId, fragmentToAdd, backStackName)
+                if (!isLast)
+                    detach(fragmentToAdd)
+                runOnCommit {
+                    backStack.add(backStackName)
+                }
+            }
+            commitNow()
+        }
+    }
+
     private fun startTransaction(transition: TransitionTypes?): FragmentTransaction {
-        fragmentManager.executePendingTransactions()
+        //fragmentManager.executePendingTransactions()
         val transaction = fragmentManager.beginTransaction().apply {
             setReorderingAllowed(false)
             when (transition) {
@@ -236,7 +249,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
 
     fun printBackStack() {
         Log.i(logTag, "CURRENT BACKSTACK")
-        Log.i(logTag, "----------------------------")
+        Log.i(logTag, "=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+")
         val entriesCount = backStack.getEntriesCount()
         if (entriesCount == 0)
             Log.i(logTag, "Backstack is empty")
