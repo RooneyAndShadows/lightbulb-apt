@@ -107,7 +107,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
             runOnCommit {
                 backStack.add(backStackEntryName)
             }
-            commit()
+            commitNow()
         }
     }
 
@@ -119,7 +119,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
             if (currentFrag != null)
                 remove(currentFrag)
             attach(nextFragment!!)
-            commit()
+            commitNow()
         }
     }
 
@@ -147,7 +147,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
             runOnCommit {
                 backStack.add(backStackName)
             }
-            commit()
+            commitNow()
         }
     }
 
@@ -166,7 +166,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
                 remove(fragToRemove!!)
             }
             attach(getCurrentFragment()!!)
-            commit()
+            commitNow()
         }
     }
 
@@ -187,7 +187,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
                     backStack.add(backStackName)
                 }
             }
-            commit()
+            commitNow()
         }
     }
 
