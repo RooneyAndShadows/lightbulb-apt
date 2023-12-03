@@ -63,12 +63,13 @@ public class FragmentGenerator extends CodeGenerator {
         });
     }
 
-    private void generateFields(FragmentBindingData fragment, List<FieldSpec> destination, List<MethodSpec> methods) {
-        List<Variable> fields = new ArrayList<>();
-        fields.addAll(fragment.getParameters());
-        fields.addAll(fragment.getPersistedVariables());
-        fields.addAll(fragment.getViewBindings());
-        fields.forEach(variable -> {
+    private void generateFields(FragmentBindingData fragment, List<FieldSpec> fields, List<MethodSpec> methods) {
+        List<Variable> targets = new ArrayList<>();
+        targets.addAll(fragment.getParameters());
+        targets.addAll(fragment.getPersistedVariables());
+        targets.addAll(fragment.getViewBindings());
+        
+        targets.forEach(variable -> {
             boolean hasSetter = variable.getSetterName() != null;
             boolean hasGetter = variable.getGetterName() != null;
 
@@ -76,15 +77,11 @@ public class FragmentGenerator extends CodeGenerator {
                 Modifier fieldAccessModifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
                 FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), fieldAccessModifier)
                         .build();
-                destination.add(fieldSpec);
+                fields.add(fieldSpec);
             }
 
             if (hasGetter) {
-                Modifier access = variable.getGetterAccessModifier();
-
-                if (access == PRIVATE) {
-                    access = PROTECTED;
-                }
+                Modifier access = variable.getGetterAccessModifier() == PRIVATE ? PROTECTED : variable.getGetterAccessModifier();
 
                 MethodSpec getter = MethodSpec.methodBuilder(variable.getGetterName())
                         .returns(variable.getType())
@@ -95,11 +92,7 @@ public class FragmentGenerator extends CodeGenerator {
             }
 
             if (hasSetter) {
-                Modifier access = variable.getSetterAccessModifier();
-
-                if (access == PRIVATE) {
-                    access = PROTECTED;
-                }
+                Modifier access = variable.getSetterAccessModifier() == PRIVATE ? PROTECTED : variable.getSetterAccessModifier();
 
                 MethodSpec setter = MethodSpec.methodBuilder(variable.getSetterName())
                         .addParameter(variable.getType(), "value")
@@ -312,7 +305,7 @@ public class FragmentGenerator extends CodeGenerator {
             generateVariableSetValueStatement(codeBlock, parameter, "this", tmpVarName, true);
             codeBlock.endControlFlow();
         }
-        
+
         return codeBlock.build();
     }
 }

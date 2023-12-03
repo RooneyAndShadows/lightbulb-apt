@@ -53,7 +53,7 @@ class TransformationExecutor(
     private fun sendToDestination(targetClass: CtClass, jarDestination: JarOutputStream) {
         try {
             val className = targetClass.name
-            info("Adding to jar $className")
+            //info("Adding to jar $className")
             jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
             jarDestination.write(targetClass.toBytecode())
             jarDestination.closeEntry()

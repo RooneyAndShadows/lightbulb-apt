@@ -8,10 +8,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentS
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbFragment
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.GENERATED_CLASS_NAME_PREFIX
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
-import javassist.ClassPool
-import javassist.CtClass
-import javassist.CtMethod
-import javassist.Modifier
+import javassist.*
 import org.gradle.configurationcache.extensions.capitalized
 
 
@@ -24,32 +21,33 @@ internal class ChangeFragmentSuperclassTransformation : IClassTransformer() {
 
         val targetCtClass = getTargetClass(classPool, ctClass)
 
-        ctClass.declaredFields.forEach {
-            val isFragmentParameter = it.hasAnnotation(FragmentParameter::class.java)
-            val isFragmentPersistedVar = it.hasAnnotation(FragmentStatePersisted::class.java)
-            val isViewBinding = it.hasAnnotation(BindView::class.java)
-            val capitalizedName = it.name.capitalized()
+        ctClass.declaredFields.forEach { field ->
+            val isFragmentParameter = field.hasAnnotation(FragmentParameter::class.java)
+            val isFragmentPersistedVar = field.hasAnnotation(FragmentStatePersisted::class.java)
+            val isViewBinding = field.hasAnnotation(BindView::class.java)
+
+            if (!isFragmentParameter && !isFragmentPersistedVar && !isViewBinding) {
+                return@forEach
+            }
+
+            val capitalizedName = field.name.capitalized()
             val setterName = "set${capitalizedName}"
             val getterName = "get${capitalizedName}"
-            var hasSetter = false
-            var hasGetter = false
+            var removeField = false
+
             ctClass.declaredMethods.forEach { method ->
-                val methodName = method.name
-                if (methodName == setterName) {
-                    hasSetter = true
-                }
-                if (methodName == getterName) {
-                    hasGetter = true
-                }
-                if (methodName == setterName || methodName == getterName) {
+                val currentMethodName = method.name
+                if (currentMethodName == setterName || currentMethodName == getterName) {
+                    removeField = true
                     if (isMethodPrivate(method)) {
                         val modifiers = Modifier.setProtected(method.modifiers)
                         method.modifiers = modifiers
                     }
                 }
             }
-            if ((isFragmentParameter || isFragmentPersistedVar || isViewBinding) && !hasSetter || !hasGetter) {
-                ctClass.removeField(it)
+
+            if (removeField) {
+                ctClass.removeField(field)
             }
         }
 
@@ -61,6 +59,10 @@ internal class ChangeFragmentSuperclassTransformation : IClassTransformer() {
         return ctClass.hasAnnotation(LightbulbFragment::class.java)
     }
 
+    private fun isMethodPrivate(ctMethod: CtMethod): Boolean {
+        return Modifier.isPrivate(ctMethod.modifiers)
+    }
+
     private fun getTargetClass(classPool: ClassPool, ctClass: CtClass): CtClass {
         val simpleName = ctClass.simpleName
         val className = generatedTargetClassLocation
@@ -69,9 +71,5 @@ internal class ChangeFragmentSuperclassTransformation : IClassTransformer() {
             .plus(simpleName)
 
         return classPool.getCtClass(className)
-    }
-
-    private fun isMethodPrivate(ctMethod: CtMethod): Boolean {
-        return Modifier.isPrivate(ctMethod.modifiers)
     }
 }

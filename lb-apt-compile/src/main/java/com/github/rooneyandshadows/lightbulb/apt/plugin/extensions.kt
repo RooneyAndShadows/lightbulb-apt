@@ -44,15 +44,6 @@ fun Project.bootClasspath(): FileCollection {
     return files(bootClasspath)
 }
 
-fun <T : kotlin.Annotation> CtClass.getAnnotationHandler(annotationClass: Class<T>): Annotation? {
-    val proxiedAnnotation: T = getAnnotation(annotationClass) as T? ?: return null
-    if (!Proxy.isProxyClass(proxiedAnnotation.javaClass)) {
-        return null
-    }
-    val impl = Proxy.getInvocationHandler(proxiedAnnotation) as AnnotationImpl
-    return impl.annotation
-}
-
 fun Project.globalClasspathForVariant(variant: Variant): FileCollection {
     val variantClasspath = variant.compileClasspath
     var globalClasspath = bootClasspath()
