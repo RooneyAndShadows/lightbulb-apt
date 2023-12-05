@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.LightbulbFragmentData;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
@@ -25,11 +25,11 @@ public class FragmentFactoryGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        List<FragmentBindingData> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS);
+        List<LightbulbFragmentData> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS);
         generateFragmentFactory(fragmentBindings);
     }
 
-    private void generateFragmentFactory(List<FragmentBindingData> fragmentBindings) {
+    private void generateFragmentFactory(List<LightbulbFragmentData> fragmentBindings) {
         TypeSpec.Builder rootClass = TypeSpec
                 .classBuilder(ClassNames.FRAGMENT_FACTORY_CLASS_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
@@ -45,11 +45,12 @@ public class FragmentFactoryGenerator extends CodeGenerator {
         }
     }
 
-    private void generateFragmentCreator(TypeSpec.Builder fragmentFactoryBuilder, FragmentBindingData fragment) {
+    private void generateFragmentCreator(TypeSpec.Builder fragmentFactoryBuilder, LightbulbFragmentData fragment) {
         List<MethodSpec> methods = new ArrayList<>();
         generateFragmentNewInstanceMethods(fragment, methods);
 
-        String initializerClassName = fragment.getClassName().simpleName();
+        String initializerClassName = fragment.className().simpleName();
+
         TypeSpec.Builder builder = TypeSpec.classBuilder(initializerClassName)
                 .addModifiers(Modifier.FINAL, Modifier.PUBLIC)
                 .addMethods(methods);
@@ -58,8 +59,8 @@ public class FragmentFactoryGenerator extends CodeGenerator {
 
     }
 
-    private void generateFragmentNewInstanceMethods(FragmentBindingData fragmentInfo, List<MethodSpec> destination) {
-        if (!fragmentInfo.isCanBeInstantiated()) {
+    private void generateFragmentNewInstanceMethods(LightbulbFragmentData fragmentInfo, List<MethodSpec> destination) {
+        if (!fragmentInfo.canBeInstantiated()) {
             return;
         }
 
@@ -71,19 +72,19 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     }
 
     private void generateFragmentNewInstanceMethod(
-            FragmentBindingData fragmentInfo,
+            LightbulbFragmentData fragmentInfo,
             boolean includeOptionalParams,
             List<MethodSpec> destination
     ) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("newInstance")
                 .addModifiers(PUBLIC, STATIC)
-                .returns(fragmentInfo.getClassName())
-                .addStatement("$T fragment = new $T()", fragmentInfo.getClassName(), fragmentInfo.getClassName())
+                .returns(fragmentInfo.className())
+                .addStatement("$T fragment = new $T()", fragmentInfo.className(), fragmentInfo.className())
                 .addStatement("$T arguments = new $T()", ClassNames.ANDROID_BUNDLE, ClassNames.ANDROID_BUNDLE);
 
-        fragmentInfo.getFragmentParameters(includeOptionalParams).forEach(param -> {
-            builder.addParameter(param.getParameterSpec());
-            CodeBlock writeStatement = generateWriteIntoBundleBlock(param, "arguments", null, false);
+        fragmentInfo.getFragmentParameters(includeOptionalParams).forEach(parameter -> {
+            builder.addParameter(generateParameterSpec(parameter));
+            CodeBlock writeStatement = generateWriteIntoBundleBlock(parameter, "arguments", null, false);
             builder.addCode(writeStatement);
         });
 

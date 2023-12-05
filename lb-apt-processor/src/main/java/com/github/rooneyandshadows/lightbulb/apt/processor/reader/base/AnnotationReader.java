@@ -1,20 +1,23 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader.base;
 
 //TODO ClassFileTransformer
+
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.*;
+import java.util.function.Consumer;
 
 public abstract class AnnotationReader {
     protected final Messager messager;
     protected final Elements elements;
     protected final RoundEnvironment environment;
-    protected final AnnotationResultsRegistry resultsRegistry;
+    private final AnnotationResultsRegistry resultsRegistry;
     private final Map<Class<? extends Annotation>, ElementKind> targets;
 
     public AnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
@@ -25,21 +28,37 @@ public abstract class AnnotationReader {
         this.targets = Collections.unmodifiableMap(getAnnotationTargets());
     }
 
-    protected abstract void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations, AnnotationResultsRegistry resultRegistry);
+    protected abstract void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements);
+
+    protected abstract void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry);
 
     protected abstract Map<Class<? extends Annotation>, ElementKind> getAnnotationTargets();
 
     public final void readAnnotations() {
-        Map<Element, List<AnnotatedElement>> annotatedElements = new HashMap<>();
+        Map<Element, List<AnnotatedElement>> annotatedElementsIndex = new HashMap<>();
+
         for (Map.Entry<Class<? extends Annotation>, ElementKind> entry : targets.entrySet()) {
             Class<? extends Annotation> annotationClass = entry.getKey();
             ElementKind elementKind = entry.getValue();
-            boolean result = obtainAnnotations(annotationClass, elementKind, annotatedElements);
+            boolean result = obtainAnnotations(annotationClass, elementKind, annotatedElementsIndex);
             if (!result) {
                 return;
             }
         }
-        onAnnotationsExtracted(annotatedElements, resultsRegistry);
+
+        annotatedElementsIndex.forEach((root, annotatedElements) -> {
+            TypeElement rootElement = (TypeElement) root;
+            handleAnnotationsForClass(rootElement, annotatedElements);
+        });
+
+        onAnnotationsExtracted(resultsRegistry);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected  <T extends Annotation> void consumeAnnotation(Class<T> annotationClass, AnnotatedElement element, Consumer<T> consumer) {
+        Annotation annotation = element.getAnnotation();
+        if (annotation.getClass() != annotationClass) return;
+        consumer.accept((T) annotation);
     }
 
     private <T extends Annotation> boolean obtainAnnotations(Class<T> annotationClass, ElementKind requiredKind, Map<Element, List<AnnotatedElement>> annotatedElements) {

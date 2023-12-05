@@ -1,11 +1,17 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.processing.Filer;
+
+import java.lang.annotation.Annotation;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator.*;
 
@@ -21,6 +27,15 @@ public abstract class CodeGenerator {
     }
 
     public abstract void generate();
+
+    public ParameterSpec generateParameterSpec(Parameter parameter) {
+        boolean isNullable = parameter.isNullable() || parameter.isOptional();
+        Class<? extends Annotation> nullabilityAnnotation = isNullable ? Nullable.class : NotNull.class;
+
+        return ParameterSpec.builder(parameter.getType(), parameter.getName())
+                .addAnnotation(nullabilityAnnotation)
+                .build();
+    }
 
     protected CodeBlock generateWriteIntoBundleBlock(Variable target, String bundleVarName, String variableContext, boolean useGetter) {
         boolean hasContext = variableContext != null && !variableContext.isBlank();

@@ -5,38 +5,63 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.Lightbulb
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentStatePersisted;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.LightbulbFragmentData;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS;
 import static javax.lang.model.element.ElementKind.*;
 
 public class FragmentAnnotationReader extends AnnotationReader {
-    private final List<FragmentBindingData> fragmentBindings = new ArrayList<>();
+    private final List<LightbulbFragmentData> fragmentBindings = new ArrayList<>();
 
     public FragmentAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
         super(resultsRegistry, messager, elements, environment);
     }
 
     @Override
-    protected void onAnnotationsExtracted(Map<Element, List<AnnotatedElement>> annotations, AnnotationResultsRegistry resultRegistry) {
-        for (Map.Entry<Element, List<AnnotatedElement>> entry : annotations.entrySet()) {
-            TypeElement fragmentClassElement = (TypeElement) entry.getKey();
-            List<AnnotatedElement> annotatedElements = entry.getValue();
-            FragmentBindingData bindingData = new FragmentBindingData(elements, fragmentClassElement, annotatedElements);
-            fragmentBindings.add(bindingData);
-        }
-        resultsRegistry.setResult(AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS, fragmentBindings);
+    protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
+        LightbulbFragmentData.Builder fragmentDataBuilder = new LightbulbFragmentData.Builder(elements, target);
+
+        annotatedElements.forEach(element -> {
+            consumeAnnotation(LightbulbFragment.class, element, lightbulbFragment -> {
+                Configuration configuration = new Configuration(lightbulbFragment.layoutName());
+                fragmentDataBuilder.withConfiguration(configuration);
+            });
+            consumeAnnotation(FragmentScreen.class, element, fragmentScreen -> {
+                ScreenInfo screenInfo = new ScreenInfo(fragmentScreen.screenGroup(), fragmentScreen.screenName());
+                fragmentDataBuilder.withScreenInfo(screenInfo);
+            });
+            consumeAnnotation(FragmentParameter.class, element, fragmentParameter -> {
+                Parameter parameter = new Parameter(element.getElement(), fragmentParameter.optional());
+                fragmentDataBuilder.withParameter(parameter);
+            });
+            consumeAnnotation(FragmentStatePersisted.class, element, fragmentStatePersisted -> {
+                Variable variableInfo = new Variable(element.getElement());
+                fragmentDataBuilder.withPersistedVariable(variableInfo);
+            });
+            consumeAnnotation(BindView.class, element, bindView -> {
+                ViewBinding viewBindingInfo = new ViewBinding(element.getElement(), bindView.name());
+                fragmentDataBuilder.withViewBinding(viewBindingInfo);
+            });
+        });
+
+        fragmentBindings.add(fragmentDataBuilder.build());
+    }
+
+    @Override
+    protected void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry) {
+        resultRegistry.setResult(FRAGMENT_BINDINGS, fragmentBindings);
     }
 
     @Override

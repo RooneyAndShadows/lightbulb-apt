@@ -1,10 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.activity.ActivityBindingData;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.activity.LightbulbActivityData;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.TypeUtils;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -25,11 +24,11 @@ public class ActivityGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        List<ActivityBindingData> activityBindings = annotationResultsRegistry.getResult(ACTIVITY_BINDINGS);
+        List<LightbulbActivityData> activityBindings = annotationResultsRegistry.getResult(ACTIVITY_BINDINGS);
         generateActivities(activityBindings);
     }
 
-    private void generateActivities(List<ActivityBindingData> activityBindings) {
+    private void generateActivities(List<LightbulbActivityData> activityBindings) {
         activityBindings.forEach(activityInfo -> {
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
@@ -39,13 +38,13 @@ public class ActivityGenerator extends CodeGenerator {
             generateOnSaveInstanceStateMethod(activityInfo, methods);
             generateOnDestroyMethod(activityInfo, methods);
 
-            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(activityInfo.getInstrumentedClassName())
+            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(activityInfo.instrumentedClassName())
                     .addModifiers(PUBLIC, ABSTRACT)
-                    .superclass(activityInfo.getSuperClassName())
+                    .superclass(activityInfo.superClassName())
                     .addFields(fields)
                     .addMethods(methods);
             try {
-                JavaFile.builder(activityInfo.getInstrumentedClassName().packageName(), generatedClass.build())
+                JavaFile.builder(activityInfo.instrumentedClassName().packageName(), generatedClass.build())
                         .build()
                         .writeTo(filer);
             } catch (IOException e) {
@@ -54,8 +53,8 @@ public class ActivityGenerator extends CodeGenerator {
         });
     }
 
-    private void generateFields(ActivityBindingData activityBindingData, List<FieldSpec> destination) {
-        boolean routingEnabled = activityBindingData.isRoutingEnabled();
+    private void generateFields(LightbulbActivityData activityBindingData, List<FieldSpec> destination) {
+        boolean routingEnabled = activityBindingData.routingEnabled();
 
         if (routingEnabled) {
             ClassName appRouterClassName = ClassNames.getAppRouterClassName();
@@ -65,8 +64,8 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnCreateMethod(ActivityBindingData activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.isRoutingEnabled();
+    private void generateOnCreateMethod(LightbulbActivityData activityBindingData, List<MethodSpec> destination) {
+        boolean routingEnabled = activityBindingData.routingEnabled();
 
         if (!routingEnabled) {
             return;
@@ -83,7 +82,7 @@ public class ActivityGenerator extends CodeGenerator {
             ClassName routerClassName = ClassNames.getAppRouterClassName();
             ClassName appNavigatorClassName = ClassNames.getAppNavigatorClassName();
             ClassName RClassName = ClassNames.androidResources();
-            String fragmentContainerId = activityBindingData.getFragmentContainerId();
+            String fragmentContainerId = activityBindingData.fragmentContainerId();
 
             builder.addStatement("$T $L = $T.id.$L", ClassNames.INTEGER, "fragmentContainerId", RClassName, fragmentContainerId);
             builder.addStatement("$L = new $T($L,$L)", ROUTER_FIELD_NAME, routerClassName, "this", "fragmentContainerId");
@@ -97,8 +96,8 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnSaveInstanceStateMethod(ActivityBindingData activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.isRoutingEnabled();
+    private void generateOnSaveInstanceStateMethod(LightbulbActivityData activityBindingData, List<MethodSpec> destination) {
+        boolean routingEnabled = activityBindingData.routingEnabled();
 
         if (!routingEnabled) {
             return;
@@ -119,8 +118,8 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnDestroyMethod(ActivityBindingData activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.isRoutingEnabled();
+    private void generateOnDestroyMethod(LightbulbActivityData activityBindingData, List<MethodSpec> destination) {
+        boolean routingEnabled = activityBindingData.routingEnabled();
 
         if (!routingEnabled) {
             return;

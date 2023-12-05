@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.FragmentBindingData;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.LightbulbFragmentData;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Configuration;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Variable;
@@ -30,11 +30,11 @@ public class FragmentGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        List<FragmentBindingData> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS);
+        List<LightbulbFragmentData> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS);
         generateFragments(fragmentBindings);
     }
 
-    private void generateFragments(List<FragmentBindingData> fragmentBindings) {
+    private void generateFragments(List<LightbulbFragmentData> fragmentBindings) {
         fragmentBindings.forEach(fragmentInfo -> {
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
@@ -48,13 +48,13 @@ public class FragmentGenerator extends CodeGenerator {
             generateSaveVariablesMethod(fragmentInfo, methods);
             generateRestoreVariablesMethod(fragmentInfo, methods);
 
-            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.getInstrumentedClassName())
+            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(fragmentInfo.instrumentedClassName())
                     .addModifiers(PUBLIC, ABSTRACT)
                     .addFields(fields)
-                    .superclass(fragmentInfo.getSuperClassName())
+                    .superclass(fragmentInfo.superClassName())
                     .addMethods(methods);
             try {
-                JavaFile.builder(fragmentInfo.getInstrumentedClassName().packageName(), generatedClass.build())
+                JavaFile.builder(fragmentInfo.instrumentedClassName().packageName(), generatedClass.build())
                         .build()
                         .writeTo(filer);
             } catch (IOException e) {
@@ -63,11 +63,11 @@ public class FragmentGenerator extends CodeGenerator {
         });
     }
 
-    private void generateFields(FragmentBindingData fragment, List<FieldSpec> fields, List<MethodSpec> methods) {
+    private void generateFields(LightbulbFragmentData fragment, List<FieldSpec> fields, List<MethodSpec> methods) {
         List<Variable> targets = new ArrayList<>();
-        targets.addAll(fragment.getParameters());
-        targets.addAll(fragment.getPersistedVariables());
-        targets.addAll(fragment.getViewBindings());
+        targets.addAll(fragment.parameters());
+        targets.addAll(fragment.persistedVariables());
+        targets.addAll(fragment.viewBindings());
         
         targets.forEach(variable -> {
             boolean hasSetter = variable.getSetterName() != null;
@@ -104,9 +104,9 @@ public class FragmentGenerator extends CodeGenerator {
         });
     }
 
-    private void generateOnCreateMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
-        boolean hasParameters = !fragment.getParameters().isEmpty();
-        boolean hasPersistedVars = !fragment.getParameters().isEmpty();
+    private void generateOnCreateMethod(LightbulbFragmentData fragment, List<MethodSpec> destination) {
+        boolean hasParameters = !fragment.parameters().isEmpty();
+        boolean hasPersistedVars = !fragment.parameters().isEmpty();
 
         if (!hasParameters && !hasPersistedVars) {
             return;
@@ -141,8 +141,8 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private void generateOnCreateViewMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
-        Configuration configuration = fragment.getConfiguration();
+    private void generateOnCreateViewMethod(LightbulbFragmentData fragment, List<MethodSpec> destination) {
+        Configuration configuration = fragment.configuration();
         String layoutName = configuration.getLayoutName();
 
         if (layoutName == null || layoutName.isBlank()) {
@@ -163,8 +163,8 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private void generateOnViewCreatedMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
-        if (fragment.getViewBindings().isEmpty()) {
+    private void generateOnViewCreatedMethod(LightbulbFragmentData fragment, List<MethodSpec> destination) {
+        if (fragment.viewBindings().isEmpty()) {
             return;
         }
 
@@ -176,7 +176,7 @@ public class FragmentGenerator extends CodeGenerator {
                 .addStatement("super.onViewCreated(fragmentView,savedInstanceState)")
                 .returns(void.class);
 
-        fragment.getViewBindings().forEach(bindingInfo -> {
+        fragment.viewBindings().forEach(bindingInfo -> {
             String fieldName = bindingInfo.getName();
             String fieldSetterName = bindingInfo.getSetterName();
             String resourceName = bindingInfo.getResourceName();
@@ -193,9 +193,9 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private void generateOnSaveInstanceStateMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
-        boolean hasParameters = !fragment.getParameters().isEmpty();
-        boolean hasPersistedVars = !fragment.getParameters().isEmpty();
+    private void generateOnSaveInstanceStateMethod(LightbulbFragmentData fragment, List<MethodSpec> destination) {
+        boolean hasParameters = !fragment.parameters().isEmpty();
+        boolean hasPersistedVars = !fragment.parameters().isEmpty();
 
         if (!hasParameters && !hasPersistedVars) {
             return;
@@ -212,7 +212,7 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private void generateFragmentParametersMethod(FragmentBindingData fragment, List<MethodSpec> destination) {
+    private void generateFragmentParametersMethod(LightbulbFragmentData fragment, List<MethodSpec> destination) {
         String argumentsParameterName = "arguments";
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("generateParameters")
@@ -220,11 +220,11 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ClassNames.ANDROID_BUNDLE, argumentsParameterName)
                 .returns(void.class);
 
-        if (fragment.getParameters().isEmpty()) {
+        if (fragment.parameters().isEmpty()) {
             return;
         }
 
-        fragment.getParameters().forEach(param -> {
+        fragment.parameters().forEach(param -> {
             CodeBlock readStatement = generateReadParameterFromBundle(param, argumentsParameterName);
             builder.addCode(readStatement);
         });
@@ -232,7 +232,7 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private void generateSaveVariablesMethod(FragmentBindingData fragmentInfo, List<MethodSpec> destination) {
+    private void generateSaveVariablesMethod(LightbulbFragmentData fragmentInfo, List<MethodSpec> destination) {
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("saveVariablesState")
                 .addModifiers(PRIVATE)
@@ -240,8 +240,8 @@ public class FragmentGenerator extends CodeGenerator {
                 .returns(void.class);
 
         List<Variable> fieldsToSave = new ArrayList<>();
-        fieldsToSave.addAll(fragmentInfo.getPersistedVariables());
-        fieldsToSave.addAll(fragmentInfo.getParameters());
+        fieldsToSave.addAll(fragmentInfo.persistedVariables());
+        fieldsToSave.addAll(fragmentInfo.parameters());
 
         if (fieldsToSave.isEmpty()) {
             return;
@@ -255,20 +255,20 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private void generateRestoreVariablesMethod(FragmentBindingData fragmentInfo, List<MethodSpec> destination) {
+    private void generateRestoreVariablesMethod(LightbulbFragmentData fragmentInfo, List<MethodSpec> destination) {
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("restoreVariablesState")
                 .addModifiers(PRIVATE)
                 .addParameter(ClassNames.ANDROID_BUNDLE, "fragmentSavedInstanceState")
                 .returns(void.class);
 
-        if (fragmentInfo.getParameters().isEmpty() && fragmentInfo.getPersistedVariables().isEmpty()) {
+        if (fragmentInfo.parameters().isEmpty() && fragmentInfo.persistedVariables().isEmpty()) {
             return;
         }
 
         List<Variable> fieldsToRestore = new ArrayList<>();
-        fieldsToRestore.addAll(fragmentInfo.getParameters());
-        fieldsToRestore.addAll(fragmentInfo.getPersistedVariables());
+        fieldsToRestore.addAll(fragmentInfo.parameters());
+        fieldsToRestore.addAll(fragmentInfo.persistedVariables());
 
         fieldsToRestore.forEach(field -> {
             CodeBlock readStatement = generateReadFromBundleBlock(field, "fragmentSavedInstanceState", "this", true);
