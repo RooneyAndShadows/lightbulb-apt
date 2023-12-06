@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner;
+package com.github.rooneyandshadows.lightbulb.apt.processor.data.common;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 import com.squareup.javapoet.TypeName;

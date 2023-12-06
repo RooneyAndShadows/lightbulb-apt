@@ -3,7 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.reader.base;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "SpellCheckingInspection"})
 public final class AnnotationResultsRegistry {
     private final Map<AnnotationResultTypes, Object> results = new HashMap<>();
 
@@ -16,7 +16,8 @@ public final class AnnotationResultsRegistry {
     }
 
     public enum AnnotationResultTypes {
-        FRAGMENT_BINDINGS,
-        ACTIVITY_BINDINGS
+        LIGHTBULB_FRAGMENT_DESCRIPTION,
+        LIGHTBULB_ACTIVITY_DESCRIPTION,
+        LIGHTBULB_STORAGE_DESCRIPTION
     }
 }

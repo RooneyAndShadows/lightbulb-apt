@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.activity.LightbulbActivityData;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbActivityDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_ACTIVITY_DESCRIPTION;
 import static javax.lang.model.element.Modifier.*;
 
 //TODO ADD ON BACK PRESSED METHOD
@@ -24,12 +24,15 @@ public class ActivityGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        List<LightbulbActivityData> activityBindings = annotationResultsRegistry.getResult(ACTIVITY_BINDINGS);
+        List<LightbulbActivityDescription> activityBindings = annotationResultsRegistry.getResult(LIGHTBULB_ACTIVITY_DESCRIPTION);
         generateActivities(activityBindings);
     }
 
-    private void generateActivities(List<LightbulbActivityData> activityBindings) {
+    private void generateActivities(List<LightbulbActivityDescription> activityBindings) {
         activityBindings.forEach(activityInfo -> {
+            ClassName instrumentedClassName = activityInfo.getInstrumentedClassName();
+            ClassName superclassName = activityInfo.getSuperClassName();
+
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
 
@@ -38,13 +41,13 @@ public class ActivityGenerator extends CodeGenerator {
             generateOnSaveInstanceStateMethod(activityInfo, methods);
             generateOnDestroyMethod(activityInfo, methods);
 
-            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(activityInfo.instrumentedClassName())
+            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(instrumentedClassName)
                     .addModifiers(PUBLIC, ABSTRACT)
-                    .superclass(activityInfo.superClassName())
+                    .superclass(superclassName)
                     .addFields(fields)
                     .addMethods(methods);
             try {
-                JavaFile.builder(activityInfo.instrumentedClassName().packageName(), generatedClass.build())
+                JavaFile.builder(instrumentedClassName.packageName(), generatedClass.build())
                         .build()
                         .writeTo(filer);
             } catch (IOException e) {
@@ -53,8 +56,8 @@ public class ActivityGenerator extends CodeGenerator {
         });
     }
 
-    private void generateFields(LightbulbActivityData activityBindingData, List<FieldSpec> destination) {
-        boolean routingEnabled = activityBindingData.routingEnabled();
+    private void generateFields(LightbulbActivityDescription activityBindingData, List<FieldSpec> destination) {
+        boolean routingEnabled = activityBindingData.isRoutingEnabled();
 
         if (routingEnabled) {
             ClassName appRouterClassName = ClassNames.getAppRouterClassName();
@@ -64,8 +67,8 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnCreateMethod(LightbulbActivityData activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.routingEnabled();
+    private void generateOnCreateMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
+        boolean routingEnabled = activityBindingData.isRoutingEnabled();
 
         if (!routingEnabled) {
             return;
@@ -82,7 +85,7 @@ public class ActivityGenerator extends CodeGenerator {
             ClassName routerClassName = ClassNames.getAppRouterClassName();
             ClassName appNavigatorClassName = ClassNames.getAppNavigatorClassName();
             ClassName RClassName = ClassNames.androidResources();
-            String fragmentContainerId = activityBindingData.fragmentContainerId();
+            String fragmentContainerId = activityBindingData.getFragmentContainerId();
 
             builder.addStatement("$T $L = $T.id.$L", ClassNames.INTEGER, "fragmentContainerId", RClassName, fragmentContainerId);
             builder.addStatement("$L = new $T($L,$L)", ROUTER_FIELD_NAME, routerClassName, "this", "fragmentContainerId");
@@ -96,8 +99,8 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnSaveInstanceStateMethod(LightbulbActivityData activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.routingEnabled();
+    private void generateOnSaveInstanceStateMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
+        boolean routingEnabled = activityBindingData.isRoutingEnabled();
 
         if (!routingEnabled) {
             return;
@@ -118,8 +121,8 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnDestroyMethod(LightbulbActivityData activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.routingEnabled();
+    private void generateOnDestroyMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
+        boolean routingEnabled = activityBindingData.isRoutingEnabled();
 
         if (!routingEnabled) {
             return;

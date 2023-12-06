@@ -35,6 +35,7 @@ public class BundleCodeGenerator {
 
     public static void generateReadStatement(TypeName paramType, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableName, String key) {
         String typeString = paramType.toString();
+
         if (isString(typeString)) readString(cbBuilder, paramType, bundleVariableName, variableName, key);
         else if (isUUID(typeString)) readUUID(cbBuilder, paramType, bundleVariableName, variableName, key);
         else if (isInt(typeString)) readInt(cbBuilder, paramType, bundleVariableName, variableName, key);

@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.LightbulbFragmentData;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
@@ -25,11 +25,11 @@ public class FragmentFactoryGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        List<LightbulbFragmentData> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS);
+        List<LightbulbFragmentDescription> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION);
         generateFragmentFactory(fragmentBindings);
     }
 
-    private void generateFragmentFactory(List<LightbulbFragmentData> fragmentBindings) {
+    private void generateFragmentFactory(List<LightbulbFragmentDescription> fragmentBindings) {
         TypeSpec.Builder rootClass = TypeSpec
                 .classBuilder(ClassNames.FRAGMENT_FACTORY_CLASS_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
@@ -45,11 +45,11 @@ public class FragmentFactoryGenerator extends CodeGenerator {
         }
     }
 
-    private void generateFragmentCreator(TypeSpec.Builder fragmentFactoryBuilder, LightbulbFragmentData fragment) {
+    private void generateFragmentCreator(TypeSpec.Builder fragmentFactoryBuilder, LightbulbFragmentDescription fragment) {
         List<MethodSpec> methods = new ArrayList<>();
         generateFragmentNewInstanceMethods(fragment, methods);
 
-        String initializerClassName = fragment.className().simpleName();
+        String initializerClassName = fragment.getClassName().simpleName();
 
         TypeSpec.Builder builder = TypeSpec.classBuilder(initializerClassName)
                 .addModifiers(Modifier.FINAL, Modifier.PUBLIC)
@@ -59,8 +59,8 @@ public class FragmentFactoryGenerator extends CodeGenerator {
 
     }
 
-    private void generateFragmentNewInstanceMethods(LightbulbFragmentData fragmentInfo, List<MethodSpec> destination) {
-        if (!fragmentInfo.canBeInstantiated()) {
+    private void generateFragmentNewInstanceMethods(LightbulbFragmentDescription fragmentInfo, List<MethodSpec> destination) {
+        if (!fragmentInfo.isCanBeInstantiated()) {
             return;
         }
 
@@ -72,14 +72,16 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     }
 
     private void generateFragmentNewInstanceMethod(
-            LightbulbFragmentData fragmentInfo,
+            LightbulbFragmentDescription fragmentInfo,
             boolean includeOptionalParams,
             List<MethodSpec> destination
     ) {
+        ClassName fragmentClassName = fragmentInfo.getClassName();
+
         MethodSpec.Builder builder = MethodSpec.methodBuilder("newInstance")
                 .addModifiers(PUBLIC, STATIC)
-                .returns(fragmentInfo.className())
-                .addStatement("$T fragment = new $T()", fragmentInfo.className(), fragmentInfo.className())
+                .returns(fragmentClassName)
+                .addStatement("$T fragment = new $T()", fragmentClassName, fragmentClassName)
                 .addStatement("$T arguments = new $T()", ClassNames.ANDROID_BUNDLE, ClassNames.ANDROID_BUNDLE);
 
         fragmentInfo.getFragmentParameters(includeOptionalParams).forEach(parameter -> {

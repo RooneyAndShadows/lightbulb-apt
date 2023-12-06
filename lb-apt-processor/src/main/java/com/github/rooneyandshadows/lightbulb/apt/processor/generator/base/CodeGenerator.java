@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Variable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;

@@ -1,8 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.activity.LightbulbActivityData;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.LightbulbFragmentData;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbActivityDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_ACTIVITY_DESCRIPTION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ROUTING_SCREENS_CLASS_NAME;
 
 @SuppressWarnings("DuplicatedCode")
@@ -30,8 +30,8 @@ public class RoutingGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        List<LightbulbFragmentData> fragmentBindings = annotationResultsRegistry.getResult(FRAGMENT_BINDINGS);
-        List<LightbulbActivityData> activityBindings = annotationResultsRegistry.getResult(ACTIVITY_BINDINGS);
+        List<LightbulbFragmentDescription> fragmentBindings = annotationResultsRegistry.getResult(LIGHTBULB_FRAGMENT_DESCRIPTION);
+        List<LightbulbActivityDescription> activityBindings = annotationResultsRegistry.getResult(LIGHTBULB_ACTIVITY_DESCRIPTION);
 
         if (!hasScreens(fragmentBindings) && !hasRoutingEnabled(activityBindings)) {
             return;
@@ -42,8 +42,9 @@ public class RoutingGenerator extends CodeGenerator {
         generateAppNavigatorSingleton();
     }
 
-    private void generateAppRouter(List<LightbulbFragmentData> fragmentBindings) {
+    private void generateAppRouter(List<LightbulbFragmentDescription> fragmentBindings) {
         ClassName routerClassName = ClassNames.getAppRouterClassName();
+
         TypeSpec.Builder routerClass = TypeSpec
                 .classBuilder(routerClassName)
                 .superclass(ClassNames.BASE_ROUTER)
@@ -55,9 +56,10 @@ public class RoutingGenerator extends CodeGenerator {
                         .addStatement("super(contextActivity,fragmentContainerId)")
                         .build()
                 );
+
         fragmentBindings.stream()
-                .filter(fragmentBindingData -> fragmentBindingData.screenInfo() != null)
-                .collect(Collectors.groupingBy(fragmentBindingData -> fragmentBindingData.screenInfo().getScreenGroupName()))
+                .filter(LightbulbFragmentDescription::isScreen)
+                .collect(Collectors.groupingBy(LightbulbFragmentDescription::getScreenGroupName))
                 .forEach((groupName, fragmentsInGroup) -> {
                     fragmentsInGroup.forEach(fragmentBinding -> {
                         generateRouteClass(routerClass, fragmentBinding, routerClassName);
@@ -117,14 +119,14 @@ public class RoutingGenerator extends CodeGenerator {
         }
     }
 
-    private void generateRoutingScreens(List<LightbulbFragmentData> fragmentBindings) {
+    private void generateRoutingScreens(List<LightbulbFragmentDescription> fragmentBindings) {
         TypeSpec.Builder rootClass = TypeSpec
                 .classBuilder(ROUTING_SCREENS_CLASS_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
         fragmentBindings.stream()
-                .filter(fragmentBindingData -> fragmentBindingData.screenInfo() != null)
-                .collect(Collectors.groupingBy(fragmentBindingData -> fragmentBindingData.screenInfo().getScreenGroupName()))
+                .filter(LightbulbFragmentDescription::isScreen)
+                .collect(Collectors.groupingBy(LightbulbFragmentDescription::getScreenGroupName))
                 .forEach((screenGroup, fragments) -> {
                     TypeSpec screenGroupClass = generateScreenGroupClass(screenGroup, fragments);
                     rootClass.addType(screenGroupClass);
@@ -136,10 +138,10 @@ public class RoutingGenerator extends CodeGenerator {
         }
     }
 
-    private void generateRouteClass(TypeSpec.Builder routerClass, LightbulbFragmentData fragment, ClassName routerClassName) {
+    private void generateRouteClass(TypeSpec.Builder routerClass, LightbulbFragmentDescription fragment, ClassName routerClassName) {
         boolean hasOptionalParameters = fragment.hasOptionalParameters();
-        String groupName = fragment.screenInfo().getScreenGroupName();
-        String screenName = fragment.screenInfo().getScreenName();
+        String groupName = fragment.getScreenGroupName();
+        String screenName = fragment.getScreenName();
         String screenClassName = groupName.concat(screenName);
         ClassName groupClass = screensClassName.nestedClass(groupName);
         ClassName screenClass = groupClass.nestedClass(screenName);
@@ -197,7 +199,7 @@ public class RoutingGenerator extends CodeGenerator {
         routerClass.addType(routeClassBuilder.build());
     }
 
-    private TypeSpec generateScreenGroupClass(String screenGroupName, List<LightbulbFragmentData> fragments) {
+    private TypeSpec generateScreenGroupClass(String screenGroupName, List<LightbulbFragmentDescription> fragments) {
         ClassName fragmentScreenClass = ClassNames.BASE_ROUTER.nestedClass("FragmentScreen");
 
         TypeSpec.Builder groupClass = TypeSpec
@@ -205,8 +207,9 @@ public class RoutingGenerator extends CodeGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
 
         fragments.forEach(fragmentInfo -> {
+            ClassName fragmentClassName = fragmentInfo.getClassName();
             boolean hasOptionalParameters = fragmentInfo.hasOptionalParameters();
-            String screenName = fragmentInfo.screenInfo().getScreenName();
+            String screenName = fragmentInfo.getScreenName();
 
             MethodSpec.Builder optionalScreenConstructor = MethodSpec
                     .constructorBuilder()
@@ -225,9 +228,9 @@ public class RoutingGenerator extends CodeGenerator {
                     .methodBuilder("getFragment")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .returns(fragmentInfo.className());
+                    .returns(fragmentClassName);
 
-            fragmentInfo.parameters().forEach(paramInfo -> {
+            fragmentInfo.getParameters().forEach(paramInfo -> {
                 String parameterName = paramInfo.getName();
                 TypeName parameterType = paramInfo.getType();
                 FieldSpec.Builder field = FieldSpec.builder(parameterType, parameterName, Modifier.PRIVATE);
@@ -260,7 +263,7 @@ public class RoutingGenerator extends CodeGenerator {
                 screenClass.addMethod(notOptionalScreenConstructor.build());
             }
 
-            getFragmentMethod.addStatement("return $T.$L.newInstance(" + allParamsString + ")", ClassNames.getFragmentFactoryClassName(), fragmentInfo.className().simpleName());
+            getFragmentMethod.addStatement("return $T.$L.newInstance(" + allParamsString + ")", ClassNames.getFragmentFactoryClassName(), fragmentClassName.simpleName());
 
             screenClass.addMethod(getFragmentMethod.build());
 
@@ -302,7 +305,7 @@ public class RoutingGenerator extends CodeGenerator {
                 .build();
     }
 
-    private String generateCommaSeparatedParamsString(boolean includeOptional, LightbulbFragmentData fragmentData, Consumer<Parameter> consumer) {
+    private String generateCommaSeparatedParamsString(boolean includeOptional, LightbulbFragmentDescription fragmentData, Consumer<Parameter> consumer) {
         String paramsString = "";
         List<Parameter> collection = fragmentData.getFragmentParameters(includeOptional);
         for (int index = 0; index < collection.size(); index++) {
@@ -317,13 +320,11 @@ public class RoutingGenerator extends CodeGenerator {
         return paramsString;
     }
 
-    private boolean hasScreens(List<LightbulbFragmentData> fragmentBindings) {
-        return fragmentBindings.stream()
-                .anyMatch(fragmentBindingData -> fragmentBindingData.screenInfo() != null);
+    private boolean hasScreens(List<LightbulbFragmentDescription> fragmentBindings) {
+        return fragmentBindings.stream().anyMatch(LightbulbFragmentDescription::isScreen);
     }
 
-    private boolean hasRoutingEnabled(List<LightbulbActivityData> activityBindings) {
-        return activityBindings.stream()
-                .anyMatch(LightbulbActivityData::routingEnabled);
+    private boolean hasRoutingEnabled(List<LightbulbActivityDescription> activityBindings) {
+        return activityBindings.stream().anyMatch(LightbulbActivityDescription::isRoutingEnabled);
     }
 }

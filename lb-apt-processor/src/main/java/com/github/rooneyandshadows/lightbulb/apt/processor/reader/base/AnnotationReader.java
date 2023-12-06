@@ -1,7 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader.base;
 
-//TODO ClassFileTransformer
-
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -13,6 +11,9 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.function.Consumer;
 
+//TODO instrumentation api ClassFileTransformer
+
+@SuppressWarnings("unchecked")
 public abstract class AnnotationReader {
     protected final Messager messager;
     protected final Elements elements;
@@ -54,7 +55,6 @@ public abstract class AnnotationReader {
         onAnnotationsExtracted(resultsRegistry);
     }
 
-    @SuppressWarnings("unchecked")
     protected  <T extends Annotation> void consumeAnnotation(Class<T> annotationClass, AnnotatedElement element, Consumer<T> consumer) {
         Annotation annotation = element.getAnnotation();
         if (annotation.getClass() != annotationClass) return;

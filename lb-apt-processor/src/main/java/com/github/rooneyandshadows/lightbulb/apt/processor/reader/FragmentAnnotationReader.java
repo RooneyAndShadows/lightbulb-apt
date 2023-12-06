@@ -5,8 +5,10 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.Lightbulb
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentScreen;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentStatePersisted;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.LightbulbFragmentData;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Variable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.ViewBinding;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
@@ -19,11 +21,11 @@ import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.FRAGMENT_BINDINGS;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION;
 import static javax.lang.model.element.ElementKind.*;
 
 public class FragmentAnnotationReader extends AnnotationReader {
-    private final List<LightbulbFragmentData> fragmentBindings = new ArrayList<>();
+    private final List<LightbulbFragmentDescription> fragmentBindings = new ArrayList<>();
 
     public FragmentAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
         super(resultsRegistry, messager, elements, environment);
@@ -31,16 +33,15 @@ public class FragmentAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        LightbulbFragmentData.Builder fragmentDataBuilder = new LightbulbFragmentData.Builder(elements, target);
+        LightbulbFragmentDescription.Builder fragmentDataBuilder = new LightbulbFragmentDescription.Builder(elements, target);
 
         annotatedElements.forEach(element -> {
             consumeAnnotation(LightbulbFragment.class, element, lightbulbFragment -> {
-                Configuration configuration = new Configuration(lightbulbFragment.layoutName());
-                fragmentDataBuilder.withConfiguration(configuration);
+                fragmentDataBuilder.withLayoutName(lightbulbFragment.layoutName());
             });
             consumeAnnotation(FragmentScreen.class, element, fragmentScreen -> {
-                ScreenInfo screenInfo = new ScreenInfo(fragmentScreen.screenGroup(), fragmentScreen.screenName());
-                fragmentDataBuilder.withScreenInfo(screenInfo);
+                fragmentDataBuilder.withScreenName(fragmentScreen.screenName());
+                fragmentDataBuilder.withScreenGroupName(fragmentScreen.screenGroup());
             });
             consumeAnnotation(FragmentParameter.class, element, fragmentParameter -> {
                 Parameter parameter = new Parameter(element.getElement(), fragmentParameter.optional());
@@ -61,7 +62,7 @@ public class FragmentAnnotationReader extends AnnotationReader {
 
     @Override
     protected void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry) {
-        resultRegistry.setResult(FRAGMENT_BINDINGS, fragmentBindings);
+        resultRegistry.setResult(LIGHTBULB_FRAGMENT_DESCRIPTION, fragmentBindings);
     }
 
     @Override

@@ -1,9 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.activity.LightbulbActivityData;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.LightbulbFragmentData;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.fragment.inner.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbActivityDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
@@ -19,10 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_ACTIVITY_DESCRIPTION;
 
 public class ActivityAnnotationReader extends AnnotationReader {
-    private final List<LightbulbActivityData> activityBindings = new ArrayList<>();
+    private final List<LightbulbActivityDescription> activityBindings = new ArrayList<>();
 
     public ActivityAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
         super(resultsRegistry, messager, elements, environment);
@@ -30,7 +28,7 @@ public class ActivityAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        LightbulbActivityData.Builder activityDataBuilder = new LightbulbActivityData.Builder(elements, target);
+        LightbulbActivityDescription.Builder activityDataBuilder = new LightbulbActivityDescription.Builder(elements, target);
 
         annotatedElements.forEach(element -> {
             consumeAnnotation(LightbulbActivity.class, element, lightbulbActivity -> {
@@ -44,7 +42,7 @@ public class ActivityAnnotationReader extends AnnotationReader {
 
     @Override
     protected void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry) {
-        resultRegistry.setResult(ACTIVITY_BINDINGS, activityBindings);
+        resultRegistry.setResult(LIGHTBULB_ACTIVITY_DESCRIPTION, activityBindings);
     }
 
     @Override

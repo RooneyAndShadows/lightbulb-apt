@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbStorage;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.activity.LightbulbActivityData;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbStorageDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
@@ -17,10 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.ACTIVITY_BINDINGS;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_STORAGE_DESCRIPTION;
 
 public class StorageAnnotationReader extends AnnotationReader {
-    private final List<LightbulbActivityData> activityBindings = new ArrayList<>();
+    private final List<LightbulbStorageDescription> storageDescriptions = new ArrayList<>();
 
     public StorageAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
         super(resultsRegistry, messager, elements, environment);
@@ -28,13 +28,20 @@ public class StorageAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        LightbulbActivityData bindingData = new LightbulbActivityData(elements, target, annotatedElements);
-        activityBindings.add(bindingData);
+        LightbulbStorageDescription.Builder storageDescriptionBuilder = new LightbulbStorageDescription.Builder(elements, target);
+
+        annotatedElements.forEach(element -> {
+            consumeAnnotation(LightbulbStorage.class, element, lightbulbStorage -> {
+                storageDescriptionBuilder.withName(lightbulbStorage.name());
+            });
+        });
+
+        storageDescriptions.add(storageDescriptionBuilder.build());
     }
 
     @Override
     protected void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry) {
-        resultRegistry.setResult(ACTIVITY_BINDINGS, activityBindings);
+        resultRegistry.setResult(LIGHTBULB_STORAGE_DESCRIPTION, storageDescriptions);
     }
 
     @Override
