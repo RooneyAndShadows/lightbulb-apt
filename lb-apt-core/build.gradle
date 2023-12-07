@@ -27,6 +27,7 @@ android {
         }
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -34,8 +35,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$versions.android.desugar"
     implementation "androidx.appcompat:appcompat:$versions.android.appcompat"
-    implementation "com.github.rooneyandshadows:java-commons:$versions.misc.java_commons"
+    implementation "androidx.preference:preference-ktx:$versions.android.preference"
+    implementation 'joda-time:joda-time:2.10.14'
 }
 
 tasks.withType(JavaCompile).configureEach {

@@ -9,6 +9,8 @@ buildscript {
                         gradle_plugin: "8.0.2",
                         gradle_build : "0.12.2",
                         appcompat    : "1.6.1",
+                        preference: "1.2.0",
+                        desugar   : "1.1.6",
                 ],
                 misc   : [
                         java_commons: "[1.0.7,1.1.0[",

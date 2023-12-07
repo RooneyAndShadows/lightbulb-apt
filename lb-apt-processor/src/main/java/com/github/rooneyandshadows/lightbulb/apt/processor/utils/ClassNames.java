@@ -28,8 +28,8 @@ public class ClassNames {
      * Lightbulb
      */
     public static final ClassName BASE_ROUTER = ClassName.get(LB_APT_CORE_ROUTING, "BaseActivityRouter");
-    public static final ClassName DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_JAVA_COMMONS_DATE, "DateUtils");
-    public static final ClassName OFFSET_DATE_UTILS = ClassName.get(ROONEY_AND_SHADOWS_JAVA_COMMONS_DATE, "DateUtilsOffsetDate");
+    public static final ClassName DATE_UTILS = ClassName.get(LB_APT_CORE_UTILS, "DateUtils");
+    public static final ClassName OFFSET_DATE_UTILS = ClassName.get(LB_APT_CORE_UTILS, "DateUtilsOffsetDate");
     public static final ClassName LB_TRANSFORMATION_ANNOTATION = ClassName.get(LB_APT_ANNOTATIONS, "LightbulbTransformation");
     /**
      * Android

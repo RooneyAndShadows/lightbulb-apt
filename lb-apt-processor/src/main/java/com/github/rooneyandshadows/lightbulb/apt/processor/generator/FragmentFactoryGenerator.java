@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION;
 import static javax.lang.model.element.Modifier.*;
 
 public class FragmentFactoryGenerator extends CodeGenerator {
@@ -25,7 +26,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        List<LightbulbFragmentDescription> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION);
+        List<LightbulbFragmentDescription> fragmentBindings = annotationResultsRegistry.getResult(LIGHTBULB_FRAGMENT_DESCRIPTION);
         generateFragmentFactory(fragmentBindings);
     }
 
