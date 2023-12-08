@@ -16,10 +16,10 @@ public abstract class BaseDescriptionBuilder<T extends BaseDescription> {
     protected final ClassName instrumentedClassName;
     protected final boolean canBeInstantiated;
 
-    public BaseDescriptionBuilder(Elements elements, TypeElement fragmentClassElement) {
+    public BaseDescriptionBuilder(Elements elements, TypeElement fragmentClassElement, String instrumentedClassPackage) {
         this.className = ClassNames.generateClassName(fragmentClassElement, elements);
         this.superClassName = ClassNames.generateSuperClassName(fragmentClassElement, elements);
-        this.instrumentedClassName = ClassNames.generateClassNameWithPrefix(PackageNames.getFragmentsPackage(), className.simpleName(), GENERATED_CLASS_NAME_PREFIX);
+        this.instrumentedClassName = ClassNames.generateClassNameWithPrefix(instrumentedClassPackage, className.simpleName(), GENERATED_CLASS_NAME_PREFIX);
         this.canBeInstantiated = ElementUtils.canBeInstantiated(fragmentClassElement);
     }
 

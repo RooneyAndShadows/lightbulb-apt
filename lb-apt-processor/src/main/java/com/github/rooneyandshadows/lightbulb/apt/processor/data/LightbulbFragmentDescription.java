@@ -4,6 +4,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.data.base.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.ViewBinding;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.ClassName;
 
 import javax.lang.model.element.TypeElement;
@@ -94,7 +95,7 @@ public final class LightbulbFragmentDescription extends BaseDescription {
         private final List<ViewBinding> viewBindings = new ArrayList<>();
 
         public Builder(Elements elements, TypeElement fragmentClassElement) {
-            super(elements, fragmentClassElement);
+            super(elements, fragmentClassElement, PackageNames.getFragmentsPackage());
         }
 
         @Override

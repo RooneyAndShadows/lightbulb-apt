@@ -19,6 +19,7 @@ public class ClassNames {
      */
     public static final String GENERATED_CLASS_NAME_PREFIX = "Lightbulb_";
     public static final String FRAGMENT_FACTORY_CLASS_NAME = "Fragments";
+    public static final String APP_STORAGE_CLASS_NAME = "AppStorage";
     public static final String ROUTING_SCREENS_CLASS_NAME = "Screens";
     public static final String ROUTING_APP_ROUTER_CLASS_NAME = "AppRouter";
     public static final String ROUTING_APP_NAVIGATOR_CLASS_NAME = "AppNavigator";
@@ -28,8 +29,8 @@ public class ClassNames {
      * Lightbulb
      */
     public static final ClassName BASE_ROUTER = ClassName.get(LB_APT_CORE_ROUTING, "BaseActivityRouter");
+    public static final ClassName BASE_STORAGE = ClassName.get(LB_APT_CORE_STORAGE, "BaseStorage");
     public static final ClassName DATE_UTILS = ClassName.get(LB_APT_CORE_UTILS, "DateUtils");
-    public static final ClassName OFFSET_DATE_UTILS = ClassName.get(LB_APT_CORE_UTILS, "DateUtilsOffsetDate");
     public static final ClassName LB_TRANSFORMATION_ANNOTATION = ClassName.get(LB_APT_ANNOTATIONS, "LightbulbTransformation");
     /**
      * Android
@@ -101,15 +102,5 @@ public class ClassNames {
 
     public static ClassName getAppNavigatorClassName() {
         return ClassName.get(PackageNames.getRoutingPackage(), ROUTING_APP_NAVIGATOR_CLASS_NAME);
-    }
-
-    public static ClassName getActivityRouterClassName(ClassName activityClassName) {
-        String className = activityClassName.simpleName().concat(ROUTING_ACTIVITY_ROUTER_CLASS_NAME_SUFFIX);
-        return ClassName.get(PackageNames.getRoutingPackage(), className);
-    }
-
-    public static ClassName getActivityNavigatorClassName(ClassName activityClassName) {
-        String className = activityClassName.simpleName().concat(ROUTING_ACTIVITY_NAVIGATOR_CLASS_NAME_SUFFIX);
-        return ClassName.get(PackageNames.getRoutingPackage(), className);
     }
 }

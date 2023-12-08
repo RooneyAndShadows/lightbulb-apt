@@ -31,9 +31,10 @@ public class StorageAnnotationReader extends AnnotationReader {
         LightbulbStorageDescription.Builder storageDescriptionBuilder = new LightbulbStorageDescription.Builder(elements, target);
 
         annotatedElements.forEach(element -> {
-            consumeAnnotation(LightbulbStorage.class, element, lightbulbStorage -> {
+            Annotation annotation = element.getAnnotation();
+            if (annotation instanceof LightbulbStorage lightbulbStorage) {
                 storageDescriptionBuilder.withName(lightbulbStorage.name());
-            });
+            }
         });
 
         storageDescriptions.add(storageDescriptionBuilder.build());

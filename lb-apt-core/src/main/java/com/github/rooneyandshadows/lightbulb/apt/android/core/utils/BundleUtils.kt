@@ -15,25 +15,17 @@ class BundleUtils {
     companion object {
         @JvmStatic
         fun putOffsetDateTime(key: String, dest: Bundle, date: OffsetDateTime?): Companion {
-            if (date != null) dest.putString(
-                key,
-                DateUtilsOffsetDate.getDateString(
-                    DateUtilsOffsetDate.defaultFormatWithTimeZone,
-                    date
-                )
-            )
+            if (date != null) {
+                dest.putString(key, DateUtils.getOffsetDateString(date))
+            }
             return Companion
         }
 
         @JvmStatic
         fun putDate(key: String, dest: Bundle, date: Date?): Companion {
-            if (date != null) dest.putString(
-                key,
-                DateUtils.getDateString(
-                    DateUtils.defaultFormatWithTimeZone,
-                    date
-                )
-            )
+            if (date != null) {
+                dest.putString(key, DateUtils.getDateString(date))
+            }
             return Companion
         }
 
@@ -129,20 +121,14 @@ class BundleUtils {
         fun getOffsetDateTime(key: String, source: Bundle): OffsetDateTime? {
             val dateString = source.getString(key)
             if (dateString.isNullOrBlank()) return null
-            return DateUtilsOffsetDate.getDateFromString(
-                DateUtilsOffsetDate.defaultFormatWithTimeZone,
-                dateString
-            )
+            return DateUtils.getOffsetDateFromString(dateString)
         }
 
         @JvmStatic
         fun getDate(key: String, source: Bundle): Date? {
             val dateString = source.getString(key)
             if (dateString.isNullOrBlank()) return null
-            return DateUtils.getDateFromString(
-                DateUtils.defaultFormatWithTimeZone,
-                dateString
-            )
+            return DateUtils.getDateFromString(dateString)
         }
 
         @JvmStatic

@@ -1,10 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbFragment;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentStatePersisted;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.ViewBinding;
@@ -36,25 +32,26 @@ public class FragmentAnnotationReader extends AnnotationReader {
         LightbulbFragmentDescription.Builder fragmentDataBuilder = new LightbulbFragmentDescription.Builder(elements, target);
 
         annotatedElements.forEach(element -> {
-            consumeAnnotation(LightbulbFragment.class, element, lightbulbFragment -> {
+            Annotation annotation = element.getAnnotation();
+            if (annotation instanceof LightbulbFragment lightbulbFragment) {
                 fragmentDataBuilder.withLayoutName(lightbulbFragment.layoutName());
-            });
-            consumeAnnotation(FragmentScreen.class, element, fragmentScreen -> {
+            }
+            if (annotation instanceof FragmentScreen fragmentScreen) {
                 fragmentDataBuilder.withScreenName(fragmentScreen.screenName());
                 fragmentDataBuilder.withScreenGroupName(fragmentScreen.screenGroup());
-            });
-            consumeAnnotation(FragmentParameter.class, element, fragmentParameter -> {
+            }
+            if (annotation instanceof FragmentParameter fragmentParameter) {
                 Parameter parameter = new Parameter(element.getElement(), fragmentParameter.optional());
                 fragmentDataBuilder.withParameter(parameter);
-            });
-            consumeAnnotation(FragmentStatePersisted.class, element, fragmentStatePersisted -> {
+            }
+            if (annotation instanceof FragmentStatePersisted fragmentStatePersisted) {
                 Variable variableInfo = new Variable(element.getElement());
                 fragmentDataBuilder.withPersistedVariable(variableInfo);
-            });
-            consumeAnnotation(BindView.class, element, bindView -> {
+            }
+            if (annotation instanceof BindView bindView) {
                 ViewBinding viewBindingInfo = new ViewBinding(element.getElement(), bindView.name());
                 fragmentDataBuilder.withViewBinding(viewBindingInfo);
-            });
+            }
         });
 
         fragmentBindings.add(fragmentDataBuilder.build());

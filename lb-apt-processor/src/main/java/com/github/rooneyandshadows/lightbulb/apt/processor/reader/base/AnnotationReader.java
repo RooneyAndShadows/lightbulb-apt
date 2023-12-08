@@ -52,13 +52,8 @@ public abstract class AnnotationReader {
             handleAnnotationsForClass(rootElement, annotatedElements);
         });
 
-        onAnnotationsExtracted(resultsRegistry);
-    }
 
-    protected  <T extends Annotation> void consumeAnnotation(Class<T> annotationClass, AnnotatedElement element, Consumer<T> consumer) {
-        Annotation annotation = element.getAnnotation();
-        if (annotation.getClass() != annotationClass) return;
-        consumer.accept((T) annotation);
+        onAnnotationsExtracted(resultsRegistry);
     }
 
     private <T extends Annotation> boolean obtainAnnotations(Class<T> annotationClass, ElementKind requiredKind, Map<Element, List<AnnotatedElement>> annotatedElements) {

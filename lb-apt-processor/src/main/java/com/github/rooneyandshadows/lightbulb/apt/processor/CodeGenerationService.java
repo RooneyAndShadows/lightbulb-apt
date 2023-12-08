@@ -1,14 +1,12 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.FragmentFactoryGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.RoutingGenerator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.ActivityAnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.FragmentAnnotationReader;
+import com.github.rooneyandshadows.lightbulb.apt.processor.reader.StorageAnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.ActivityGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.FragmentGenerator;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -37,10 +35,12 @@ public class CodeGenerationService {
     private void init() {
         readers.add(new ActivityAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
         readers.add(new FragmentAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
+        readers.add(new StorageAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
         generators.add(new FragmentGenerator(filer, resultsRegistry));
         generators.add(new FragmentFactoryGenerator(filer, resultsRegistry));
         generators.add(new RoutingGenerator(filer, resultsRegistry));
         generators.add(new ActivityGenerator(filer, resultsRegistry));
+        generators.add(new StorageGenerator(filer, resultsRegistry));
         //  generators.add(new BindingRegistryGenerator(rootPackage, filer, resultsRegistry));
     }
 

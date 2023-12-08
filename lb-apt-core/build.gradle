@@ -5,7 +5,6 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-
 android {
     namespace "$environment.android_core_namespace"
     compileSdk 33
@@ -38,7 +37,7 @@ dependencies {
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$versions.android.desugar"
     implementation "androidx.appcompat:appcompat:$versions.android.appcompat"
     implementation "androidx.preference:preference-ktx:$versions.android.preference"
-    implementation 'joda-time:joda-time:2.10.14'
+    implementation "com.google.code.gson:gson:$versions.google.gson"
 }
 
 tasks.withType(JavaCompile).configureEach {

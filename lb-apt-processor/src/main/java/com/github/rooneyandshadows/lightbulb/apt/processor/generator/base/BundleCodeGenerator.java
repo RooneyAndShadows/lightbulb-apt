@@ -115,12 +115,12 @@ public class BundleCodeGenerator {
         String tmpVarName = key.concat("DateString");
         String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
         cbBuilder.addStatement("$T $L = ".concat(getDateStringExpression), STRING, tmpVarName, key);
-        cbBuilder.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", paramType, variableName, DATE_UTILS, DATE_UTILS, "defaultFormat", tmpVarName);
+        cbBuilder.addStatement("$T $L = $T.getDateFromString($L)", paramType, variableName, DATE_UTILS, tmpVarName);
     }
 
     private static void writeDate(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         String tmpVarName = key.concat("DateString");
-        cbBuilder.addStatement("$T $L = $T.getDateString($T.$L,$L);", STRING, tmpVarName, DATE_UTILS, DATE_UTILS, "defaultFormat", variableAccessor);
+        cbBuilder.addStatement("$T $L = $T.getDateString($L)", STRING, tmpVarName, DATE_UTILS, variableAccessor);
         cbBuilder.addStatement("$L.putString($S,$L)", bundleVariableName, key, tmpVarName);
     }
 
@@ -128,12 +128,12 @@ public class BundleCodeGenerator {
         String tmpVarName = variableName.concat("DateString");
         String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
         cbBuilder.addStatement("$T $L = ".concat(getDateStringExpression), STRING, tmpVarName, key);
-        cbBuilder.addStatement("$T $L = $T.getDateFromString($T.$L,$L)", paramType, variableName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", tmpVarName);
+        cbBuilder.addStatement("$T $L = $T.getOffsetDateFromString($L)", paramType, variableName, DATE_UTILS, tmpVarName);
     }
 
     private static void writeOffsetDate(CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
         String tmpVarName = key.concat("DateString");
-        cbBuilder.addStatement("$T $L = $T.getDateString($T.$L,$L);", STRING, tmpVarName, OFFSET_DATE_UTILS, OFFSET_DATE_UTILS, "defaultFormatWithTimeZone", variableAccessor);
+        cbBuilder.addStatement("$T $L = $T.getOffsetDateString($L)", STRING, tmpVarName, DATE_UTILS, variableAccessor);
         cbBuilder.addStatement("$L.putString($S,$L)", bundleVariableName, key, tmpVarName);
     }
 

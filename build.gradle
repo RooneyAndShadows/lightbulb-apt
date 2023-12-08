@@ -3,14 +3,15 @@ buildscript {
         versions = [
                 kotlin : "1.8.10",
                 google : [
-                        auto_service: "1.0.1"
+                        auto_service: "1.0.1",
+                        gson        : "2.10.1"
                 ],
                 android: [
                         gradle_plugin: "8.0.2",
                         gradle_build : "0.12.2",
                         appcompat    : "1.6.1",
-                        preference: "1.2.0",
-                        desugar   : "1.1.6",
+                        preference   : "1.2.0",
+                        desugar      : "1.1.6",
                 ],
                 misc   : [
                         java_commons: "[1.0.7,1.1.0[",
@@ -20,9 +21,9 @@ buildscript {
                 ]
         ]
         environment = [
-                "group_id": "com.github.rooneyandshadows.lightbulb-apt",
+                "group_id"              : "com.github.rooneyandshadows.lightbulb-apt",
                 "android_core_namespace": 'com.github.rooneyandshadows.lightbulb.apt.core',
-                "version" : "2.0.0"
+                "version"               : "2.0.0"
         ]
     }
     repositories {

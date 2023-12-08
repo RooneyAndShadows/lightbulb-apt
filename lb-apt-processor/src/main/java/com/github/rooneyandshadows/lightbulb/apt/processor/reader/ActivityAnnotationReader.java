@@ -31,10 +31,11 @@ public class ActivityAnnotationReader extends AnnotationReader {
         LightbulbActivityDescription.Builder activityDataBuilder = new LightbulbActivityDescription.Builder(elements, target);
 
         annotatedElements.forEach(element -> {
-            consumeAnnotation(LightbulbActivity.class, element, lightbulbActivity -> {
+            Annotation annotation = element.getAnnotation();
+            if(annotation instanceof LightbulbActivity lightbulbActivity){
                 activityDataBuilder.withRoutingEnabled(lightbulbActivity.enableRouterGeneration());
                 activityDataBuilder.withFragmentContainerId(lightbulbActivity.fragmentContainerId());
-            });
+            }
         });
 
         activityBindings.add(activityDataBuilder.build());

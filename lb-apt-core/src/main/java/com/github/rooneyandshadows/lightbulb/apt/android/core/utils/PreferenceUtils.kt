@@ -3,7 +3,6 @@ package com.github.rooneyandshadows.lightbulb.apt.android.core.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.preference.PreferenceManager
-import com.github.rooneyandshadows.java.commons.string.StringUtils
 import java.util.*
 
 @Suppress("unused")
@@ -88,8 +87,10 @@ class PreferenceUtils {
         @JvmStatic
         fun getUUID(context: Context, preferenceKey: String): UUID? {
             val savedValue = getString(context, preferenceKey, "")
-            return if (StringUtils.isNullOrEmptyString(savedValue)) null
-            else UUID.fromString(savedValue)
+            if (savedValue.isBlank()) {
+                return null
+            }
+            return UUID.fromString(savedValue)
         }
 
         @JvmStatic

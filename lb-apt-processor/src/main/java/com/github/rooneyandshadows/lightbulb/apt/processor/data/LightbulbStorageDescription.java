@@ -2,6 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.data;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.base.BaseDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.base.BaseDescriptionBuilder;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.ClassName;
 
 import javax.lang.model.element.TypeElement;
@@ -23,7 +24,7 @@ public final class LightbulbStorageDescription extends BaseDescription {
         private String name;
 
         public Builder(Elements elements, TypeElement fragmentClassElement) {
-            super(elements, fragmentClassElement);
+            super(elements, fragmentClassElement, PackageNames.getStoragePackage());
         }
 
         @Override

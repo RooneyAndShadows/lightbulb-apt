@@ -8,6 +8,7 @@ public class PackageNames {
     public static final String ROONEY_AND_SHADOWS = "com.github.rooneyandshadows";
     public static final String LB_APT_CORE = resolve(ROONEY_AND_SHADOWS, "lightbulb", "apt", "android", "core");
     public static final String LB_APT_CORE_ROUTING = resolve(LB_APT_CORE, "routing");
+    public static final String LB_APT_CORE_STORAGE = resolve(LB_APT_CORE, "storage");
     public static final String LB_APT_CORE_UTILS = resolve(LB_APT_CORE, "utils");
     public static final String LB_APT_PROCESSOR = resolve(ROONEY_AND_SHADOWS, "lightbulb", "apt", "processor");
     public static final String LB_APT_ANNOTATIONS = resolve(LB_APT_PROCESSOR, "annotations");
@@ -38,7 +39,11 @@ public class PackageNames {
     }
 
     public static String getRoutingScreensPackage() {
-        return resolve(getRootPackage(), "lightbulb", "routing", "screens");
+        return resolve(getRoutingPackage(), "screens");
+    }
+
+    public static String getStoragePackage() {
+        return resolve(getRootPackage(), "lightbulb", "storage");
     }
 
     public static String getFragmentsFactoryPackage() {

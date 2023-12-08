@@ -4,8 +4,6 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.SparseArray
-import com.github.rooneyandshadows.java.commons.date.DateUtils
-import com.github.rooneyandshadows.java.commons.date.DateUtilsOffsetDate
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.collections.ArrayList
@@ -16,24 +14,18 @@ class ParcelUtils {
         @JvmStatic
         fun writeOffsetDateTime(dest: Parcel, date: OffsetDateTime?): Companion {
             dest.writeByte((if (date == null) 0 else 1).toByte())
-            if (date != null) dest.writeString(
-                DateUtilsOffsetDate.getDateString(
-                    DateUtilsOffsetDate.defaultFormatWithTimeZone,
-                    date
-                )
-            )
+            if (date != null){
+                dest.writeString(DateUtils.getOffsetDateString(date))
+            }
             return Companion
         }
 
         @JvmStatic
         fun writeDate(dest: Parcel, date: Date?): Companion {
             dest.writeByte((if (date == null) 0 else 1).toByte())
-            if (date != null) dest.writeString(
-                DateUtils.getDateString(
-                    DateUtils.defaultFormatWithTimeZone,
-                    date
-                )
-            )
+            if (date != null){
+                dest.writeString(DateUtils.getDateString(date))
+            }
             return Companion
         }
 
@@ -130,17 +122,16 @@ class ParcelUtils {
 
         @JvmStatic
         fun readOffsetDateTime(source: Parcel): OffsetDateTime? {
-            return if (source.readByte().toInt() == 1) DateUtilsOffsetDate.getDateFromString(
-                DateUtilsOffsetDate.defaultFormatWithTimeZone, source.readString()
-            ) else null
+            return if (source.readByte().toInt() == 1){
+                DateUtils.getOffsetDateFromString(source.readString())
+            } else null
         }
 
         @JvmStatic
         fun readDate(source: Parcel): Date? {
-            return if (source.readByte().toInt() == 1) DateUtils.getDateFromString(
-                DateUtils.defaultFormatWithTimeZone,
-                source.readString()
-            ) else null
+            return if (source.readByte().toInt() == 1){
+                DateUtils.getDateFromString(source.readString())
+            } else null
         }
 
         @JvmStatic
@@ -213,7 +204,6 @@ class ParcelUtils {
             }
         }
 
-        @Suppress("DEPRECATION")
         @JvmStatic
         fun <V : Parcelable> readTypedArrayList(
             source: Parcel,
