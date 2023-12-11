@@ -2,7 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Variable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.ViewBinding;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
@@ -45,7 +45,7 @@ public class FragmentAnnotationReader extends AnnotationReader {
                 fragmentDataBuilder.withParameter(parameter);
             }
             if (annotation instanceof FragmentStatePersisted fragmentStatePersisted) {
-                Variable variableInfo = new Variable(element.getElement());
+                Field variableInfo = new Field(element.getElement());
                 fragmentDataBuilder.withPersistedVariable(variableInfo);
             }
             if (annotation instanceof BindView bindView) {

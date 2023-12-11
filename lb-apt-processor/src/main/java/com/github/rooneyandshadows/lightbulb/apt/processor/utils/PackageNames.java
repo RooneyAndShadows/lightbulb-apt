@@ -19,7 +19,8 @@ public class PackageNames {
     public static final String ANDROIDX = "androidx";
     public static final String ANDROID_OS = resolve(ANDROID, "os");
     public static final String ANDROID_VIEW = resolve(ANDROID, "view");
-    public static final String ANDROID_CONTENT_RES = resolve(ANDROID, "content", "res");
+    public static final String ANDROID_CONTENT = resolve(ANDROID, "content");
+    public static final String ANDROID_CONTENT_RES = resolve(ANDROID_CONTENT, "res");
     public static final String ANDROIDX_FRAGMENT_APP = resolve(ANDROIDX, "fragment", "app");
     public static final String ANDROIDX_APPCOMPAT_APP = resolve(ANDROIDX, "appcompat", "app");
     public static final String ANDROID_BUILD_VERSION = resolve(ANDROID_OS, "Build", "VERSION");

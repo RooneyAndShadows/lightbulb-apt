@@ -2,7 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.data;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.base.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Variable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.ViewBinding;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.ClassName;
@@ -19,7 +19,7 @@ public final class LightbulbFragmentDescription extends BaseDescription {
     private final String screenName;
     private final String layoutName;
     private final List<Parameter> parameters;
-    private final List<Variable> persistedVariables;
+    private final List<Field> persistedVariables;
     private final List<ViewBinding> viewBindings;
 
     public LightbulbFragmentDescription(
@@ -31,7 +31,7 @@ public final class LightbulbFragmentDescription extends BaseDescription {
             String screenName,
             String layoutName,
             List<Parameter> parameters,
-            List<Variable> persistedVariables,
+            List<Field> persistedVariables,
             List<ViewBinding> viewBindings
     ) {
         super(className, superClassName, instrumentedClassName, canBeInstantiated);
@@ -68,7 +68,7 @@ public final class LightbulbFragmentDescription extends BaseDescription {
         return parameters;
     }
 
-    public List<Variable> getPersistedVariables() {
+    public List<Field> getPersistedVariables() {
         return persistedVariables;
     }
 
@@ -91,7 +91,7 @@ public final class LightbulbFragmentDescription extends BaseDescription {
         private String screenGroupName;
         private String layoutName;
         private final List<Parameter> parameters = new ArrayList<>();
-        private final List<Variable> persistedVariables = new ArrayList<>();
+        private final List<Field> persistedVariables = new ArrayList<>();
         private final List<ViewBinding> viewBindings = new ArrayList<>();
 
         public Builder(Elements elements, TypeElement fragmentClassElement) {
@@ -130,7 +130,7 @@ public final class LightbulbFragmentDescription extends BaseDescription {
             this.parameters.add(parameter);
         }
 
-        public void withPersistedVariable(Variable persistedVariable) {
+        public void withPersistedVariable(Field persistedVariable) {
             this.persistedVariables.add(persistedVariable);
         }
 

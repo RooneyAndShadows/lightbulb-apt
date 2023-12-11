@@ -10,8 +10,10 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class ElementUtils {
 
@@ -34,6 +36,13 @@ public class ElementUtils {
         return (TypeElement) ((DeclaredType) superClassTypeMirror).asElement();
     }
 
+    public static List<Element> getFieldElements(TypeElement element) {
+        return element.getEnclosedElements()
+                .stream()
+                .filter(o -> o.getKind().isField())
+                .collect(Collectors.toList());
+    }
+
     public static String getSimpleName(Element element) {
         return element.getSimpleName().toString();
     }
@@ -45,12 +54,12 @@ public class ElementUtils {
     }
 
     public static String scanForSetter(Element classElement, String fieldName) {
-        String setterName = "set".concat(capitalizeFirstLetter(fieldName));
+        String setterName = "set".concat(StringUtils.capitalizeFirstLetter(fieldName));
         return methodExists(classElement, setterName);
     }
 
     public static String scanForGetter(Element classElement, String fieldName) {
-        String getterName = "get".concat(capitalizeFirstLetter(fieldName));
+        String getterName = "get".concat(StringUtils.capitalizeFirstLetter(fieldName));
         return methodExists(classElement, getterName);
     }
 
@@ -103,9 +112,5 @@ public class ElementUtils {
         return element.getModifiers()
                 .stream()
                 .anyMatch(modifier -> modifier == Modifier.FINAL);
-    }
-
-    private static String capitalizeFirstLetter(String target) {
-        return target.substring(0, 1).toUpperCase() + target.substring(1);
     }
 }

@@ -9,7 +9,7 @@ import javax.lang.model.element.Modifier;
 
 
 @SuppressWarnings("DuplicatedCode")
-public class Variable {
+public class Field {
     protected final String name;
     protected final TypeName type;
     protected final String setterName;
@@ -21,7 +21,7 @@ public class Variable {
     protected final boolean isFinal;
     protected final boolean isNullable;
 
-    public Variable(Element fieldElement) {
+    public Field(Element fieldElement) {
         Element classElement = fieldElement.getEnclosingElement();
         this.element = fieldElement;
         this.name = ElementUtils.getSimpleName(fieldElement);

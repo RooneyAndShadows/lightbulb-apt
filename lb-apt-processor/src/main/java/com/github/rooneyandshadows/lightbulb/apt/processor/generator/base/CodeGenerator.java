@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Variable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
@@ -37,7 +37,7 @@ public abstract class CodeGenerator {
                 .build();
     }
 
-    protected CodeBlock generateWriteIntoBundleBlock(Variable target, String bundleVarName, String variableContext, boolean useGetter) {
+    protected CodeBlock generateWriteIntoBundleBlock(Field target, String bundleVarName, String variableContext, boolean useGetter) {
         boolean hasContext = variableContext != null && !variableContext.isBlank();
         TypeName typeName = target.getType();
         String parameterName = target.getName();
@@ -51,7 +51,7 @@ public abstract class CodeGenerator {
         return codeBlock.build();
     }
 
-    protected CodeBlock generateReadFromBundleBlock(Variable variable, String bundleVariableName, String variableContext, boolean useSetter) {
+    protected CodeBlock generateReadFromBundleBlock(Field variable, String bundleVariableName, String variableContext, boolean useSetter) {
         TypeName paramType = variable.getType();
         String varName = variable.getName();
         String tmpVarName = varName.concat("FromBundle");
@@ -66,7 +66,7 @@ public abstract class CodeGenerator {
         return codeBlock.build();
     }
 
-    protected void generateVariableSetValueStatement(CodeBlock.Builder codeBlock, Variable variable, String variableContext, String fromVarName, boolean useSetter) {
+    protected void generateVariableSetValueStatement(CodeBlock.Builder codeBlock, Field variable, String variableContext, String fromVarName, boolean useSetter) {
         boolean hasContext = variableContext != null && !variableContext.isBlank();
         String accessorStatement = hasContext ? variableContext.concat(".") : "";
         String varName = variable.getName();

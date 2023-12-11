@@ -6,13 +6,15 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import java.lang.reflect.Type
 
-abstract class BaseStorage<T : Any>(private val key: String, private val clazz: Class<T>) {
+abstract class BaseStorage<T : Any> {
     private val dateFormat: String = "yyyy-MM-dd HH:mm:ssZ"
     private val gson: Gson = GsonBuilder().setDateFormat(dateFormat).create()
 
+    abstract fun getStorageClass(): Class<T>
+
     abstract fun getDefault(): T
 
-    protected fun load(context: Context): T {
+    protected fun load(context: Context, key: String): T {
         val value: String = PreferenceUtils.getString(context, key, "")
 
         return if (value.isBlank()) {
@@ -20,11 +22,11 @@ abstract class BaseStorage<T : Any>(private val key: String, private val clazz: 
             PreferenceUtils.saveString(context, key, serializeSettings(default))
             default
         } else {
-            deserializeSettings(value, clazz)
+            deserializeSettings(value, getStorageClass())
         }
     }
 
-    protected fun save(context: Context, settings: T) {
+    protected fun save(context: Context, settings: T, key: String) {
         PreferenceUtils.saveString(context, key, serializeSettings(settings))
     }
 

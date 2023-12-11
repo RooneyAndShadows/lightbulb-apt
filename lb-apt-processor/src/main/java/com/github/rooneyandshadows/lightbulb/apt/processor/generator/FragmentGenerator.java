@@ -2,7 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Variable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
@@ -65,7 +65,7 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private void generateFields(LightbulbFragmentDescription fragment, List<FieldSpec> fields, List<MethodSpec> methods) {
-        List<Variable> targets = new ArrayList<>();
+        List<Field> targets = new ArrayList<>();
         targets.addAll(fragment.getParameters());
         targets.addAll(fragment.getPersistedVariables());
         targets.addAll(fragment.getViewBindings());
@@ -239,7 +239,7 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ClassNames.ANDROID_BUNDLE, "outState")
                 .returns(void.class);
 
-        List<Variable> fieldsToSave = new ArrayList<>();
+        List<Field> fieldsToSave = new ArrayList<>();
         fieldsToSave.addAll(fragmentInfo.getParameters());
         fieldsToSave.addAll(fragmentInfo.getPersistedVariables());
 
@@ -266,7 +266,7 @@ public class FragmentGenerator extends CodeGenerator {
             return;
         }
 
-        List<Variable> fieldsToRestore = new ArrayList<>();
+        List<Field> fieldsToRestore = new ArrayList<>();
         fieldsToRestore.addAll(fragmentInfo.getParameters());
         fieldsToRestore.addAll(fragmentInfo.getPersistedVariables());
 

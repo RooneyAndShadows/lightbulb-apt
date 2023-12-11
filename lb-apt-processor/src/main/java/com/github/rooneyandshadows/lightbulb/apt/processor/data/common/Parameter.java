@@ -3,7 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.data.common;
 import javax.lang.model.element.Element;
 
 @SuppressWarnings("DuplicatedCode")
-public class Parameter extends Variable {
+public class Parameter extends Field {
     private final boolean optional;
 
     public Parameter(Element element, boolean optional) {

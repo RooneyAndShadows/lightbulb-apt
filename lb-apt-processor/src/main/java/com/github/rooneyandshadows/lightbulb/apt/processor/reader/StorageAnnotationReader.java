@@ -2,9 +2,11 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbStorageDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
@@ -33,7 +35,13 @@ public class StorageAnnotationReader extends AnnotationReader {
         annotatedElements.forEach(element -> {
             Annotation annotation = element.getAnnotation();
             if (annotation instanceof LightbulbStorage lightbulbStorage) {
+                List<Field> fields = ElementUtils.getFieldElements((TypeElement) element.getElement())
+                        .stream()
+                        .map(Field::new)
+                        .toList();
                 storageDescriptionBuilder.withName(lightbulbStorage.name());
+                storageDescriptionBuilder.withSubKeys(lightbulbStorage.subKeys());
+                storageDescriptionBuilder.withFields(fields);
             }
         });
 
