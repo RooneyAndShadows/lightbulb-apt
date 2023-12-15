@@ -17,12 +17,12 @@ public class ClassNames {
     /**
      * Result names
      */
-    public static final String GENERATED_CLASS_NAME_PREFIX = "Lightbulb_";
+    public static final String DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX = "Lightbulb_";
+    public static final String STORAGE_CLASS_NAME_PREFIX = "App";
     public static final String FRAGMENT_FACTORY_CLASS_NAME = "Fragments";
-    public static final String APP_STORAGE_CLASS_NAME = "AppStorage";
     public static final String ROUTING_SCREENS_CLASS_NAME = "Screens";
     public static final String ROUTING_APP_ROUTER_CLASS_NAME = "AppRouter";
-    public static final String ROUTING_APP_NAVIGATOR_CLASS_NAME = "AppNavigator";
+    public static final String LIGHTBULB_SERVICE_CLASS_NAME = "LightbulbService";
     public static final String ROUTING_ACTIVITY_ROUTER_CLASS_NAME_SUFFIX = "Router";
     public static final String ROUTING_ACTIVITY_NAVIGATOR_CLASS_NAME_SUFFIX = "Navigator";
     /**
@@ -101,7 +101,7 @@ public class ClassNames {
         return ClassName.get(PackageNames.getRoutingPackage(), ROUTING_APP_ROUTER_CLASS_NAME);
     }
 
-    public static ClassName getAppNavigatorClassName() {
-        return ClassName.get(PackageNames.getRoutingPackage(), ROUTING_APP_NAVIGATOR_CLASS_NAME);
+    public static ClassName getLightbulbServiceClassName() {
+        return ClassName.get(PackageNames.getRoutingPackage(), LIGHTBULB_SERVICE_CLASS_NAME);
     }
 }

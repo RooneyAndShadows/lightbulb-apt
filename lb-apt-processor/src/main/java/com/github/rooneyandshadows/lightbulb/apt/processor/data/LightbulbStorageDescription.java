@@ -10,6 +10,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.util.List;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.STORAGE_CLASS_NAME_PREFIX;
+
 public final class LightbulbStorageDescription extends BaseDescription {
     private final String name;
     private final String[] subKeys;
@@ -40,7 +42,7 @@ public final class LightbulbStorageDescription extends BaseDescription {
         private List<Field> fields;
 
         public Builder(Elements elements, TypeElement fragmentClassElement) {
-            super(elements, fragmentClassElement, PackageNames.getStoragePackage());
+            super(elements, fragmentClassElement, PackageNames.getStoragePackage(), STORAGE_CLASS_NAME_PREFIX);
         }
 
         @Override

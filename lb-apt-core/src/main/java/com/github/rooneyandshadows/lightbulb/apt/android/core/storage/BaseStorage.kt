@@ -1,12 +1,12 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.core.storage
 
-import android.content.Context
+import androidx.appcompat.app.AppCompatActivity
 import com.github.rooneyandshadows.lightbulb.apt.android.core.utils.PreferenceUtils
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import java.lang.reflect.Type
 
-abstract class BaseStorage<T : Any> {
+abstract class BaseStorage<T : Any>(private val contextActivity: AppCompatActivity) {
     private val dateFormat: String = "yyyy-MM-dd HH:mm:ssZ"
     private val gson: Gson = GsonBuilder().setDateFormat(dateFormat).create()
 
@@ -14,20 +14,20 @@ abstract class BaseStorage<T : Any> {
 
     abstract fun getDefault(): T
 
-    protected fun load(context: Context, key: String): T {
-        val value: String = PreferenceUtils.getString(context, key, "")
+    protected fun load(key: String): T {
+        val value: String = PreferenceUtils.getString(contextActivity, key, "")
 
         return if (value.isBlank()) {
             val default = getDefault()
-            PreferenceUtils.saveString(context, key, serializeSettings(default))
+            PreferenceUtils.saveString(contextActivity, key, serializeSettings(default))
             default
         } else {
             deserializeSettings(value, getStorageClass())
         }
     }
 
-    protected fun save(context: Context, settings: T, key: String) {
-        PreferenceUtils.saveString(context, key, serializeSettings(settings))
+    protected fun save(settings: T, key: String) {
+        PreferenceUtils.saveString(contextActivity, key, serializeSettings(settings))
     }
 
     private fun serializeSettings(settings: T): String {

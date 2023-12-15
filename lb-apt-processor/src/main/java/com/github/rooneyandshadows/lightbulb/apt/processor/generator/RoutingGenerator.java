@@ -1,6 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbActivityDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
@@ -15,8 +14,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_ACTIVITY_DESCRIPTION;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.AnnotationResultUtils.getFragmentDescriptions;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.AnnotationResultUtils.hasRoutingScreens;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ROUTING_SCREENS_CLASS_NAME;
 
 @SuppressWarnings("DuplicatedCode")
@@ -30,16 +29,14 @@ public class RoutingGenerator extends CodeGenerator {
 
     @Override
     public void generate() {
-        List<LightbulbFragmentDescription> fragmentBindings = annotationResultsRegistry.getResult(LIGHTBULB_FRAGMENT_DESCRIPTION);
-        List<LightbulbActivityDescription> activityBindings = annotationResultsRegistry.getResult(LIGHTBULB_ACTIVITY_DESCRIPTION);
-
-        if (!hasScreens(fragmentBindings) && !hasRoutingEnabled(activityBindings)) {
+        if (!hasRoutingScreens(annotationResultsRegistry)) {
             return;
         }
 
+        List<LightbulbFragmentDescription> fragmentBindings = getFragmentDescriptions(annotationResultsRegistry);
+
         generateRoutingScreens(fragmentBindings);
         generateAppRouter(fragmentBindings);
-        generateAppNavigatorSingleton();
     }
 
     private void generateAppRouter(List<LightbulbFragmentDescription> fragmentBindings) {
@@ -72,52 +69,6 @@ public class RoutingGenerator extends CodeGenerator {
         }
     }
 
-    private void generateAppNavigatorSingleton() {
-        ClassName routerClassName = ClassNames.getAppRouterClassName();
-        ClassName navigatorClassName = ClassNames.getAppNavigatorClassName();
-        TypeSpec.Builder singletonClass = TypeSpec
-                .classBuilder(navigatorClassName)
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addField(navigatorClassName, "instance", Modifier.PRIVATE, Modifier.STATIC)
-                .addField(routerClassName, "router", Modifier.PRIVATE)
-                .addMethod(MethodSpec.methodBuilder("getInstance")
-                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.SYNCHRONIZED)
-                        .returns(navigatorClassName)
-                        .beginControlFlow("if(instance == null)")
-                        .addStatement("instance = new $T()", navigatorClassName)
-                        .endControlFlow()
-                        .addStatement("return instance")
-                        .build()
-                ).addMethod(MethodSpec.methodBuilder("getRouter")
-                        .addModifiers(Modifier.PUBLIC)
-                        .returns(routerClassName)
-                        .addStatement("return router")
-                        .build()
-                ).addMethod(MethodSpec.methodBuilder("route")
-                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                        .returns(routerClassName)
-                        .addStatement("return getInstance().getRouter()")
-                        .build()
-                ).addMethod(MethodSpec.methodBuilder("bind")
-                        .addModifiers(Modifier.PUBLIC)
-                        .addParameter(routerClassName, "router")
-                        .returns(void.class)
-                        .addStatement("this.router = router")
-                        .addStatement("this.router.attach()")
-                        .build()
-                ).addMethod(MethodSpec.methodBuilder("unBind")
-                        .addModifiers(Modifier.PUBLIC)
-                        .returns(void.class)
-                        .addStatement("this.router.detach()")
-                        .addStatement("this.router = null")
-                        .build()
-                );
-        try {
-            JavaFile.builder(navigatorClassName.packageName(), singletonClass.build()).build().writeTo(filer);
-        } catch (IOException e) {
-            //e.printStackTrace();
-        }
-    }
 
     private void generateRoutingScreens(List<LightbulbFragmentDescription> fragmentBindings) {
         TypeSpec.Builder rootClass = TypeSpec
@@ -320,11 +271,5 @@ public class RoutingGenerator extends CodeGenerator {
         return paramsString;
     }
 
-    private boolean hasScreens(List<LightbulbFragmentDescription> fragmentBindings) {
-        return fragmentBindings.stream().anyMatch(LightbulbFragmentDescription::isScreen);
-    }
 
-    private boolean hasRoutingEnabled(List<LightbulbActivityDescription> activityBindings) {
-        return activityBindings.stream().anyMatch(LightbulbActivityDescription::isRoutingEnabled);
-    }
 }

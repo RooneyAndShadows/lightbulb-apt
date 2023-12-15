@@ -3,7 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.IClassTransformer
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbActivity
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.GENERATED_CLASS_NAME_PREFIX
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.ClassPool
 import javassist.CtClass
@@ -29,7 +29,7 @@ internal class ChangeActivitySuperclassTransformation : IClassTransformer() {
         val simpleName = ctClass.simpleName
         val className = generatedTargetClassLocation
             .plus(".")
-            .plus(GENERATED_CLASS_NAME_PREFIX)
+            .plus(DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX)
             .plus(simpleName)
 
         return classPool.getCtClass(className)

@@ -9,7 +9,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
 public final class LightbulbActivityDescription extends BaseDescription {
-    private final boolean routingEnabled;
     private final String fragmentContainerId;
 
     public LightbulbActivityDescription(
@@ -17,16 +16,10 @@ public final class LightbulbActivityDescription extends BaseDescription {
             ClassName superClassName,
             ClassName instrumentedClassName,
             boolean canBeInstantiated,
-            boolean routingEnabled,
             String fragmentContainerId
     ) {
         super(className, superClassName, instrumentedClassName, canBeInstantiated);
-        this.routingEnabled = routingEnabled;
         this.fragmentContainerId = fragmentContainerId;
-    }
-
-    public boolean isRoutingEnabled() {
-        return routingEnabled;
     }
 
     public String getFragmentContainerId() {
@@ -34,7 +27,6 @@ public final class LightbulbActivityDescription extends BaseDescription {
     }
 
     public static final class Builder extends BaseDescriptionBuilder<LightbulbActivityDescription> {
-        private boolean routingEnabled;
         private String fragmentContainerId;
 
         public Builder(Elements elements, TypeElement fragmentClassElement) {
@@ -48,13 +40,8 @@ public final class LightbulbActivityDescription extends BaseDescription {
                     superClassName,
                     instrumentedClassName,
                     canBeInstantiated,
-                    routingEnabled,
                     fragmentContainerId
             );
-        }
-
-        public void withRoutingEnabled(boolean routingEnabled) {
-            this.routingEnabled = routingEnabled;
         }
 
         public void withFragmentContainerId(String fragmentContainerId) {

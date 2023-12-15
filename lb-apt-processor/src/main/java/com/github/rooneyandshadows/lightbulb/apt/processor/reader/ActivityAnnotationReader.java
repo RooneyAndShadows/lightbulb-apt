@@ -33,7 +33,6 @@ public class ActivityAnnotationReader extends AnnotationReader {
         annotatedElements.forEach(element -> {
             Annotation annotation = element.getAnnotation();
             if(annotation instanceof LightbulbActivity lightbulbActivity){
-                activityDataBuilder.withRoutingEnabled(lightbulbActivity.enableRouterGeneration());
                 activityDataBuilder.withFragmentContainerId(lightbulbActivity.fragmentContainerId());
             }
         });

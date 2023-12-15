@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbActivityDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.AnnotationResultUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
 
@@ -17,9 +18,11 @@ import static javax.lang.model.element.Modifier.*;
 //TODO ADD ON BACK PRESSED METHOD
 public class ActivityGenerator extends CodeGenerator {
     private final String ROUTER_FIELD_NAME = "router";
+    private final boolean hasRouter;
 
     public ActivityGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, annotationResultsRegistry);
+        hasRouter = AnnotationResultUtils.hasRoutingScreens(annotationResultsRegistry);
     }
 
     @Override
@@ -57,9 +60,7 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     private void generateFields(LightbulbActivityDescription activityBindingData, List<FieldSpec> destination) {
-        boolean routingEnabled = activityBindingData.isRoutingEnabled();
-
-        if (routingEnabled) {
+        if (hasRouter) {
             ClassName appRouterClassName = ClassNames.getAppRouterClassName();
             FieldSpec fieldSpec = FieldSpec.builder(appRouterClassName, ROUTER_FIELD_NAME, PRIVATE).build();
             destination.add(fieldSpec);
@@ -68,9 +69,7 @@ public class ActivityGenerator extends CodeGenerator {
 
     @SuppressWarnings("ConstantValue")
     private void generateOnCreateMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.isRoutingEnabled();
-
-        if (!routingEnabled) {
+        if (!hasRouter) {
             return;
         }
 
@@ -81,9 +80,9 @@ public class ActivityGenerator extends CodeGenerator {
                 .returns(void.class)
                 .addStatement("super.onCreate(savedInstanceState)");
 
-        if (routingEnabled) {
+        if (hasRouter) {
             ClassName routerClassName = ClassNames.getAppRouterClassName();
-            ClassName appNavigatorClassName = ClassNames.getAppNavigatorClassName();
+            ClassName appNavigatorClassName = ClassNames.getLightbulbServiceClassName();
             ClassName RClassName = ClassNames.androidResources();
             String fragmentContainerId = activityBindingData.getFragmentContainerId();
 
@@ -100,9 +99,7 @@ public class ActivityGenerator extends CodeGenerator {
 
     @SuppressWarnings("ConstantValue")
     private void generateOnSaveInstanceStateMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.isRoutingEnabled();
-
-        if (!routingEnabled) {
+        if (!hasRouter) {
             return;
         }
 
@@ -113,7 +110,7 @@ public class ActivityGenerator extends CodeGenerator {
                 .returns(void.class)
                 .addStatement("super.onSaveInstanceState(outState)");
 
-        if (routingEnabled) {
+        if (hasRouter) {
             builder.addStatement("$L.saveState(outState)", ROUTER_FIELD_NAME);
         }
 
@@ -122,9 +119,7 @@ public class ActivityGenerator extends CodeGenerator {
 
     @SuppressWarnings("ConstantValue")
     private void generateOnDestroyMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
-        boolean routingEnabled = activityBindingData.isRoutingEnabled();
-
-        if (!routingEnabled) {
+        if (!hasRouter) {
             return;
         }
 
@@ -134,8 +129,8 @@ public class ActivityGenerator extends CodeGenerator {
                 .returns(void.class)
                 .addStatement("super.onDestroy()");
 
-        if (routingEnabled) {
-            ClassName appNavigatorClassName = ClassNames.getAppNavigatorClassName();
+        if (hasRouter) {
+            ClassName appNavigatorClassName = ClassNames.getLightbulbServiceClassName();
             builder.addStatement("$L.getInstance().unBind()", appNavigatorClassName);
         }
 

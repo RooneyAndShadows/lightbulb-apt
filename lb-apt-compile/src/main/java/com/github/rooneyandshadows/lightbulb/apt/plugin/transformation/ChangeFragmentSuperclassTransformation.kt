@@ -6,7 +6,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.BindView
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentStatePersisted
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbFragment
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.GENERATED_CLASS_NAME_PREFIX
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.*
 import org.gradle.configurationcache.extensions.capitalized
@@ -67,7 +67,7 @@ internal class ChangeFragmentSuperclassTransformation : IClassTransformer() {
         val simpleName = ctClass.simpleName
         val className = generatedTargetClassLocation
             .plus(".")
-            .plus(GENERATED_CLASS_NAME_PREFIX)
+            .plus(DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX)
             .plus(simpleName)
 
         return classPool.getCtClass(className)

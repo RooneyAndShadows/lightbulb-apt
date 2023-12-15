@@ -20,7 +20,6 @@ public abstract class CodeGenerator {
     protected final Filer filer;
     protected final AnnotationResultsRegistry annotationResultsRegistry;
 
-
     public CodeGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
         this.filer = filer;
         this.annotationResultsRegistry = annotationResultsRegistry;

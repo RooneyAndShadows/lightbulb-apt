@@ -47,6 +47,10 @@ public class PackageNames {
         return resolve(getRootPackage(), "lightbulb", "storage");
     }
 
+    public static String getServicePackage() {
+        return resolve(getRootPackage(), "lightbulb", "service");
+    }
+
     public static String getFragmentsFactoryPackage() {
         return resolve(getRootPackage(), "lightbulb", "fragments", "factory");
     }

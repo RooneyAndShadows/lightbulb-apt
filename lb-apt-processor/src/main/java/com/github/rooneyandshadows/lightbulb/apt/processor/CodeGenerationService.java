@@ -41,6 +41,7 @@ public class CodeGenerationService {
         generators.add(new RoutingGenerator(filer, resultsRegistry));
         generators.add(new ActivityGenerator(filer, resultsRegistry));
         generators.add(new StorageGenerator(filer, resultsRegistry));
+        generators.add(new ServiceGenerator(filer, resultsRegistry));
         //  generators.add(new BindingRegistryGenerator(rootPackage, filer, resultsRegistry));
     }
 
