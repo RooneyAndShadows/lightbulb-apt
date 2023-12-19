@@ -1,10 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
 
@@ -28,13 +28,19 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     @Override
-    public void generate() {
-        List<LightbulbFragmentDescription> fragmentBindings = annotationResultsRegistry.getResult(AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION);
-        generateFragments(fragmentBindings);
+    protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        List<LightbulbFragmentDescription> fragmentDescriptions = annotationResultsRegistry.getFragmentDescriptions();
+
+        generateFragments(fragmentDescriptions);
     }
 
-    private void generateFragments(List<LightbulbFragmentDescription> fragmentBindings) {
-        fragmentBindings.forEach(fragmentInfo -> {
+    @Override
+    protected boolean willGenerateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        return annotationResultsRegistry.hasFragmentDescriptions();
+    }
+
+    private void generateFragments(List<LightbulbFragmentDescription> fragmentDescriptions) {
+        fragmentDescriptions.forEach(fragmentInfo -> {
             ClassName instrumentedClassName = fragmentInfo.getInstrumentedClassName();
             ClassName superClassName = fragmentInfo.getSuperClassName();
             List<FieldSpec> fields = new ArrayList<>();

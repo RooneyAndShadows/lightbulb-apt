@@ -1,0 +1,119 @@
+package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
+
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbActivityDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbApplicationDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
+import com.squareup.javapoet.*;
+import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.processing.Filer;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_CONTEXT;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.STRING;
+import static javax.lang.model.element.Modifier.*;
+
+@SuppressWarnings("ConstantValue")
+public class ApplicationGenerator extends CodeGenerator {
+    private final boolean hasStorages;
+    private final boolean hasApplications;
+    private final List<LightbulbApplicationDescription> appDescriptions;
+    private final List<LightbulbStorageDescription> storageDescriptions;
+
+    public ApplicationGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, annotationResultsRegistry);
+        hasStorages = annotationResultsRegistry.hasStorageDescriptions();
+        hasApplications = annotationResultsRegistry.hasApplicationDescriptions();
+        appDescriptions = annotationResultsRegistry.getApplicationDescriptions();
+        storageDescriptions = annotationResultsRegistry.getStorageDescriptions();
+    }
+
+    @Override
+    protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        appDescriptions.forEach(applicationDescription -> {
+            ClassName instrumentedClassName = applicationDescription.getInstrumentedClassName();
+            ClassName superclassName = applicationDescription.getSuperClassName();
+
+            List<FieldSpec> fields = new ArrayList<>();
+            List<MethodSpec> methods = new ArrayList<>();
+
+            generateFields(fields);
+            generateOnCreateMethod(methods);
+
+            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(instrumentedClassName)
+                    .addModifiers(PUBLIC, ABSTRACT)
+                    .superclass(superclassName)
+                    .addFields(fields)
+                    .addMethods(methods);
+            try {
+                JavaFile.builder(instrumentedClassName.packageName(), generatedClass.build())
+                        .build()
+                        .writeTo(filer);
+            } catch (IOException e) {
+                //e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    protected boolean willGenerateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        return hasApplications;
+    }
+
+    private void generateFields(List<FieldSpec> destination) {
+        if (hasStorages) {
+            storageDescriptions.forEach(storageDescription -> {
+                ClassName storageClassName = storageDescription.getInstrumentedClassName();
+                String fieldName = MemberUtils.getFieldNameForClass(storageClassName.simpleName());
+                FieldSpec fieldSpec = FieldSpec.builder(storageClassName, fieldName, PRIVATE).build();
+                destination.add(fieldSpec);
+            });
+        }
+    }
+
+    private void generateOnCreateMethod(List<MethodSpec> destination) {
+        if (!hasStorages) {
+            return;
+        }
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreate")
+                .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(void.class)
+                .addStatement("super.onCreate()");
+
+        if (hasStorages) {
+            String contextVarName = "context";
+            String storageParamsCommaSeparated = "";
+
+            builder.addStatement("$T $L = getApplicationContext()", ANDROID_CONTEXT, contextVarName);
+
+            for (int i = 0; i < storageDescriptions.size(); i++) {
+                boolean isLast = i == storageDescriptions.size() - 1;
+                ClassName storageClassName = storageDescriptions.get(i).getInstrumentedClassName();
+                String storageFieldName = MemberUtils.getFieldNameForClass(storageClassName.simpleName());
+
+                builder.addStatement("this.$L = new $T($L)", storageFieldName, storageClassName, contextVarName);
+
+                storageParamsCommaSeparated = storageParamsCommaSeparated.concat(storageFieldName);
+
+                if (!isLast) {
+                    storageParamsCommaSeparated = storageParamsCommaSeparated.concat(", ");
+                }
+            }
+
+            ClassName lbServiceClassName = ClassNames.getLightbulbServiceClassName();
+
+            builder.addStatement("$L.getInstance().bindStorages($L)", lbServiceClassName, storageParamsCommaSeparated);
+
+        }
+
+        destination.add(builder.build());
+    }
+}

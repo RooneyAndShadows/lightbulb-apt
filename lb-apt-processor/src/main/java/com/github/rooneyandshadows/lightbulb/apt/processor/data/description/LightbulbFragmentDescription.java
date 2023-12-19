@@ -1,9 +1,9 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.data;
+package com.github.rooneyandshadows.lightbulb.apt.processor.data.description;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.base.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.ViewBinding;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.base.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.ViewBinding;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.ClassName;
 

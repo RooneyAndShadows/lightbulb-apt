@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.data.base;
+package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.base;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;

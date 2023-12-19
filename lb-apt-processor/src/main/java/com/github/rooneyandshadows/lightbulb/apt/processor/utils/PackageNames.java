@@ -63,6 +63,10 @@ public class PackageNames {
         return resolve(getRootPackage(), "lightbulb", "activities");
     }
 
+    public static String getApplicationPackage() {
+        return resolve(getRootPackage(), "lightbulb", "application");
+    }
+
     public static String resolve(String first, String... other) {
         String packageString = first;
         for (String packagePart : other) {

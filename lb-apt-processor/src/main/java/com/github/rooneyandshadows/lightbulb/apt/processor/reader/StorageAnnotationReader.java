@@ -1,11 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbStorageDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 
 import javax.annotation.processing.Messager;
@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_STORAGE_DESCRIPTION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_STORAGE_DESCRIPTION;
 
 public class StorageAnnotationReader extends AnnotationReader {
     private final List<LightbulbStorageDescription> storageDescriptions = new ArrayList<>();

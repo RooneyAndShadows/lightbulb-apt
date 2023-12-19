@@ -54,12 +54,12 @@ public class ElementUtils {
     }
 
     public static String scanForSetter(Element classElement, String fieldName) {
-        String setterName = "set".concat(StringUtils.capitalizeFirstLetter(fieldName));
+        String setterName = MemberUtils.getFieldSetterName(fieldName);
         return methodExists(classElement, setterName);
     }
 
     public static String scanForGetter(Element classElement, String fieldName) {
-        String getterName = "get".concat(StringUtils.capitalizeFirstLetter(fieldName));
+        String getterName = MemberUtils.getFieldGetterName(fieldName);
         return methodExists(classElement, getterName);
     }
 

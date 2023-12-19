@@ -23,8 +23,6 @@ public class ClassNames {
     public static final String ROUTING_SCREENS_CLASS_NAME = "Screens";
     public static final String ROUTING_APP_ROUTER_CLASS_NAME = "AppRouter";
     public static final String LIGHTBULB_SERVICE_CLASS_NAME = "LightbulbService";
-    public static final String ROUTING_ACTIVITY_ROUTER_CLASS_NAME_SUFFIX = "Router";
-    public static final String ROUTING_ACTIVITY_NAVIGATOR_CLASS_NAME_SUFFIX = "Navigator";
     /**
      * Lightbulb
      */
@@ -102,6 +100,6 @@ public class ClassNames {
     }
 
     public static ClassName getLightbulbServiceClassName() {
-        return ClassName.get(PackageNames.getRoutingPackage(), LIGHTBULB_SERVICE_CLASS_NAME);
+        return ClassName.get(PackageNames.getServicePackage(), LIGHTBULB_SERVICE_CLASS_NAME);
     }
 }

@@ -1,7 +1,7 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.data;
+package com.github.rooneyandshadows.lightbulb.apt.processor.data.description;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.base.BaseDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.base.BaseDescriptionBuilder;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.base.BaseDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.base.BaseDescriptionBuilder;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.ClassName;
 

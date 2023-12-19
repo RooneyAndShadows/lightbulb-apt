@@ -1,9 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbActivityDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbActivityDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.AnnotationResultUtils;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
 
@@ -12,24 +11,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_ACTIVITY_DESCRIPTION;
 import static javax.lang.model.element.Modifier.*;
 
-//TODO ADD ON BACK PRESSED METHOD
 public class ActivityGenerator extends CodeGenerator {
     private final String ROUTER_FIELD_NAME = "router";
     private final boolean hasRouter;
+    private final boolean hasStorage;
 
     public ActivityGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, annotationResultsRegistry);
-        hasRouter = AnnotationResultUtils.hasRoutingScreens(annotationResultsRegistry);
+        hasRouter = annotationResultsRegistry.hasRoutingScreens();
+        hasStorage = annotationResultsRegistry.hasStorageDescriptions();
     }
 
     @Override
-    public void generate() {
-        List<LightbulbActivityDescription> activityBindings = annotationResultsRegistry.getResult(LIGHTBULB_ACTIVITY_DESCRIPTION);
-        generateActivities(activityBindings);
+    protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        List<LightbulbActivityDescription> activityDescriptions = annotationResultsRegistry.getActivityDescriptions();
+
+        generateActivities(activityDescriptions);
     }
+
+    @Override
+    protected boolean willGenerateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        return annotationResultsRegistry.hasActivityDescriptions();
+    }
+
 
     private void generateActivities(List<LightbulbActivityDescription> activityBindings) {
         activityBindings.forEach(activityInfo -> {
@@ -91,7 +97,7 @@ public class ActivityGenerator extends CodeGenerator {
             builder.beginControlFlow("if(savedInstanceState != null)")
                     .addStatement("$L.restoreState(savedInstanceState)", ROUTER_FIELD_NAME)
                     .endControlFlow();
-            builder.addStatement("$L.getInstance().bind($L)", appNavigatorClassName, ROUTER_FIELD_NAME);
+            builder.addStatement("$L.getInstance().bindRouter($L)", appNavigatorClassName, ROUTER_FIELD_NAME);
         }
 
         destination.add(builder.build());
@@ -131,7 +137,7 @@ public class ActivityGenerator extends CodeGenerator {
 
         if (hasRouter) {
             ClassName appNavigatorClassName = ClassNames.getLightbulbServiceClassName();
-            builder.addStatement("$L.getInstance().unBind()", appNavigatorClassName);
+            builder.addStatement("$L.getInstance().unbindRouter()", appNavigatorClassName);
         }
 
         destination.add(builder.build());

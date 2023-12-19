@@ -1,14 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
-
 import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public final class AnnotatedElement {
     private final Element element;

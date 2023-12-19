@@ -1,8 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbStorageDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_STORAGE_DESCRIPTION;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 import static javax.lang.model.element.Modifier.*;
 
@@ -25,9 +24,15 @@ public class StorageGenerator extends CodeGenerator {
     }
 
     @Override
-    public void generate() {
-        List<LightbulbStorageDescription> storageDescriptions = annotationResultsRegistry.getResult(LIGHTBULB_STORAGE_DESCRIPTION);
+    protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        List<LightbulbStorageDescription> storageDescriptions = annotationResultsRegistry.getStorageDescriptions();
+
         generateStorageImplementations(storageDescriptions);
+    }
+
+    @Override
+    protected boolean willGenerateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        return annotationResultsRegistry.hasStorageDescriptions();
     }
 
     private void generateStorageImplementations(List<LightbulbStorageDescription> storageDescriptions) {
@@ -73,7 +78,7 @@ public class StorageGenerator extends CodeGenerator {
     }
 
     private void generateConstructorMethod(LightbulbStorageDescription storageDescription, List<MethodSpec> methods) {
-        ParameterSpec activityParam = ParameterSpec.builder(ANDROID_ACTIVITY, "contextActivity")
+        ParameterSpec activityParam = ParameterSpec.builder(ANDROID_CONTEXT, "context")
                 .addAnnotation(NotNull.class)
                 .build();
 

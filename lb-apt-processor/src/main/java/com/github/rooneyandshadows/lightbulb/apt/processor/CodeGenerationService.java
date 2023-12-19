@@ -1,12 +1,15 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.GenerateCodeStep;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.ReadAnnotationsStep;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.base.GenerationStep;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.ActivityAnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.FragmentAnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.StorageAnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -16,37 +19,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CodeGenerationService {
-    private final Filer filer;
-    private final Messager messager;
-    private final Elements elements;
-    private final RoundEnvironment roundEnvironment;
-    private final List<AnnotationReader> readers = new ArrayList<>();
-    private final List<CodeGenerator> generators = new ArrayList<>();
+    private final List<GenerationStep> steps = new ArrayList<>();
     private final AnnotationResultsRegistry resultsRegistry = new AnnotationResultsRegistry();
 
     public CodeGenerationService(Filer filer, Messager messager, Elements elements, RoundEnvironment roundEnvironment) {
-        this.filer = filer;
-        this.messager = messager;
-        this.elements = elements;
-        this.roundEnvironment = roundEnvironment;
-        init();
-    }
-
-    private void init() {
-        readers.add(new ActivityAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
-        readers.add(new FragmentAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
-        readers.add(new StorageAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
-        generators.add(new FragmentGenerator(filer, resultsRegistry));
-        generators.add(new FragmentFactoryGenerator(filer, resultsRegistry));
-        generators.add(new RoutingGenerator(filer, resultsRegistry));
-        generators.add(new ActivityGenerator(filer, resultsRegistry));
-        generators.add(new StorageGenerator(filer, resultsRegistry));
-        generators.add(new ServiceGenerator(filer, resultsRegistry));
-        //  generators.add(new BindingRegistryGenerator(rootPackage, filer, resultsRegistry));
+        steps.add(new ReadAnnotationsStep(messager, elements, roundEnvironment));
+        steps.add(new GenerateCodeStep(filer));
     }
 
     public void process() {
-        readers.forEach(AnnotationReader::readAnnotations);
-        generators.forEach(CodeGenerator::generate);
+        steps.forEach(generationStep -> generationStep.process(resultsRegistry));
     }
 }

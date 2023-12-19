@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.data.common;
+package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common;
 
 import javax.lang.model.element.Element;
 

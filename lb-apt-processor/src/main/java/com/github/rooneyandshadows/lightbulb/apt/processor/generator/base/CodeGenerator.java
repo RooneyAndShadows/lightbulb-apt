@@ -1,8 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
@@ -18,14 +18,22 @@ import static com.github.rooneyandshadows.lightbulb.apt.processor.generator.base
 @SuppressWarnings("SameParameterValue")
 public abstract class CodeGenerator {
     protected final Filer filer;
-    protected final AnnotationResultsRegistry annotationResultsRegistry;
+    private final AnnotationResultsRegistry annotationResultsRegistry;
 
     public CodeGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
         this.filer = filer;
         this.annotationResultsRegistry = annotationResultsRegistry;
     }
 
-    public abstract void generate();
+    protected abstract void generateCode(AnnotationResultsRegistry annotationResultsRegistry);
+
+    protected abstract boolean willGenerateCode(AnnotationResultsRegistry annotationResultsRegistry);
+
+    public final void generate() {
+        if (willGenerateCode(annotationResultsRegistry)) {
+            generateCode(annotationResultsRegistry);
+        }
+    }
 
     public ParameterSpec generateParameterSpec(Parameter parameter) {
         boolean isNullable = parameter.isNullable() || parameter.isOptional();

@@ -1,5 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader.base;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -9,7 +11,6 @@ import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.function.Consumer;
 
 //TODO instrumentation api ClassFileTransformer
 

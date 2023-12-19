@@ -1,9 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
 
@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.AnnotationResultUtils.getFragmentDescriptions;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.AnnotationResultUtils.hasRoutingScreens;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ROUTING_SCREENS_CLASS_NAME;
 
 @SuppressWarnings("DuplicatedCode")
@@ -28,15 +26,16 @@ public class RoutingGenerator extends CodeGenerator {
     }
 
     @Override
-    public void generate() {
-        if (!hasRoutingScreens(annotationResultsRegistry)) {
-            return;
-        }
-
-        List<LightbulbFragmentDescription> fragmentBindings = getFragmentDescriptions(annotationResultsRegistry);
+    protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        List<LightbulbFragmentDescription> fragmentBindings = annotationResultsRegistry.getFragmentDescriptions();
 
         generateRoutingScreens(fragmentBindings);
         generateAppRouter(fragmentBindings);
+    }
+
+    @Override
+    protected boolean willGenerateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        return annotationResultsRegistry.hasRoutingScreens();
     }
 
     private void generateAppRouter(List<LightbulbFragmentDescription> fragmentBindings) {
@@ -270,6 +269,4 @@ public class RoutingGenerator extends CodeGenerator {
         }
         return paramsString;
     }
-
-
 }

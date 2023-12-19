@@ -1,8 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbFragmentDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION;
 import static javax.lang.model.element.Modifier.*;
 
 public class FragmentFactoryGenerator extends CodeGenerator {
@@ -25,9 +24,15 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     }
 
     @Override
-    public void generate() {
-        List<LightbulbFragmentDescription> fragmentBindings = annotationResultsRegistry.getResult(LIGHTBULB_FRAGMENT_DESCRIPTION);
-        generateFragmentFactory(fragmentBindings);
+    protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        List<LightbulbFragmentDescription> fragmentDescriptions = annotationResultsRegistry.getFragmentDescriptions();
+
+        generateFragmentFactory(fragmentDescriptions);
+    }
+
+    @Override
+    protected boolean willGenerateCode(AnnotationResultsRegistry annotationResultsRegistry) {
+        return annotationResultsRegistry.hasFragmentDescriptions();
     }
 
     private void generateFragmentFactory(List<LightbulbFragmentDescription> fragmentBindings) {

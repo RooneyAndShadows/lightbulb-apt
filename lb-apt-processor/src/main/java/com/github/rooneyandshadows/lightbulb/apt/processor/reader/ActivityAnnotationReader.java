@@ -1,9 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.LightbulbActivityDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbActivityDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
 import javax.annotation.processing.Messager;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_ACTIVITY_DESCRIPTION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_ACTIVITY_DESCRIPTION;
 
 public class ActivityAnnotationReader extends AnnotationReader {
     private final List<LightbulbActivityDescription> activityBindings = new ArrayList<>();
