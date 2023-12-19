@@ -77,8 +77,8 @@ public class FragmentGenerator extends CodeGenerator {
         targets.addAll(fragment.getViewBindings());
 
         targets.forEach(variable -> {
-            boolean hasSetter = variable.getSetterName() != null;
-            boolean hasGetter = variable.getGetterName() != null;
+            boolean hasSetter = variable.hasSetter();
+            boolean hasGetter = variable.hasGetter();
 
             if (!hasGetter || !hasSetter) {
                 Modifier fieldAccessModifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;

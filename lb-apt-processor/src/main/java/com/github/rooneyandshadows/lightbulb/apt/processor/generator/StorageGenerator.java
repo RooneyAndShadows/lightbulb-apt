@@ -16,6 +16,7 @@ import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNam
 import static javax.lang.model.element.Modifier.*;
 
 public class StorageGenerator extends CodeGenerator {
+    private final String storageKeyFieldName = "STORAGE_KEY";
     private final String storagePackage;
 
     public StorageGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
@@ -70,7 +71,7 @@ public class StorageGenerator extends CodeGenerator {
             storageKeyFieldInitializer = storageKeyFieldInitializer.concat("$%s");
         }
 
-        FieldSpec fieldSpec = FieldSpec.builder(STRING, "STORAGE_KEY", PRIVATE, FINAL)
+        FieldSpec fieldSpec = FieldSpec.builder(STRING, storageKeyFieldName, PRIVATE, FINAL)
                 .initializer("$S", storageKeyFieldInitializer)
                 .build();
 
@@ -146,14 +147,25 @@ public class StorageGenerator extends CodeGenerator {
                     .addAnnotation(NotNull.class)
                     .build();
 
+
+            CodeBlock.Builder loadDataCodeBlock = CodeBlock.builder();
+
+            if (subKeys.length > 0) {
+                loadDataCodeBlock.addStatement("$T key = $T.format($L,$L)", STRING, STRING, storageKeyFieldName, keyParamsCommaSeparated);
+            } else {
+                loadDataCodeBlock.addStatement("$T key = $L", STRING, storageKeyFieldName);
+            }
+
+            loadDataCodeBlock.addStatement("$T data = this.load(key)", storageClassName);
+
+
             MethodSpec setMethod = MethodSpec.methodBuilder(field.getSetterName())
                     .addModifiers(PUBLIC, FINAL)
                     .addAnnotation(NotNull.class)
                     .addParameter(newValueParam)
                     .addParameters(keyParameters)
                     .returns(void.class)
-                    .addStatement("$T key = $T.format(STORAGE_KEY,$L)", STRING, STRING, keyParamsCommaSeparated)
-                    .addStatement("$T data = this.load(key)", storageClassName)
+                    .addCode(loadDataCodeBlock.build())
                     .addStatement("data.$L = $L", field.getName(), "newValue")
                     .addStatement("save($L,$L)", "data", "key")
                     .build();
@@ -163,8 +175,7 @@ public class StorageGenerator extends CodeGenerator {
                     .addAnnotation(NotNull.class)
                     .addParameters(keyParameters)
                     .returns(field.getType())
-                    .addStatement("$T key = $T.format(STORAGE_KEY,$L)", STRING, STRING, keyParamsCommaSeparated)
-                    .addStatement("$T data = this.load(key)", storageClassName)
+                    .addCode(loadDataCodeBlock.build())
                     .addStatement("return data.$L", field.getName())
                     .build();
 

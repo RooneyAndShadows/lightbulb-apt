@@ -53,20 +53,20 @@ public class ElementUtils {
         return classPackage.concat(".").concat(classSimpleName);
     }
 
-    public static String scanForSetter(Element classElement, String fieldName) {
+    public static boolean scanForSetter(Element classElement, String fieldName) {
         String setterName = MemberUtils.getFieldSetterName(fieldName);
         return methodExists(classElement, setterName);
     }
 
-    public static String scanForGetter(Element classElement, String fieldName) {
+    public static boolean scanForGetter(Element classElement, String fieldName) {
         String getterName = MemberUtils.getFieldGetterName(fieldName);
         return methodExists(classElement, getterName);
     }
 
-    private static String methodExists(Element classElement, String methodName) {
-        if (classElement.getKind() != ElementKind.CLASS) return null;
+    private static boolean methodExists(Element classElement, String methodName) {
+        if (classElement.getKind() != ElementKind.CLASS) return false;
         Pattern pattern = Pattern.compile("^".concat(methodName).concat("(\\$.*)?$"), Pattern.CASE_INSENSITIVE);
-        return classElement.getEnclosedElements().stream()
+        return !classElement.getEnclosedElements().stream()
                 .filter(target -> {
                     String targetName = target.getSimpleName().toString();
                     boolean take = target.getKind() == ElementKind.METHOD;
@@ -75,8 +75,8 @@ public class ElementUtils {
                     return take;
                 })
                 .map(element -> element.getSimpleName().toString())
-                .findFirst()
-                .orElse(null);
+                .toList()
+                .isEmpty();
     }
 
     public static Modifier getAccessModifier(Element element) {

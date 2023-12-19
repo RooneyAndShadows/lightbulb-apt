@@ -7,7 +7,7 @@ import javassist.CtClass
 abstract class IClassTransformer {
     fun transform(classPool: ClassPool, ctClass: CtClass): CtClass {
         if (shouldTransform(classPool, ctClass)) {
-            LoggingUtil.info("Executing transformation: ${javaClass.name} for class ${ctClass.name}")
+            LoggingUtil.info("Executing transformation: ${javaClass.name}")
             ctClass.defrost()
             applyTransformations(classPool, ctClass)
             ctClass.freeze()

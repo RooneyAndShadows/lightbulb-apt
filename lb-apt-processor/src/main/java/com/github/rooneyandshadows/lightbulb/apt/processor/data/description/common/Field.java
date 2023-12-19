@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,19 +21,23 @@ public class Field {
     protected final Modifier getterAccessModifier;
     protected final boolean isFinal;
     protected final boolean isNullable;
+    protected final boolean hasSetter;
+    protected final boolean hasGetter;
 
     public Field(Element fieldElement) {
         Element classElement = fieldElement.getEnclosingElement();
         this.element = fieldElement;
         this.name = ElementUtils.getSimpleName(fieldElement);
         this.type = ElementUtils.getTypeOfFieldElement(fieldElement);
-        this.setterName = ElementUtils.scanForSetter(classElement, name);
-        this.getterName = ElementUtils.scanForGetter(classElement, name);
+        this.setterName = MemberUtils.getFieldSetterName(name);
+        this.getterName = MemberUtils.getFieldGetterName(name);
         this.accessModifier = ElementUtils.getAccessModifier(fieldElement);
         this.setterAccessModifier = ElementUtils.getMethodAccessModifier(classElement, setterName);
         this.getterAccessModifier = ElementUtils.getMethodAccessModifier(classElement, getterName);
         this.isFinal = ElementUtils.isFinal(fieldElement);
         this.isNullable = fieldElement.getAnnotation(Nullable.class) != null;
+        this.hasSetter = ElementUtils.scanForSetter(classElement, name);
+        this.hasGetter = ElementUtils.scanForGetter(classElement, name);
     }
 
     public boolean accessModifierAtLeast(Modifier target) {
@@ -60,20 +65,20 @@ public class Field {
         return getterName;
     }
 
-    public boolean hasSetter() {
-        return setterName != null;
-    }
-
-    public boolean hasGetter() {
-        return getterName != null;
-    }
-
     public boolean isNullable() {
         return isNullable;
     }
 
     public boolean isFinal() {
         return isFinal;
+    }
+
+    public boolean hasSetter() {
+        return hasSetter;
+    }
+
+    public boolean hasGetter() {
+        return hasGetter;
     }
 
     public Modifier getAccessModifier() {

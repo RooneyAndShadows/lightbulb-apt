@@ -10,9 +10,9 @@ abstract class BaseStorage<T : Any>(private val context: Context) {
     private val dateFormat: String = "yyyy-MM-dd HH:mm:ssZ"
     private val gson: Gson = GsonBuilder().setDateFormat(dateFormat).create()
 
-    abstract fun getStorageClass(): Class<T>
+    protected abstract fun getStorageClass(): Class<T>
 
-    abstract fun getDefault(): T
+    protected abstract fun getDefault(): T
 
     protected fun load(key: String): T {
         val value: String = PreferenceUtils.getString(context, key, "")
