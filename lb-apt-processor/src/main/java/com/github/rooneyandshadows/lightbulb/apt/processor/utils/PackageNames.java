@@ -1,5 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class PackageNames {
     private static String rootPackage = null;
     /**
@@ -19,6 +20,7 @@ public class PackageNames {
     public static final String ANDROIDX = "androidx";
     public static final String ANDROID_OS = resolve(ANDROID, "os");
     public static final String ANDROID_VIEW = resolve(ANDROID, "view");
+    public static final String ANDROID_APP = resolve(ANDROID, "app");
     public static final String ANDROID_CONTENT = resolve(ANDROID, "content");
     public static final String ANDROID_CONTENT_RES = resolve(ANDROID_CONTENT, "res");
     public static final String ANDROIDX_FRAGMENT_APP = resolve(ANDROIDX, "fragment", "app");
@@ -31,12 +33,18 @@ public class PackageNames {
     }
 
     public static String getRootPackage() {
-        if (PackageNames.rootPackage == null) throw new IllegalStateException("root package cannot be null");
+        if (PackageNames.rootPackage == null) {
+            throw new IllegalStateException("root package cannot be null");
+        }
         return PackageNames.rootPackage;
     }
 
+    public static String getLightbulbPackage() {
+        return resolve(getRootPackage(), "lightbulb");
+    }
+
     public static String getRoutingPackage() {
-        return resolve(getRootPackage(), "lightbulb", "routing");
+        return resolve(getLightbulbPackage(), "routing");
     }
 
     public static String getRoutingScreensPackage() {
@@ -44,27 +52,27 @@ public class PackageNames {
     }
 
     public static String getStoragePackage() {
-        return resolve(getRootPackage(), "lightbulb", "storage");
+        return resolve(getLightbulbPackage(), "storage");
     }
 
     public static String getServicePackage() {
-        return resolve(getRootPackage(), "lightbulb", "service");
+        return resolve(getLightbulbPackage(), "service");
     }
 
     public static String getFragmentsFactoryPackage() {
-        return resolve(getRootPackage(), "lightbulb", "fragments", "factory");
+        return resolve(getLightbulbPackage(), "fragments", "factory");
     }
 
     public static String getFragmentsPackage() {
-        return resolve(getRootPackage(), "lightbulb", "fragments");
+        return resolve(getLightbulbPackage(), "fragments");
     }
 
     public static String getActivitiesPackage() {
-        return resolve(getRootPackage(), "lightbulb", "activities");
+        return resolve(getLightbulbPackage(), "activities");
     }
 
     public static String getApplicationPackage() {
-        return resolve(getRootPackage(), "lightbulb", "application");
+        return resolve(getLightbulbPackage(), "application");
     }
 
     public static String resolve(String first, String... other) {

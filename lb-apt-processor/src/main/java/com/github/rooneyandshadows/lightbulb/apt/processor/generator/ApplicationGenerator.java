@@ -1,25 +1,20 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbActivityDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbApplicationDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import com.squareup.javapoet.*;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.processing.Filer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_CONTEXT;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.STRING;
 import static javax.lang.model.element.Modifier.*;
 
-@SuppressWarnings("ConstantValue")
 public class ApplicationGenerator extends CodeGenerator {
     private final boolean hasStorages;
     private final boolean hasApplications;
@@ -82,38 +77,17 @@ public class ApplicationGenerator extends CodeGenerator {
             return;
         }
 
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreate")
+        ClassName lbServiceClassName = ClassNames.getLightbulbServiceClassName();
+
+        MethodSpec onCreateMethod = MethodSpec.methodBuilder("onCreate")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
                 .returns(void.class)
-                .addStatement("super.onCreate()");
+                .addStatement("super.onCreate()")
+                .addStatement("$L.getInstance().setApplicationContext(this)", lbServiceClassName)
+                .build();
 
-        if (hasStorages) {
-            String contextVarName = "context";
-            String storageParamsCommaSeparated = "";
 
-            builder.addStatement("$T $L = getApplicationContext()", ANDROID_CONTEXT, contextVarName);
-
-            for (int i = 0; i < storageDescriptions.size(); i++) {
-                boolean isLast = i == storageDescriptions.size() - 1;
-                ClassName storageClassName = storageDescriptions.get(i).getInstrumentedClassName();
-                String storageFieldName = MemberUtils.getFieldNameForClass(storageClassName.simpleName());
-
-                builder.addStatement("this.$L = new $T($L)", storageFieldName, storageClassName, contextVarName);
-
-                storageParamsCommaSeparated = storageParamsCommaSeparated.concat(storageFieldName);
-
-                if (!isLast) {
-                    storageParamsCommaSeparated = storageParamsCommaSeparated.concat(", ");
-                }
-            }
-
-            ClassName lbServiceClassName = ClassNames.getLightbulbServiceClassName();
-
-            builder.addStatement("$L.getInstance().bindStorages($L)", lbServiceClassName, storageParamsCommaSeparated);
-
-        }
-
-        destination.add(builder.build());
+        destination.add(onCreateMethod);
     }
 }

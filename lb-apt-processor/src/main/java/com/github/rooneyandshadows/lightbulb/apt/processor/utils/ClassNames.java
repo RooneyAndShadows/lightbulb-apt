@@ -37,6 +37,7 @@ public class ClassNames {
     public static final ClassName ANDROID_ACTIVITY = ClassName.get(ANDROIDX_APPCOMPAT_APP, "AppCompatActivity");
     public static final ClassName ANDROID_BUNDLE = ClassName.get(ANDROID_OS, "Bundle");
     public static final ClassName ANDROID_CONTEXT = ClassName.get(ANDROID_CONTENT, "Context");
+    public static final ClassName ANDROID_APPLICATION = ClassName.get(ANDROID_APP, "Application");
     public static final ClassName ANDROID_RESOURCES = ClassName.get(ANDROID_CONTENT_RES, "Resources");
     public static final ClassName ANDROID_VIEW = ClassName.get(PackageNames.ANDROID_VIEW, "View");
     public static final ClassName ANDROID_LAYOUT_INFLATER = ClassName.get(PackageNames.ANDROID_VIEW, "LayoutInflater");

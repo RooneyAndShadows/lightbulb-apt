@@ -7,12 +7,15 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.processing.Filer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_APPLICATION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_CONTEXT;
 import static javax.lang.model.element.Modifier.*;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -21,19 +24,19 @@ public class ServiceGenerator extends CodeGenerator {
     private final String servicePackage;
     private final boolean hasRoutingElements;
     private final boolean hasStorageElements;
+    private final List<LightbulbStorageDescription> storageDescriptions;
 
     public ServiceGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, annotationResultsRegistry);
         servicePackage = PackageNames.getServicePackage();
         hasRoutingElements = annotationResultsRegistry.hasRoutingScreens();
         hasStorageElements = annotationResultsRegistry.hasStorageDescriptions();
+        storageDescriptions = annotationResultsRegistry.getStorageDescriptions();
     }
 
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
-        List<LightbulbStorageDescription> storageDescriptions = annotationResultsRegistry.getStorageDescriptions();
-
-        generateServiceSingleton(storageDescriptions);
+        generateServiceSingleton();
     }
 
     @Override
@@ -41,30 +44,21 @@ public class ServiceGenerator extends CodeGenerator {
         return hasStorageElements || hasRoutingElements;
     }
 
-    private void generateServiceSingleton(List<LightbulbStorageDescription> storageDescriptions) {
+    private void generateServiceSingleton() {
         ClassName lightbulbServiceClassName = ClassNames.getLightbulbServiceClassName();
         List<FieldSpec> fields = new ArrayList<>();
         List<MethodSpec> methods = new ArrayList<>();
 
         TypeSpec.Builder singletonClass = TypeSpec
                 .classBuilder(lightbulbServiceClassName)
-                .addModifiers(PUBLIC, FINAL)
-                .addField(lightbulbServiceClassName, "instance", PRIVATE, STATIC)
-                .addMethod(MethodSpec.methodBuilder("getInstance")
-                        .addModifiers(PUBLIC, STATIC, SYNCHRONIZED)
-                        .returns(lightbulbServiceClassName)
-                        .beginControlFlow("if(instance == null)")
-                        .addStatement("instance = new $T()", lightbulbServiceClassName)
-                        .endControlFlow()
-                        .addStatement("return instance")
-                        .build()
-                );
+                .addModifiers(PUBLIC, FINAL);
 
+        generateInstance(lightbulbServiceClassName, fields, methods);
+        generateContextMember(fields, methods);
         generateRoutingMember(fields, methods);
-        generateStorageMembers(storageDescriptions, fields, methods);
+        generateStorageMembers(fields, methods);
         generateBindRouterMethod(methods);
         generateUnbindRouterMethod(methods);
-        generateBindStoragesMethod(storageDescriptions, methods);
 
         singletonClass.addFields(fields);
         singletonClass.addMethods(methods);
@@ -76,7 +70,69 @@ public class ServiceGenerator extends CodeGenerator {
         }
     }
 
-    private void generateStorageMembers(List<LightbulbStorageDescription> storageDescriptions, List<FieldSpec> fields, List<MethodSpec> methods) {
+    private void generateInstance(ClassName lightbulbServiceClassName, List<FieldSpec> fields, List<MethodSpec> methods) {
+        FieldSpec instanceField = FieldSpec.builder(lightbulbServiceClassName, "instance", PRIVATE, STATIC)
+                .build();
+
+        MethodSpec getInstanceMethod = MethodSpec.methodBuilder("getInstance")
+                .addModifiers(PUBLIC, STATIC, SYNCHRONIZED)
+                .returns(lightbulbServiceClassName)
+                .beginControlFlow("if(instance == null)")
+                .addStatement("instance = new $T()", lightbulbServiceClassName)
+                .endControlFlow()
+                .addStatement("return instance")
+                .build();
+
+        fields.add(instanceField);
+        methods.add(getInstanceMethod);
+    }
+
+
+    private void generateContextMember(List<FieldSpec> fields, List<MethodSpec> methods) {
+        String contextFieldName = "applicationContext";
+        String getterName = MemberUtils.getFieldGetterName(contextFieldName);
+        String setterName = MemberUtils.getFieldSetterName(contextFieldName);
+
+        FieldSpec field = FieldSpec.builder(ANDROID_CONTEXT, contextFieldName, PRIVATE)
+                .build();
+
+        ParameterSpec applicationParameter = ParameterSpec.builder(ANDROID_APPLICATION, "application")
+                .addAnnotation(NotNull.class)
+                .build();
+
+        String applicationContextVarName = "applicationContext";
+
+        MethodSpec.Builder setterMethodBuilder = MethodSpec.methodBuilder(setterName)
+                .addModifiers(PUBLIC, FINAL)
+                .addParameter(applicationParameter)
+                .returns(void.class)
+                .addStatement("$T $L = $L.$L", ANDROID_CONTEXT, applicationContextVarName, applicationParameter.name, "getApplicationContext()")
+                .addStatement("this.$L = $L", contextFieldName, applicationContextVarName);
+
+        if (hasStorageElements) {
+            storageDescriptions.forEach(lightbulbStorageDescription -> {
+                ClassName storageClassName = lightbulbStorageDescription.getInstrumentedClassName();
+                String storageFieldName = MemberUtils.getFieldNameForClass(storageClassName.simpleName());
+
+                setterMethodBuilder.addStatement("this.$L = new $T($L)", storageFieldName, storageClassName, applicationContextVarName);
+            });
+        }
+
+        MethodSpec setterMethod = setterMethodBuilder.build();
+
+        MethodSpec getterMethod = MethodSpec.methodBuilder(getterName)
+                .addModifiers(PUBLIC, STATIC, FINAL)
+                .returns(ANDROID_CONTEXT)
+                .addAnnotation(NotNull.class)
+                .addStatement("return getInstance().$L", contextFieldName)
+                .build();
+
+        fields.add(field);
+        methods.add(setterMethod);
+        methods.add(getterMethod);
+    }
+
+    private void generateStorageMembers(List<FieldSpec> fields, List<MethodSpec> methods) {
         storageDescriptions.forEach(storageDescription -> {
             ClassName generatedStorageClassName = storageDescription.getInstrumentedClassName();
             String generatedStorageSimpleClassName = generatedStorageClassName.simpleName();
@@ -87,9 +143,10 @@ public class ServiceGenerator extends CodeGenerator {
                     .build();
 
             MethodSpec storageGetter = MethodSpec.methodBuilder(getterName)
-                    .addModifiers(PUBLIC, FINAL)
+                    .addModifiers(PUBLIC, STATIC, FINAL)
+                    .addAnnotation(NotNull.class)
                     .returns(generatedStorageClassName)
-                    .addStatement("return $L", fieldName)
+                    .addStatement("return getInstance().$L", fieldName)
                     .build();
 
             fields.add(storageField);
@@ -101,25 +158,18 @@ public class ServiceGenerator extends CodeGenerator {
         ClassName routerClassName = ClassNames.getAppRouterClassName();
         String generatedRouterSimpleClassName = routerClassName.simpleName();
         String fieldName = MemberUtils.getFieldNameForClass(generatedRouterSimpleClassName);
-        String getterName = MemberUtils.getFieldGetterName(generatedRouterSimpleClassName);
 
         FieldSpec routerField = FieldSpec.builder(routerClassName, fieldName, PRIVATE)
                 .build();
 
-        MethodSpec routerGetter = MethodSpec.methodBuilder(getterName)
-                .addModifiers(PUBLIC, FINAL)
-                .returns(routerClassName)
-                .addStatement("return $L", fieldName)
-                .build();
-
         MethodSpec routeMethod = MethodSpec.methodBuilder("route")
                 .addModifiers(PUBLIC, STATIC, FINAL)
+                .addAnnotation(NotNull.class)
                 .returns(routerClassName)
-                .addStatement("return getInstance().$L()", getterName)
+                .addStatement("return getInstance().$L", fieldName)
                 .build();
 
         fields.add(routerField);
-        methods.add(routerGetter);
         methods.add(routeMethod);
     }
 
@@ -134,7 +184,11 @@ public class ServiceGenerator extends CodeGenerator {
         String generatedRouterSimpleClassName = routerClassName.simpleName();
         String routerFieldName = MemberUtils.getFieldNameForClass(generatedRouterSimpleClassName);
 
-        bindMethodBuilder.addParameter(routerClassName, routerFieldName);
+        ParameterSpec routerParameter = ParameterSpec.builder(routerClassName, routerFieldName)
+                .addAnnotation(NotNull.class)
+                .build();
+
+        bindMethodBuilder.addParameter(routerParameter);
         bindMethodBuilder.addStatement("this.$L = $L", routerFieldName, routerFieldName);
         bindMethodBuilder.addStatement("this.$L.attach()", routerFieldName);
 
@@ -156,24 +210,5 @@ public class ServiceGenerator extends CodeGenerator {
         unbindMethodBuilder.addStatement("this.$L = null", routerFieldName);
 
         methods.add(unbindMethodBuilder.build());
-    }
-
-    private void generateBindStoragesMethod(List<LightbulbStorageDescription> storageDescriptions, List<MethodSpec> methods) {
-        if (!hasStorageElements) return;
-
-        MethodSpec.Builder bindMethodBuilder = MethodSpec.methodBuilder("bindStorages")
-                .addModifiers(PUBLIC, FINAL)
-                .returns(void.class);
-
-        storageDescriptions.forEach(storageDescription -> {
-            ClassName generatedStorageClassName = storageDescription.getInstrumentedClassName();
-            String generatedStorageSimpleClassName = generatedStorageClassName.simpleName();
-            String fieldName = MemberUtils.getFieldNameForClass(generatedStorageSimpleClassName);
-
-            bindMethodBuilder.addParameter(generatedStorageClassName, fieldName);
-            bindMethodBuilder.addStatement("this.$L = $L", fieldName, fieldName);
-        });
-
-        methods.add(bindMethodBuilder.build());
     }
 }
