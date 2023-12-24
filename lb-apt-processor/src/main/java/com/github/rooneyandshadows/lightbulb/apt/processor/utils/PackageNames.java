@@ -43,6 +43,10 @@ public class PackageNames {
         return resolve(getRootPackage(), "lightbulb");
     }
 
+    public static String getComponentsPackage() {
+        return resolve(getLightbulbPackage(), "components");
+    }
+
     public static String getRoutingPackage() {
         return resolve(getLightbulbPackage(), "routing");
     }
@@ -55,16 +59,20 @@ public class PackageNames {
         return resolve(getLightbulbPackage(), "storage");
     }
 
+    public static String getParcelablePackage() {
+        return resolve(getLightbulbPackage(), "parcelable");
+    }
+
     public static String getServicePackage() {
         return resolve(getLightbulbPackage(), "service");
     }
 
-    public static String getFragmentsFactoryPackage() {
-        return resolve(getLightbulbPackage(), "fragments", "factory");
-    }
-
     public static String getFragmentsPackage() {
         return resolve(getLightbulbPackage(), "fragments");
+    }
+
+    public static String getFragmentsFactoryPackage() {
+        return resolve(getFragmentsPackage(), "factory");
     }
 
     public static String getActivitiesPackage() {

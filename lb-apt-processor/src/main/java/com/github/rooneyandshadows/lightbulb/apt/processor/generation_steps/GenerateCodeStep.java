@@ -33,6 +33,7 @@ public class GenerateCodeStep implements GenerationStep {
         generators.add(new ActivityGenerator(filer, resultsRegistry));
         generators.add(new StorageGenerator(filer, resultsRegistry));
         generators.add(new ServiceGenerator(filer, resultsRegistry));
+        generators.add(new ParcelableGenerator(filer, resultsRegistry));
         generators.forEach(CodeGenerator::generate);
     }
 }

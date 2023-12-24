@@ -36,6 +36,9 @@ public class ClassNames {
     public static final ClassName ANDROID_FRAGMENT = ClassName.get(ANDROIDX_FRAGMENT_APP, "Fragment");
     public static final ClassName ANDROID_ACTIVITY = ClassName.get(ANDROIDX_APPCOMPAT_APP, "AppCompatActivity");
     public static final ClassName ANDROID_BUNDLE = ClassName.get(ANDROID_OS, "Bundle");
+    public static final ClassName ANDROID_PARCEL = ClassName.get(ANDROID_OS, "Parcel");
+    public static final ClassName ANDROID_PARCELABLE = ClassName.get(ANDROID_OS, "Parcelable");
+    public static final ClassName ANDROID_PARCELABLE_CREATOR = ClassName.get(ANDROID_OS, "Parcelable", "Creator");
     public static final ClassName ANDROID_CONTEXT = ClassName.get(ANDROID_CONTENT, "Context");
     public static final ClassName ANDROID_APPLICATION = ClassName.get(ANDROID_APP, "Application");
     public static final ClassName ANDROID_RESOURCES = ClassName.get(ANDROID_CONTENT_RES, "Resources");

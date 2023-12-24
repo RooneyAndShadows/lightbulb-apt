@@ -1,9 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.data;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbActivityDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbApplicationDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +36,10 @@ public final class AnnotationResultsRegistry {
         return getResult(LIGHTBULB_STORAGE_DESCRIPTION);
     }
 
+    public List<LightbulbParcelableDescription> getParcelableDescriptions() {
+        return getResult(LIGHTBULB_PARCELABLE_DESCRIPTION);
+    }
+
     public boolean hasApplicationDescriptions() {
         return !getApplicationDescriptions().isEmpty();
     }
@@ -55,6 +56,10 @@ public final class AnnotationResultsRegistry {
         return !getStorageDescriptions().isEmpty();
     }
 
+    public boolean hasParcelableDescriptions() {
+        return !getParcelableDescriptions().isEmpty();
+    }
+
     public boolean hasRoutingScreens() {
         List<LightbulbFragmentDescription> fragmentBindings = getFragmentDescriptions();
         return fragmentBindings.stream().anyMatch(LightbulbFragmentDescription::isScreen);
@@ -64,6 +69,7 @@ public final class AnnotationResultsRegistry {
         LIGHTBULB_FRAGMENT_DESCRIPTION,
         LIGHTBULB_ACTIVITY_DESCRIPTION,
         LIGHTBULB_APPLICATION_DESCRIPTION,
-        LIGHTBULB_STORAGE_DESCRIPTION
+        LIGHTBULB_STORAGE_DESCRIPTION,
+        LIGHTBULB_PARCELABLE_DESCRIPTION
     }
 }
