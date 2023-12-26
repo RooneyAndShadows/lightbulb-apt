@@ -8,7 +8,6 @@ import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.processing.Filer;
-import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
