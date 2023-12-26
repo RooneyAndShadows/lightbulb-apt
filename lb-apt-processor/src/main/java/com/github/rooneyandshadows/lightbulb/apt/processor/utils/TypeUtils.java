@@ -1,5 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
+
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Date;
@@ -61,5 +64,14 @@ public class TypeUtils {
 
     public static boolean isDouble(String target) {
         return target.equals(doubleType) || target.equals(doublePrimType);
+    }
+
+    public static boolean isFromType(TypeName requestType, TypeName expectedType) {
+        if(requestType instanceof ParameterizedTypeName) {
+            TypeName typeName = ((ParameterizedTypeName) requestType).rawType;
+            return (typeName.equals(expectedType));
+        }
+
+        return false;
     }
 }

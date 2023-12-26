@@ -1,6 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
@@ -342,4 +341,9 @@ public class ParcelableCodeGenerator {
                 .endControlFlow()
                 .endControlFlow();
     }
+
+    //TypeName TYPE_LIST = ClassName.get(List.class);
+   // boolean isList = isFromType(type, TYPE_LIST)
+
+
 }

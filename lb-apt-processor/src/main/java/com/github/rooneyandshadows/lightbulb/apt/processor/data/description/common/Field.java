@@ -7,11 +7,13 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import java.util.List;
 
 
 @SuppressWarnings("DuplicatedCode")
 public class Field {
     protected final String name;
+    protected final TypeInformation typeInformation;
     protected final TypeName type;
     protected final String setterName;
     protected final String getterName;
@@ -27,6 +29,7 @@ public class Field {
     public Field(Element fieldElement) {
         Element classElement = fieldElement.getEnclosingElement();
         this.element = fieldElement;
+        this.typeInformation = new TypeInformation(fieldElement);
         this.name = ElementUtils.getSimpleName(fieldElement);
         this.type = ElementUtils.getTypeOfFieldElement(fieldElement);
         this.setterName = MemberUtils.getFieldSetterName(name);
