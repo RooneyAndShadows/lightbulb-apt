@@ -1,26 +1,71 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.TypeUtils.*;
 
 public class ParcelableCodeGenerator {
 
-    public static void generateWriteStatement(TypeName paramType, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String variableName) {
-        String typeString = paramType.toString();
+    public static void generateReadStatement(TypeInformation type, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableName) {
+        if (type.isString()) {
+            readString(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isUUID()) {
+            readUUID(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isInt()) {
+            readInt(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isBoolean()) {
+            readBoolean(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isFloat()) {
+            readFloat(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isLong()) {
+            readLong(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isDouble()) {
+            readDouble(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isDate()) {
+            readDate(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isOffsetDate()) {
+            readOffsetDate(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.is(ANDROID_PARCELABLE)) {
+            readParcelable(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.is(ANDROID_SPARSE_ARRAY)) {
+            readSparseArray(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isList()) {
+            readList(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        } else if (type.isMap()) {
+            readMap(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+        }
+    }
 
-        if (isString(typeString)) writeString(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else if (isUUID(typeString)) writeUUID(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else if (isInt(typeString)) writeInt(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else if (isBoolean(typeString)) writeBoolean(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else if (isFloat(typeString)) writeFloat(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else if (isLong(typeString)) writeLong(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else if (isDouble(typeString)) writeDouble(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else if (isDate(typeString)) writeDate(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else if (isOffsetDate(typeString)) writeOffsetDate(cbBuilder, paramType, bundleVariableName, variableAccessor);
-        else writeParcelable(cbBuilder, paramType, bundleVariableName, variableAccessor);
+    public static void generateWriteStatement(TypeInformation type, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String variableName) {
+        if (type.isString()) {
+            writeString(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isUUID()) {
+            writeUUID(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isInt()) {
+            writeInt(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isBoolean()) {
+            writeBoolean(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isFloat()) {
+            writeFloat(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isLong()) {
+            writeLong(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isDouble()) {
+            writeDouble(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isDate()) {
+            writeDate(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isOffsetDate()) {
+            writeOffsetDate(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.is(ANDROID_PARCELABLE)) {
+            writeParcelable(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.is(ANDROID_SPARSE_ARRAY)) {
+            writeSparseArray(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isList()) {
+            writeList(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        } else if (type.isMap()) {
+            writeMap(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+        }
     }
 
     private static void writeOffsetDate(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
@@ -276,7 +321,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void writeSparseArray(CodeBlock.Builder cbBuilder, String parcelVariableName, String variableAccessor) {
+    private static void writeSparseArray(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
         cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
         cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
         cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
@@ -298,7 +343,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void writeList(CodeBlock.Builder cbBuilder, String parcelVariableName, String variableAccessor) {
+    private static void writeList(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
         cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
         cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
         cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
@@ -320,7 +365,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void writeMap(CodeBlock.Builder cbBuilder, String parcelVariableName, String variableAccessor) {
+    private static void writeMap(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
         cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
         cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
         cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
@@ -341,9 +386,4 @@ public class ParcelableCodeGenerator {
                 .endControlFlow()
                 .endControlFlow();
     }
-
-    //TypeName TYPE_LIST = ClassName.get(List.class);
-   // boolean isList = isFromType(type, TYPE_LIST)
-
-
 }

@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
@@ -121,6 +122,7 @@ public class StorageGenerator extends CodeGenerator {
         ClassName storageClassName = storageDescription.getClassName();
 
         storageDescription.getFields().forEach(field -> {
+            TypeName fieldTypeName = field.getTypeInformation().getTypeName();
             String[] subKeys = storageDescription.getSubKeys();
             List<ParameterSpec> keyParameters = new ArrayList<>();
             String keyParamsCommaSeparated = "";
@@ -143,7 +145,7 @@ public class StorageGenerator extends CodeGenerator {
 
             }
 
-            ParameterSpec newValueParam = ParameterSpec.builder(field.getType(), "newValue")
+            ParameterSpec newValueParam = ParameterSpec.builder(fieldTypeName, "newValue")
                     .addAnnotation(NotNull.class)
                     .build();
 
@@ -174,7 +176,7 @@ public class StorageGenerator extends CodeGenerator {
                     .addModifiers(PUBLIC, FINAL)
                     .addAnnotation(NotNull.class)
                     .addParameters(keyParameters)
-                    .returns(field.getType())
+                    .returns(fieldTypeName)
                     .addCode(loadDataCodeBlock.build())
                     .addStatement("return data.$L", field.getName())
                     .build();

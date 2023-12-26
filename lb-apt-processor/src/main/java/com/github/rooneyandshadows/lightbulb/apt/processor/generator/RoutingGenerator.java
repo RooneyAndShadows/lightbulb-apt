@@ -182,7 +182,7 @@ public class RoutingGenerator extends CodeGenerator {
 
             fragmentInfo.getParameters().forEach(paramInfo -> {
                 String parameterName = paramInfo.getName();
-                TypeName parameterType = paramInfo.getType();
+                TypeName parameterType = paramInfo.getTypeInformation().getTypeName();
                 FieldSpec.Builder field = FieldSpec.builder(parameterType, parameterName, Modifier.PRIVATE);
 
                 if (paramInfo.isOptional()) {

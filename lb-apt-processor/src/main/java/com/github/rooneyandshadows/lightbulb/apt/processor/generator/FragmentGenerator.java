@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
@@ -76,22 +77,23 @@ public class FragmentGenerator extends CodeGenerator {
         targets.addAll(fragment.getPersistedVariables());
         targets.addAll(fragment.getViewBindings());
 
-        targets.forEach(variable -> {
-            boolean hasSetter = variable.hasSetter();
-            boolean hasGetter = variable.hasGetter();
+        targets.forEach(field -> {
+            boolean hasSetter = field.hasSetter();
+            boolean hasGetter = field.hasGetter();
+            TypeName fieldTypeName = field.getTypeInformation().getTypeName();
 
             if (!hasGetter || !hasSetter) {
-                Modifier fieldAccessModifier = variable.accessModifierAtLeast(PROTECTED) ? variable.getAccessModifier() : PROTECTED;
-                FieldSpec fieldSpec = FieldSpec.builder(variable.getType(), variable.getName(), fieldAccessModifier)
+                Modifier fieldAccessModifier = field.accessModifierAtLeast(PROTECTED) ? field.getAccessModifier() : PROTECTED;
+                FieldSpec fieldSpec = FieldSpec.builder(fieldTypeName, field.getName(), fieldAccessModifier)
                         .build();
                 fields.add(fieldSpec);
             }
 
             if (hasGetter) {
-                Modifier access = variable.getGetterAccessModifier() == PRIVATE ? PROTECTED : variable.getGetterAccessModifier();
+                Modifier access = field.getGetterAccessModifier() == PRIVATE ? PROTECTED : field.getGetterAccessModifier();
 
-                MethodSpec getter = MethodSpec.methodBuilder(variable.getGetterName())
-                        .returns(variable.getType())
+                MethodSpec getter = MethodSpec.methodBuilder(field.getGetterName())
+                        .returns(fieldTypeName)
                         .addModifiers(access, ABSTRACT)
                         .build();
 
@@ -99,10 +101,10 @@ public class FragmentGenerator extends CodeGenerator {
             }
 
             if (hasSetter) {
-                Modifier access = variable.getSetterAccessModifier() == PRIVATE ? PROTECTED : variable.getSetterAccessModifier();
+                Modifier access = field.getSetterAccessModifier() == PRIVATE ? PROTECTED : field.getSetterAccessModifier();
 
-                MethodSpec setter = MethodSpec.methodBuilder(variable.getSetterName())
-                        .addParameter(variable.getType(), "value")
+                MethodSpec setter = MethodSpec.methodBuilder(field.getSetterName())
+                        .addParameter(fieldTypeName, "value")
                         .addModifiers(access, ABSTRACT)
                         .build();
 
@@ -285,13 +287,13 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private CodeBlock generateReadParameterFromBundle(Parameter parameter, String bundleVariableName) {
-        TypeName paramType = parameter.getType();
+        TypeInformation type = parameter.getTypeInformation();
         String varName = parameter.getName();
         String tmpVarName = varName.concat("FromBundle");
         boolean isOptional = parameter.isOptional();
         boolean isNullable = parameter.isNullable();
         boolean isNullableOrOptional = isNullable || isOptional;
-        boolean isPrimitive = parameter.getType().isPrimitive();
+        boolean isPrimitive = type.isPrimitive();
         CodeBlock.Builder codeBlock = CodeBlock.builder();
 
         if (!isPrimitive && !isNullableOrOptional) {
@@ -299,7 +301,7 @@ public class FragmentGenerator extends CodeGenerator {
                     .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, String.format("%s is not optional.", varName))
                     .endControlFlow();
 
-            generateReadStatement(paramType, codeBlock, bundleVariableName, tmpVarName, varName);
+            generateReadStatement(type, codeBlock, bundleVariableName, tmpVarName, varName);
             generateVariableSetValueStatement(codeBlock, parameter, "this", tmpVarName, true);
 
             codeBlock.beginControlFlow("if($L == null)", tmpVarName)
@@ -307,7 +309,7 @@ public class FragmentGenerator extends CodeGenerator {
                     .endControlFlow();
         } else {
             codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, varName);
-            generateReadStatement(paramType, codeBlock, bundleVariableName, tmpVarName, varName);
+            generateReadStatement(type, codeBlock, bundleVariableName, tmpVarName, varName);
             generateVariableSetValueStatement(codeBlock, parameter, "this", tmpVarName, true);
             codeBlock.endControlFlow();
         }

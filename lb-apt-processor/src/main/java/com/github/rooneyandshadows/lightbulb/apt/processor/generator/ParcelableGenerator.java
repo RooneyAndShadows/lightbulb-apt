@@ -101,7 +101,9 @@ public class ParcelableGenerator extends CodeGenerator {
 
     private void generateFields(LightbulbParcelableDescription parcelableDescription, List<FieldSpec> fields) {
         parcelableDescription.getFields().forEach(field -> {
-            FieldSpec fieldSpec = FieldSpec.builder(field.getType(), field.getName(), PRIVATE)
+            TypeName fieldTypeName = field.getTypeInformation().getTypeName();
+
+            FieldSpec fieldSpec = FieldSpec.builder(fieldTypeName, field.getName(), PRIVATE)
                     .build();
 
             fields.add(fieldSpec);

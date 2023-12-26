@@ -2,19 +2,16 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.com
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
-import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
-import java.util.List;
 
 
 @SuppressWarnings("DuplicatedCode")
 public class Field {
     protected final String name;
     protected final TypeInformation typeInformation;
-    protected final TypeName type;
     protected final String setterName;
     protected final String getterName;
     protected final Element element;
@@ -31,7 +28,6 @@ public class Field {
         this.element = fieldElement;
         this.typeInformation = new TypeInformation(fieldElement);
         this.name = ElementUtils.getSimpleName(fieldElement);
-        this.type = ElementUtils.getTypeOfFieldElement(fieldElement);
         this.setterName = MemberUtils.getFieldSetterName(name);
         this.getterName = MemberUtils.getFieldGetterName(name);
         this.accessModifier = ElementUtils.getAccessModifier(fieldElement);
@@ -56,8 +52,8 @@ public class Field {
         return name;
     }
 
-    public TypeName getType() {
-        return type;
+    public TypeInformation getTypeInformation() {
+        return typeInformation;
     }
 
     public String getSetterName() {

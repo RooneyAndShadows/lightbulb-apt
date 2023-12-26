@@ -39,34 +39,32 @@ public abstract class CodeGenerator {
         boolean isNullable = parameter.isNullable() || parameter.isOptional();
         Class<? extends Annotation> nullabilityAnnotation = isNullable ? Nullable.class : NotNull.class;
 
-        return ParameterSpec.builder(parameter.getType(), parameter.getName())
+        return ParameterSpec.builder(parameter.getTypeInformation().getTypeName(), parameter.getName())
                 .addAnnotation(nullabilityAnnotation)
                 .build();
     }
 
     protected CodeBlock generateWriteIntoBundleBlock(Field target, String bundleVarName, String variableContext, boolean useGetter) {
         boolean hasContext = variableContext != null && !variableContext.isBlank();
-        TypeName typeName = target.getType();
         String parameterName = target.getName();
         String contextStatement = hasContext ? variableContext.concat(".") : "";
         String accessorStatement = (target.hasGetter() && useGetter) ? target.getGetterName().concat("()") : parameterName;
         String variableAccessor = contextStatement.concat(accessorStatement);
         CodeBlock.Builder codeBlock = CodeBlock.builder();
 
-        generateWriteStatement(typeName, codeBlock, bundleVarName, variableAccessor, parameterName);
+        generateWriteStatement(target.getTypeInformation(), codeBlock, bundleVarName, variableAccessor, parameterName);
 
         return codeBlock.build();
     }
 
     protected CodeBlock generateReadFromBundleBlock(Field variable, String bundleVariableName, String variableContext, boolean useSetter) {
-        TypeName paramType = variable.getType();
         String varName = variable.getName();
         String tmpVarName = varName.concat("FromBundle");
 
         CodeBlock.Builder codeBlock = CodeBlock.builder();
 
         codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, varName);
-        generateReadStatement(paramType, codeBlock, bundleVariableName, tmpVarName, varName);
+        generateReadStatement(variable.getTypeInformation(), codeBlock, bundleVariableName, tmpVarName, varName);
         generateVariableSetValueStatement(codeBlock, variable, variableContext, tmpVarName, useSetter);
         codeBlock.endControlFlow();
 

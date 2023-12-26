@@ -19,6 +19,7 @@ public class PackageNames {
     public static final String ANDROID = "android";
     public static final String ANDROIDX = "androidx";
     public static final String ANDROID_OS = resolve(ANDROID, "os");
+    public static final String ANDROID_UTIL = resolve(ANDROID, "util");
     public static final String ANDROID_VIEW = resolve(ANDROID, "view");
     public static final String ANDROID_APP = resolve(ANDROID, "app");
     public static final String ANDROID_CONTENT = resolve(ANDROID, "content");
