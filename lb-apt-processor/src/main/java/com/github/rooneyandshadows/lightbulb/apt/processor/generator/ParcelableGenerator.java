@@ -2,7 +2,10 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbParcelableDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.ParcelableCodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +18,7 @@ import java.util.List;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 import static javax.lang.model.element.Modifier.*;
 
+@SuppressWarnings("SameParameterValue")
 public class ParcelableGenerator extends CodeGenerator {
     private final String parcelablePackage;
     private final List<LightbulbParcelableDescription> parcelableDescriptions;
@@ -43,9 +47,10 @@ public class ParcelableGenerator extends CodeGenerator {
 
             generateFields(parcelableDescription, fields);
             generateCreatorField(parcelableDescription, fields);
-            generateConstructorMethod(methods);
+            generateConstructorMethod(parcelableDescription, methods);
+            generateWriteToParcelMethod(parcelableDescription, methods);
             generateDescribeContentsMethod(methods);
-            generateWriteToParcelMethod(methods);
+
 
             TypeSpec.Builder parcelableClass = TypeSpec
                     .classBuilder(instrumentedClassName)
@@ -63,14 +68,19 @@ public class ParcelableGenerator extends CodeGenerator {
         });
     }
 
-    private void generateConstructorMethod(List<MethodSpec> methods) {
-        MethodSpec constructorMethod = MethodSpec.constructorBuilder()
+    private void generateConstructorMethod(LightbulbParcelableDescription parcelableDescription, List<MethodSpec> methods) {
+        MethodSpec.Builder constructorMethodBuilder = MethodSpec.constructorBuilder()
                 .addModifiers(PROTECTED)
-                .addParameter(ANDROID_PARCEL, "in")
-                .build();
+                .addParameter(ANDROID_PARCEL, "in");
 
-        methods.add(constructorMethod);
+        parcelableDescription.getFields().forEach(field -> {
+            CodeBlock readFromParcelBlock = generateReadFromParcelBlock(field, "in");
+            constructorMethodBuilder.addCode(readFromParcelBlock);
+        });
+
+        methods.add(constructorMethodBuilder.build());
     }
+
 
     private void generateDescribeContentsMethod(List<MethodSpec> methods) {
         MethodSpec describeContentsMethod = MethodSpec.methodBuilder("describeContents")
@@ -83,20 +93,24 @@ public class ParcelableGenerator extends CodeGenerator {
         methods.add(describeContentsMethod);
     }
 
-    private void generateWriteToParcelMethod(List<MethodSpec> methods) {
+    private void generateWriteToParcelMethod(LightbulbParcelableDescription parcelableDescription, List<MethodSpec> methods) {
         ParameterSpec parcelParam = ParameterSpec.builder(ANDROID_PARCEL, "dest")
                 .addAnnotation(NotNull.class)
                 .build();
 
-        MethodSpec writeToParcelMethod = MethodSpec.methodBuilder("writeToParcel")
+        MethodSpec.Builder writeToParcelMethodBuilder = MethodSpec.methodBuilder("writeToParcel")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
                 .addParameter(parcelParam)
                 .addParameter(TypeName.INT, "flags")
-                .returns(void.class)
-                .build();
+                .returns(void.class);
 
-        methods.add(writeToParcelMethod);
+        parcelableDescription.getFields().forEach(field -> {
+            CodeBlock writeIntoParcelBlock = generateWriteIntoParcelBlock(field, "dest");
+            writeToParcelMethodBuilder.addCode(writeIntoParcelBlock);
+        });
+
+        methods.add(writeToParcelMethodBuilder.build());
     }
 
     private void generateFields(LightbulbParcelableDescription parcelableDescription, List<FieldSpec> fields) {
@@ -144,5 +158,23 @@ public class ParcelableGenerator extends CodeGenerator {
                 .build();
 
         fields.add(fieldSpec);
+    }
+
+    private CodeBlock generateWriteIntoParcelBlock(Field field, String bundleVariableName) {
+        CodeBlock.Builder codeBlock = CodeBlock.builder();
+
+        ParcelableCodeGenerator.generateWriteStatement(codeBlock, field, bundleVariableName);
+
+        return codeBlock.build();
+    }
+
+    private CodeBlock generateReadFromParcelBlock(Field field, String parcelVariableName) {
+        String fieldName = field.getName();
+        CodeBlock.Builder codeBlock = CodeBlock.builder();
+
+        ParcelableCodeGenerator.generateReadStatement(codeBlock, field, parcelVariableName);
+        generateFieldSetValueStatement(codeBlock, field, fieldName, false);
+
+        return codeBlock.build();
     }
 }

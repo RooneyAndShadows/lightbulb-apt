@@ -9,40 +9,66 @@ import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNam
 
 public class BundleCodeGenerator {
 
-    public static void generateWriteStatement(TypeInformation type, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String key) {
+    public static void generateWriteStatement(CodeBlock.Builder cbBuilder, TypeInformation type, String bundleVariableName, String variableAccessor, String key) {
         boolean checkForNull = !type.isPrimitive();
 
         if (checkForNull) {
             cbBuilder.beginControlFlow("if($L != null)", variableAccessor);
         }
 
-        if (type.isString()) writeString(cbBuilder, bundleVariableName, variableAccessor, key);
-        else if (type.isUUID()) writeUUID(cbBuilder, bundleVariableName, variableAccessor, key);
-        else if (type.isInt()) writeInt(cbBuilder, bundleVariableName, variableAccessor, key);
-        else if (type.isBoolean()) writeBoolean(cbBuilder, bundleVariableName, variableAccessor, key);
-        else if (type.isFloat()) writeFloat(cbBuilder, bundleVariableName, variableAccessor, key);
-        else if (type.isLong()) writeLong(cbBuilder, bundleVariableName, variableAccessor, key);
-        else if (type.isDouble()) writeDouble(cbBuilder, bundleVariableName, variableAccessor, key);
-        else if (type.isDate()) writeDate(cbBuilder, bundleVariableName, variableAccessor, key);
-        else if (type.isOffsetDate()) writeOffsetDate(cbBuilder, bundleVariableName, variableAccessor, key);
-        else writeParcelable(cbBuilder, bundleVariableName, variableAccessor, key);
+        if (type.isString()) {
+            writeString(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.isUUID()) {
+            writeUUID(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.isInt()) {
+            writeInt(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.isBoolean()) {
+            writeBoolean(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.isFloat()) {
+            writeFloat(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.isLong()) {
+            writeLong(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.isDouble()) {
+            writeDouble(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.isDate()) {
+            writeDate(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.isOffsetDate()) {
+            writeOffsetDate(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else if (type.is(ANDROID_PARCELABLE)) {
+            writeParcelable(cbBuilder, bundleVariableName, variableAccessor, key);
+        } else {
+            //NOT SUPPORTED TYPE
+        }
 
         if (checkForNull) {
             cbBuilder.endControlFlow();
         }
     }
 
-    public static void generateReadStatement(TypeInformation type, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableName, String key) {
-        if (type.isString()) readString(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else if (type.isUUID()) readUUID(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else if (type.isInt()) readInt(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else if (type.isBoolean()) readBoolean(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else if (type.isFloat()) readFloat(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else if (type.isLong()) readLong(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else if (type.isDouble()) readDouble(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else if (type.isDate()) readDate(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else if (type.isOffsetDate()) readOffsetDate(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
-        else readParcelable(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+    public static void generateReadStatement(CodeBlock.Builder cbBuilder, TypeInformation type, String bundleVariableName, String variableName, String key) {
+        if (type.isString()) {
+            readString(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.isUUID()) {
+            readUUID(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.isInt()) {
+            readInt(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.isBoolean()) {
+            readBoolean(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.isFloat()) {
+            readFloat(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.isLong()) {
+            readLong(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.isDouble()) {
+            readDouble(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.isDate()) {
+            readDate(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.isOffsetDate()) {
+            readOffsetDate(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else if (type.is(ANDROID_PARCELABLE)) {
+            readParcelable(cbBuilder, type.getTypeName(), bundleVariableName, variableName, key);
+        } else {
+            //NOT SUPPORTED TYPE
+        }
     }
 
     private static void readString(CodeBlock.Builder cbBuilder, TypeName paramType, String bundleVariableName, String variableName, String key) {

@@ -1,89 +1,103 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 
+@SuppressWarnings("DuplicatedCode")
 public class ParcelableCodeGenerator {
 
-    public static void generateReadStatement(TypeInformation type, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableName) {
+    public static void generateWriteStatement(CodeBlock.Builder cbBuilder, Field field, String bundleVariableName) {
+        TypeInformation type = field.getTypeInformation();
+
         if (type.isString()) {
-            readString(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeString(cbBuilder, field, bundleVariableName);
         } else if (type.isUUID()) {
-            readUUID(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeUUID(cbBuilder, field, bundleVariableName);
         } else if (type.isInt()) {
-            readInt(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeInt(cbBuilder, field, bundleVariableName);
         } else if (type.isBoolean()) {
-            readBoolean(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeBoolean(cbBuilder, field, bundleVariableName);
         } else if (type.isFloat()) {
-            readFloat(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeFloat(cbBuilder, field, bundleVariableName);
         } else if (type.isLong()) {
-            readLong(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeLong(cbBuilder, field, bundleVariableName);
         } else if (type.isDouble()) {
-            readDouble(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeDouble(cbBuilder, field, bundleVariableName);
         } else if (type.isDate()) {
-            readDate(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeDate(cbBuilder, field, bundleVariableName);
         } else if (type.isOffsetDate()) {
-            readOffsetDate(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeOffsetDate(cbBuilder, field, bundleVariableName);
         } else if (type.is(ANDROID_PARCELABLE)) {
-            readParcelable(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeParcelable(cbBuilder, field, bundleVariableName);
         } else if (type.is(ANDROID_SPARSE_ARRAY)) {
-            readSparseArray(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeSparseArray(cbBuilder, field, bundleVariableName);
         } else if (type.isList()) {
-            readList(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeList(cbBuilder, field, bundleVariableName);
         } else if (type.isMap()) {
-            readMap(cbBuilder, type.getTypeName(), bundleVariableName, variableName);
+            writeMap(cbBuilder, field, bundleVariableName);
         }
     }
 
-    public static void generateWriteStatement(TypeInformation type, CodeBlock.Builder cbBuilder, String bundleVariableName, String variableAccessor, String variableName) {
+    public static void generateReadStatement(CodeBlock.Builder cbBuilder, Field field, String bundleVariableName) {
+        TypeInformation type = field.getTypeInformation();
+        String variableName = field.getName();
+
         if (type.isString()) {
-            writeString(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readString(cbBuilder, field, bundleVariableName);
         } else if (type.isUUID()) {
-            writeUUID(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readUUID(cbBuilder, field, bundleVariableName);
         } else if (type.isInt()) {
-            writeInt(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readInt(cbBuilder, field, bundleVariableName);
         } else if (type.isBoolean()) {
-            writeBoolean(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readBoolean(cbBuilder, field, bundleVariableName);
         } else if (type.isFloat()) {
-            writeFloat(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readFloat(cbBuilder, field, bundleVariableName);
         } else if (type.isLong()) {
-            writeLong(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readLong(cbBuilder, field, bundleVariableName);
         } else if (type.isDouble()) {
-            writeDouble(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readDouble(cbBuilder, field, bundleVariableName);
         } else if (type.isDate()) {
-            writeDate(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readDate(cbBuilder, field, bundleVariableName);
         } else if (type.isOffsetDate()) {
-            writeOffsetDate(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readOffsetDate(cbBuilder, field, bundleVariableName);
         } else if (type.is(ANDROID_PARCELABLE)) {
-            writeParcelable(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readParcelable(cbBuilder, field, bundleVariableName);
         } else if (type.is(ANDROID_SPARSE_ARRAY)) {
-            writeSparseArray(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readSparseArray(cbBuilder, field, bundleVariableName);
         } else if (type.isList()) {
-            writeList(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readList(cbBuilder, field, bundleVariableName);
         } else if (type.isMap()) {
-            writeMap(cbBuilder, type.getTypeName(), bundleVariableName, variableAccessor);
+            readMap(cbBuilder, field, bundleVariableName);
+        } else {
+            //NOT SUPPORTED TYPE
         }
     }
 
-    private static void writeOffsetDate(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        String tmpVarName = "offsetDateString";
+    private static void writeOffsetDate(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        String variableName = field.getName();
+        String nullMarkerVariable = variableName.concat("Marker");
+        String tmpVarName = variableName.concat("OffsetDateString");
+        String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-        cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-        cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                .addStatement("$T $L = $T.getOffsetDateString($L)", STRING, tmpVarName, DATE_UTILS, variableAccessor)
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+        cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                .addStatement("$T $L = $T.getOffsetDateString($L)", STRING, tmpVarName, DATE_UTILS, fieldAccessor)
                 .addStatement("$L.writeString($L)", parcelVariableName, tmpVarName)
                 .endControlFlow();
     }
 
-    private static void readOffsetDate(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
+    private static void readOffsetDate(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
         String tmpVarName = variableName.concat("OffsetDateString");
 
-        cbBuilder.addStatement("$T $L = null", varType, variableName);
+        cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$T $L = $L.readString()", STRING, tmpVarName, parcelVariableName)
@@ -91,22 +105,27 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void writeDate(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
+    private static void writeDate(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
         String tmpVarName = "dateString";
+        String variableName = field.getName();
+        String nullMarkerVariable = variableName.concat("Marker");
+        String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-        cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-        cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                .addStatement("$T $L = $T.getDateString($L)", STRING, tmpVarName, DATE_UTILS, variableAccessor)
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+        cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                .addStatement("$T $L = $T.getDateString($L)", STRING, tmpVarName, DATE_UTILS, fieldAccessor)
                 .addStatement("$L.writeString($L)", parcelVariableName, tmpVarName)
                 .endControlFlow();
     }
 
-    private static void readDate(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
+    private static void readDate(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
         String tmpVarName = variableName.concat("DateString");
 
-        cbBuilder.addStatement("$T $L = null", varType, variableName);
+        cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$T $L = $L.readString()", STRING, tmpVarName, parcelVariableName)
@@ -114,28 +133,35 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void writeInt(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        boolean isPrimitive = varType.isPrimitive();
+    private static void writeInt(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String fieldAccessor = String.format("this.%s", field.getName());
+        boolean isPrimitive = typeName.isPrimitive();
 
         if (isPrimitive) {
-            cbBuilder.addStatement("$L.writeInt($L)", parcelVariableName, variableAccessor);
+            cbBuilder.addStatement("$L.writeInt($L)", parcelVariableName, fieldAccessor);
         } else {
-            cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-            cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-            cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                    .addStatement("$L.writeInt($L)", parcelVariableName, variableAccessor)
+            String variableName = field.getName();
+            String nullMarkerVariable = variableName.concat("Marker");
+
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+            cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                    .addStatement("$L.writeInt($L)", parcelVariableName, fieldAccessor)
                     .endControlFlow();
         }
     }
 
-    private static void readInt(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
-        boolean isPrimitive = varType.isPrimitive();
+    private static void readInt(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
+        boolean isPrimitive = typeName.isPrimitive();
 
         if (isPrimitive) {
-            cbBuilder.addStatement("$T $L = $L.readInt()", varType, variableName, parcelVariableName);
+            cbBuilder.addStatement("$T $L = $L.readInt()", typeName, variableName, parcelVariableName);
         } else {
             String existenceVar = variableName.concat("Exists");
-            cbBuilder.addStatement("$T $L = null", varType, variableName);
+            cbBuilder.addStatement("$T $L = null", typeName, variableName);
             cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
                     .addStatement("$L = $L.readInt()", variableName, parcelVariableName)
@@ -143,155 +169,195 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void writeString(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-        cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-        cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                .addStatement("$L.writeString($L)", parcelVariableName, variableAccessor)
+    private static void writeString(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        String variableName = field.getName();
+        String nullMarkerVariable = variableName.concat("Marker");
+        String fieldAccessor = String.format("this.%s", field.getName());
+
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+        cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                .addStatement("$L.writeString($L)", parcelVariableName, fieldAccessor)
                 .endControlFlow();
     }
 
-    private static void readString(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
+    private static void readString(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
-        cbBuilder.addStatement("$T $L = null", varType, variableName);
+
+        cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
-                .addStatement("$L = $L.readInt()", varType, variableName, parcelVariableName)
+                .addStatement("$L = $L.readString()", variableName, parcelVariableName)
                 .endControlFlow();
     }
 
-    private static void writeDouble(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        boolean isPrimitive = varType.isPrimitive();
+    private static void writeDouble(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String fieldAccessor = String.format("this.%s", field.getName());
+        boolean isPrimitive = typeName.isPrimitive();
 
         if (isPrimitive) {
-            cbBuilder.addStatement("$L.writeDouble($L)", parcelVariableName, variableAccessor);
+            cbBuilder.addStatement("$L.writeDouble($L)", parcelVariableName, fieldAccessor);
         } else {
-            cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-            cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-            cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                    .addStatement("$L.writeDouble($L)", parcelVariableName, variableAccessor)
+            String variableName = field.getName();
+            String nullMarkerVariable = variableName.concat("Marker");
+
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+            cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                    .addStatement("$L.writeDouble($L)", parcelVariableName, fieldAccessor)
                     .endControlFlow();
         }
     }
 
-    private static void readDouble(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
-        boolean isPrimitive = varType.isPrimitive();
+    private static void readDouble(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
+        boolean isPrimitive = typeName.isPrimitive();
 
         if (isPrimitive) {
-            cbBuilder.addStatement("$T $L = $L.readDouble()", varType, variableName, parcelVariableName);
-        } else {
-            String existenceVar = variableName.concat("Exists");
-            cbBuilder.addStatement("$T $L = null", varType, variableName);
-            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
-            cbBuilder.beginControlFlow("if($L)", existenceVar)
-                    .addStatement("$L = $L.readDouble()", varType, variableName, parcelVariableName)
-                    .endControlFlow();
-        }
-    }
-
-    private static void writeFloat(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        boolean isPrimitive = varType.isPrimitive();
-
-        if (isPrimitive) {
-            cbBuilder.addStatement("$L.writeFloat($L)", parcelVariableName, variableAccessor);
-        } else {
-            cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-            cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-            cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                    .addStatement("$L.writeFloat($L)", parcelVariableName, variableAccessor)
-                    .endControlFlow();
-        }
-    }
-
-    private static void readFloat(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
-        boolean isPrimitive = varType.isPrimitive();
-
-        if (isPrimitive) {
-            cbBuilder.addStatement("$T $L = $L.readFloat()", varType, variableName, parcelVariableName);
+            cbBuilder.addStatement("$T $L = $L.readDouble()", typeName, variableName, parcelVariableName);
         } else {
             String existenceVar = variableName.concat("Exists");
-            cbBuilder.addStatement("$T $L = null", varType, variableName);
+            cbBuilder.addStatement("$T $L = null", typeName, variableName);
             cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
-                    .addStatement("$L = $L.readFloat()", varType, variableName, parcelVariableName)
+                    .addStatement("$L = $L.readDouble()", variableName, parcelVariableName)
                     .endControlFlow();
         }
     }
 
-    private static void writeLong(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        boolean isPrimitive = varType.isPrimitive();
+    private static void writeFloat(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String fieldAccessor = String.format("this.%s", field.getName());
+        boolean isPrimitive = typeName.isPrimitive();
 
         if (isPrimitive) {
-            cbBuilder.addStatement("$L.writeLong($L)", parcelVariableName, variableAccessor);
+            cbBuilder.addStatement("$L.writeFloat($L)", parcelVariableName, fieldAccessor);
         } else {
-            cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-            cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-            cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                    .addStatement("$L.writeLong($L)", parcelVariableName, variableAccessor)
+            String variableName = field.getName();
+            String nullMarkerVariable = variableName.concat("Marker");
+
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+            cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                    .addStatement("$L.writeFloat($L)", parcelVariableName, fieldAccessor)
                     .endControlFlow();
         }
     }
 
-    private static void readLong(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
-        boolean isPrimitive = varType.isPrimitive();
+    private static void readFloat(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
+        boolean isPrimitive = typeName.isPrimitive();
 
         if (isPrimitive) {
-            cbBuilder.addStatement("$T $L = $L.readLong()", varType, variableName, parcelVariableName);
+            cbBuilder.addStatement("$T $L = $L.readFloat()", typeName, variableName, parcelVariableName);
         } else {
             String existenceVar = variableName.concat("Exists");
-            cbBuilder.addStatement("$T $L = null", varType, variableName);
+            cbBuilder.addStatement("$T $L = null", typeName, variableName);
             cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
-                    .addStatement("$L = $L.readLong()", varType, variableName, parcelVariableName)
+                    .addStatement("$L = $L.readFloat()", variableName, parcelVariableName)
                     .endControlFlow();
         }
     }
 
-    private static void writeBoolean(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        boolean isPrimitive = varType.isPrimitive();
+    private static void writeLong(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String fieldAccessor = String.format("this.%s", field.getName());
+        boolean isPrimitive = typeName.isPrimitive();
 
         if (isPrimitive) {
-            cbBuilder.addStatement("$L.writeInt($L ? 1 : 0)", parcelVariableName, variableAccessor);
+            cbBuilder.addStatement("$L.writeLong($L)", parcelVariableName, fieldAccessor);
         } else {
-            cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-            cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-            cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                    .addStatement("$L.writeInt($L ? 1 : 0)", parcelVariableName, variableAccessor)
+            String variableName = field.getName();
+            String nullMarkerVariable = variableName.concat("Marker");
+
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+            cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                    .addStatement("$L.writeLong($L)", parcelVariableName, fieldAccessor)
                     .endControlFlow();
         }
     }
 
-    private static void readBoolean(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
-        boolean isPrimitive = varType.isPrimitive();
+    private static void readLong(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
+        boolean isPrimitive = typeName.isPrimitive();
 
         if (isPrimitive) {
-            cbBuilder.addStatement("$T $L = $L.readInt() == 1", varType, variableName, parcelVariableName);
+            cbBuilder.addStatement("$T $L = $L.readLong()", typeName, variableName, parcelVariableName);
         } else {
             String existenceVar = variableName.concat("Exists");
-            cbBuilder.addStatement("$T $L = null", varType, variableName);
+            cbBuilder.addStatement("$T $L = null", typeName, variableName);
             cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
-                    .addStatement("$L = $L.readInt() == 1", varType, variableName, parcelVariableName)
+                    .addStatement("$L = $L.readLong()", variableName, parcelVariableName)
                     .endControlFlow();
         }
     }
 
-    private static void writeUUID(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        String tmpVarName = "uuidString";
+    private static void writeBoolean(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String fieldAccessor = String.format("this.%s", field.getName());
+        boolean isPrimitive = typeName.isPrimitive();
 
-        cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-        cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-        cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                .addStatement("$T $L = $L.toString()", STRING, tmpVarName, variableAccessor)
+        if (isPrimitive) {
+            cbBuilder.addStatement("$L.writeInt($L ? 1 : 0)", parcelVariableName, fieldAccessor);
+        } else {
+            String variableName = field.getName();
+            String nullMarkerVariable = variableName.concat("Marker");
+
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+            cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                    .addStatement("$L.writeInt($L ? 1 : 0)", parcelVariableName, fieldAccessor)
+                    .endControlFlow();
+        }
+    }
+
+    private static void readBoolean(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
+        boolean isPrimitive = typeName.isPrimitive();
+
+        if (isPrimitive) {
+            cbBuilder.addStatement("$T $L = $L.readInt() == 1", typeName, variableName, parcelVariableName);
+        } else {
+            String existenceVar = variableName.concat("Exists");
+            cbBuilder.addStatement("$T $L = null", typeName, variableName);
+            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+            cbBuilder.beginControlFlow("if($L)", existenceVar)
+                    .addStatement("$L = $L.readInt() == 1", variableName, parcelVariableName)
+                    .endControlFlow();
+        }
+    }
+
+    private static void writeUUID(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        String variableName = field.getName();
+        String nullMarkerVariable = variableName.concat("Marker");
+        String tmpVarName = variableName.concat("uuidString");
+        String fieldAccessor = String.format("this.%s", field.getName());
+
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+        cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                .addStatement("$T $L = $L.toString()", STRING, tmpVarName, fieldAccessor)
                 .addStatement("$L.writeString($L)", parcelVariableName, tmpVarName)
                 .endControlFlow();
     }
 
-    private static void readUUID(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
+    private static void readUUID(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
         String tmpVarName = variableName.concat("UuidString");
 
-        cbBuilder.addStatement("$T $L = null", varType, variableName);
+        cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$T $L = $L.readString()", STRING, tmpVarName, parcelVariableName)
@@ -299,90 +365,119 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void writeParcelable(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-        cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-        cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                .addStatement("$L.writeParcelable($L,0)", parcelVariableName, variableAccessor)
+    private static void writeParcelable(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        String variableName = field.getName();
+        String nullMarkerVariable = variableName.concat("Marker");
+        String fieldAccessor = String.format("this.%s", field.getName());
+
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+        cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                .addStatement("$L.writeParcelable($L,0)", parcelVariableName, fieldAccessor)
                 .endControlFlow();
     }
 
-    private static void readParcelable(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
+    private static void readParcelable(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
 
-        cbBuilder.addStatement("$T $L = null", varType, variableName);
+        cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L = $L.readParcelable(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, varType)
+                .addStatement("$L = $L.readParcelable(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, typeName)
                 .nextControlFlow("else")
                 .addStatement("$L = $L.getParcelable(this.getClass().getClassLoader())", variableName, parcelVariableName)
                 .endControlFlow()
                 .endControlFlow();
     }
 
-    private static void writeSparseArray(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-        cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-        cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                .addStatement("$L.writeSparseArray($L)", parcelVariableName, variableAccessor)
+    private static void writeSparseArray(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        String variableName = field.getName();
+        String nullMarkerVariable = variableName.concat("Marker");
+        String fieldAccessor = String.format("this.%s", field.getName());
+
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+        cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                .addStatement("$L.writeSparseArray($L)", parcelVariableName, fieldAccessor)
                 .endControlFlow();
     }
 
-    private static void readSparseArray(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
+    private static void readSparseArray(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
 
-        cbBuilder.addStatement("$T $L = null", varType, variableName);
+        cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, varType)
+                .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, typeName)
                 .nextControlFlow("else")
                 .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader())", variableName, parcelVariableName)
                 .endControlFlow()
                 .endControlFlow();
     }
 
-    private static void writeList(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-        cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-        cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                .addStatement("$L.writeList($L)", parcelVariableName, variableAccessor)
+    private static void writeList(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        String variableName = field.getName();
+        String nullMarkerVariable = variableName.concat("Marker");
+        String fieldAccessor = String.format("this.%s", field.getName());
+
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+        cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                .addStatement("$L.writeList($L)", parcelVariableName, fieldAccessor)
                 .endControlFlow();
     }
 
-    private static void readList(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
+    private static void readList(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        TypeName listTypeParamTypeName = field.getTypeInformation().getParametrizedTypes().get(0).getTypeName();
+        String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
 
-        cbBuilder.addStatement("$T $L = null", varType, variableName);
+        cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
+                .addStatement("$L = new $T()", variableName, typeName)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L = $L.readList(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, varType)
+                .addStatement("$L.readList($L,this.getClass().getClassLoader(),$T.class)", parcelVariableName, variableName, listTypeParamTypeName)
                 .nextControlFlow("else")
-                .addStatement("$L = $L.readList(this.getClass().getClassLoader())", variableName, parcelVariableName)
+                .addStatement("$L.readList($L,this.getClass().getClassLoader())", parcelVariableName, variableName)
                 .endControlFlow()
                 .endControlFlow();
     }
 
-    private static void writeMap(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableAccessor) {
-        cbBuilder.addStatement("$T isNull = $L == null ? 0 else 1", TypeName.INT);
-        cbBuilder.addStatement("$L.writeByte(($T)isNull))", parcelVariableName, TypeName.BYTE);
-        cbBuilder.beginControlFlow("if($L != null)", variableAccessor)
-                .addStatement("$L.writeMap($L)", parcelVariableName, variableAccessor)
+    private static void writeMap(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        String variableName = field.getName();
+        String nullMarkerVariable = variableName.concat("Marker");
+        String fieldAccessor = String.format("this.%s", field.getName());
+
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+        cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
+                .addStatement("$L.writeMap($L)", parcelVariableName, fieldAccessor)
                 .endControlFlow();
     }
 
-    private static void readMap(CodeBlock.Builder cbBuilder, TypeName varType, String parcelVariableName, String variableName) {
+    private static void readMap(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
+        TypeName typeName = field.getTypeInformation().getTypeName();
+        TypeName mapTypeParamKeyTypeName = field.getTypeInformation().getParametrizedTypes().get(0).getTypeName();
+        TypeName mapTypeParamValueTypeName = field.getTypeInformation().getParametrizedTypes().get(1).getTypeName();
+        String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
 
-        cbBuilder.addStatement("$T $L = null", varType, variableName);
+        cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
+                .addStatement("$L = new $T()", variableName, typeName)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L = $L.readMap(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, varType)
+                .addStatement("$L.readMap($L, this.getClass().getClassLoader(),$T.class,$T.class)", parcelVariableName, variableName, mapTypeParamKeyTypeName, mapTypeParamValueTypeName)
                 .nextControlFlow("else")
-                .addStatement("$L = $L.readMap(this.getClass().getClassLoader())", variableName, parcelVariableName)
+                .addStatement("$L.readMap($L, this.getClass().getClassLoader())", parcelVariableName, variableName)
                 .endControlFlow()
                 .endControlFlow();
     }

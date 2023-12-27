@@ -1,5 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
@@ -11,10 +12,7 @@ import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeMirror;
 import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @SuppressWarnings({"DuplicatedCode", "RedundantIfStatement", "unused"})
@@ -51,6 +49,23 @@ public class TypeInformation {
 
     public TypeName getTypeName() {
         return typeName;
+    }
+
+    public List<TypeInformation> getParametrizedTypes() {
+        List<TypeInformation> result = new ArrayList<>();
+
+        if (!isParametrized()) {
+            return result;
+        }
+
+        DeclaredType type = (DeclaredType) typeMirror;
+
+        type.getTypeArguments().forEach(typeArg -> {
+            TypeElement typeArgElement = (TypeElement) ((DeclaredType) typeArg).asElement();
+            result.add(new TypeInformation(typeArgElement));
+        });
+
+        return result;
     }
 
     public boolean isPrimitive() {

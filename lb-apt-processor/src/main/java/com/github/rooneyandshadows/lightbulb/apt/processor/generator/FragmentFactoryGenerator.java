@@ -1,6 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
@@ -15,6 +18,7 @@ import java.util.List;
 
 import static javax.lang.model.element.Modifier.*;
 
+@SuppressWarnings("SameParameterValue")
 public class FragmentFactoryGenerator extends CodeGenerator {
     private final String fragmentsFactoryPackage;
 
@@ -40,9 +44,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
                 .classBuilder(ClassNames.FRAGMENT_FACTORY_CLASS_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
-        fragmentBindings.forEach(fragmentBindingData -> {
-            generateFragmentCreator(rootClass, fragmentBindingData);
-        });
+        fragmentBindings.forEach(fragmentBindingData -> generateFragmentCreator(rootClass, fragmentBindingData));
 
         try {
             JavaFile.builder(fragmentsFactoryPackage, rootClass.build()).build().writeTo(filer);
@@ -91,14 +93,26 @@ public class FragmentFactoryGenerator extends CodeGenerator {
                 .addStatement("$T arguments = new $T()", ClassNames.ANDROID_BUNDLE, ClassNames.ANDROID_BUNDLE);
 
         fragmentInfo.getFragmentParameters(includeOptionalParams).forEach(parameter -> {
-            builder.addParameter(generateParameterSpec(parameter));
-            CodeBlock writeStatement = generateWriteIntoBundleBlock(parameter, "arguments", null, false);
-            builder.addCode(writeStatement);
+            CodeBlock writeIntoBundleCodeBlock = generateWriteParamIntoBundleBlock(parameter, "arguments");
+            ParameterSpec parameterSpec = generateParameterSpec(parameter);
+
+            builder.addParameter(parameterSpec);
+            builder.addCode(writeIntoBundleCodeBlock);
         });
 
         builder.addStatement("fragment.setArguments(arguments)");
         builder.addStatement("return fragment");
 
         destination.add(builder.build());
+    }
+
+    private CodeBlock generateWriteParamIntoBundleBlock(Parameter parameter, String bundleVariableName) {
+        TypeInformation parameterTypeInfo = parameter.getTypeInformation();
+        String variableName = parameter.getName();
+        CodeBlock.Builder writeIntoBundleCodeBlock = CodeBlock.builder();
+
+        BundleCodeGenerator.generateWriteStatement(writeIntoBundleCodeBlock, parameterTypeInfo, bundleVariableName, variableName, variableName);
+
+        return writeIntoBundleCodeBlock.build();
     }
 }
