@@ -1,21 +1,16 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredEntity;
+
 import javax.lang.model.type.TypeMirror;
 
-public class Variable {
-    protected final String name;
-    protected final TypeInformation typeInformation;
+public class Variable extends DeclaredEntity {
+    public Variable(String name, TypeMirror typeMirror, BaseMetadata metadata) {
+        super(name, typeMirror, metadata);
+    }
 
     public Variable(String name, TypeMirror typeMirror) {
-        this.typeInformation = new TypeInformation(typeMirror);
-        this.name = name;
-    }
-
-    public final String getName() {
-        return name;
-    }
-
-    public final TypeInformation getTypeInformation() {
-        return typeInformation;
+        super(name, typeMirror);
     }
 }

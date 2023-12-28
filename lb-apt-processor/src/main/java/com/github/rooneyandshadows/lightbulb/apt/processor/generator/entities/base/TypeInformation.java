@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
+package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
@@ -16,7 +16,7 @@ import java.util.*;
 
 
 @SuppressWarnings({"DuplicatedCode", "RedundantIfStatement", "unused"})
-public class TypeInformation {
+public final class TypeInformation {
     private static final String stringType = String.class.getCanonicalName();
     private static final String intType = Integer.class.getCanonicalName();
     private static final String intPrimType = int.class.getCanonicalName();
@@ -33,9 +33,9 @@ public class TypeInformation {
     private static final String offsetDateType = OffsetDateTime.class.getCanonicalName();
     private static final String listType = List.class.getCanonicalName();
     private static final String mapType = Map.class.getCanonicalName();
-    protected final TypeMirror typeMirror;
-    protected final TypeName typeName;
-    protected final boolean isPrimitive;
+    private final TypeMirror typeMirror;
+    private final TypeName typeName;
+    private final boolean isPrimitive;
 
     public TypeInformation(TypeMirror typeMirror) {
         this.typeMirror = typeMirror;
@@ -43,7 +43,17 @@ public class TypeInformation {
         this.typeName = ClassName.get(typeMirror);
     }
 
-    public boolean canBeInstantiated(){
+    public TypeInformation getSuperClassTypeInfo(){
+        TypeElement typeElement = (TypeElement) ((DeclaredType) typeMirror).asElement();
+        TypeMirror superClassTypeMirror = typeElement.getSuperclass();
+
+        if ((superClassTypeMirror instanceof NoType)){
+            return null;
+        }
+        return new TypeInformation(superClassTypeMirror);
+    }
+
+    public boolean canBeInstantiated() {
         if (isPrimitive) {
             return false;
         } else {

@@ -1,5 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredEntity;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +11,7 @@ import javax.lang.model.element.Modifier;
 
 
 @SuppressWarnings("DuplicatedCode")
-public class Field extends Variable {
+public class Field extends DeclaredEntity {
     protected final Element element;
     protected final Element enclosingClassElement;
     protected final String setterName;
@@ -22,8 +24,8 @@ public class Field extends Variable {
     protected final boolean hasSetter;
     protected final boolean hasGetter;
 
-    public Field(Element fieldElement) {
-        super(ElementUtils.getSimpleName(fieldElement),fieldElement.asType());
+    public Field(Element fieldElement, BaseMetadata metadata) {
+        super(ElementUtils.getSimpleName(fieldElement), fieldElement.asType(), metadata);
         this.enclosingClassElement = fieldElement.getEnclosingElement();
         this.element = fieldElement;
         this.setterName = MemberUtils.getFieldSetterName(name);
@@ -35,7 +37,10 @@ public class Field extends Variable {
         this.isNullable = fieldElement.getAnnotation(Nullable.class) != null;
         this.hasSetter = ElementUtils.scanForSetter(enclosingClassElement, name);
         this.hasGetter = ElementUtils.scanForGetter(enclosingClassElement, name);
+    }
 
+    public Field(Element fieldElement) {
+        this(fieldElement, null);
     }
 
     public boolean accessModifierAtLeast(Modifier target) {

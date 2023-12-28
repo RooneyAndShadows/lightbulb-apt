@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
