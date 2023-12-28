@@ -9,6 +9,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,8 +22,8 @@ public class ApplicationGenerator extends CodeGenerator {
     private final List<LightbulbApplicationDescription> appDescriptions;
     private final List<LightbulbStorageDescription> storageDescriptions;
 
-    public ApplicationGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, annotationResultsRegistry);
+    public ApplicationGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer,elements, annotationResultsRegistry);
         hasStorages = annotationResultsRegistry.hasStorageDescriptions();
         hasApplications = annotationResultsRegistry.hasApplicationDescriptions();
         appDescriptions = annotationResultsRegistry.getApplicationDescriptions();

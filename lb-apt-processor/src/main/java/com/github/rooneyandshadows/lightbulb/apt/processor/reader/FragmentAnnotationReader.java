@@ -1,9 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldPersisted;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.ViewBinding;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldViewBinding;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
@@ -38,14 +39,14 @@ public class FragmentAnnotationReader extends AnnotationReader {
             } else if (annotation instanceof FragmentScreen fragmentScreen) {
                 fragmentDataBuilder.withScreenName(fragmentScreen.screenName());
                 fragmentDataBuilder.withScreenGroupName(fragmentScreen.screenGroup());
-            } else if (annotation instanceof FragmentParameter fragmentParameter) {
-                Parameter parameter = new Parameter(element.getElement(), fragmentParameter.optional());
+            } else if (annotation instanceof com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter fragmentParameter) {
+                FieldScreenParameter parameter = new FieldScreenParameter(element.getElement(), fragmentParameter.optional());
                 fragmentDataBuilder.withParameter(parameter);
             } else if (annotation instanceof FragmentStatePersisted fragmentStatePersisted) {
-                Field variableInfo = new Field(element.getElement());
+                FieldPersisted variableInfo = new FieldPersisted(element.getElement());
                 fragmentDataBuilder.withPersistedVariable(variableInfo);
             } else if (annotation instanceof BindView bindView) {
-                ViewBinding viewBindingInfo = new ViewBinding(element.getElement(), bindView.name());
+                FieldViewBinding viewBindingInfo = new FieldViewBinding(element.getElement(), bindView.name());
                 fragmentDataBuilder.withViewBinding(viewBindingInfo);
             }
         });
@@ -63,7 +64,7 @@ public class FragmentAnnotationReader extends AnnotationReader {
         Map<Class<? extends Annotation>, ElementKind> targets = new HashMap<>();
         targets.put(LightbulbFragment.class, CLASS);
         targets.put(FragmentScreen.class, CLASS);
-        targets.put(FragmentParameter.class, FIELD);
+        targets.put(com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter.class, FIELD);
         targets.put(FragmentStatePersisted.class, FIELD);
         targets.put(BindView.class, FIELD);
         return targets;

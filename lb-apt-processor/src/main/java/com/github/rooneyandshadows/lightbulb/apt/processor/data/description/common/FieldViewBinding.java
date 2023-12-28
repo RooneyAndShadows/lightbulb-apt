@@ -2,10 +2,10 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.com
 
 import javax.lang.model.element.Element;
 
-public class ViewBinding extends Field {
+public class FieldViewBinding extends Field {
     private final String resourceName;
 
-    public ViewBinding(Element fieldElement, String resourceName) {
+    public FieldViewBinding(Element fieldElement, String resourceName) {
         super(fieldElement);
         this.resourceName = resourceName;
     }

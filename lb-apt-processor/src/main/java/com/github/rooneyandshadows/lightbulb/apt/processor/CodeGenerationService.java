@@ -24,7 +24,7 @@ public class CodeGenerationService {
 
     public CodeGenerationService(Filer filer, Messager messager, Elements elements, RoundEnvironment roundEnvironment) {
         steps.add(new ReadAnnotationsStep(messager, elements, roundEnvironment));
-        steps.add(new GenerateCodeStep(filer));
+        steps.add(new GenerateCodeStep(filer, elements));
     }
 
     public void process() {

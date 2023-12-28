@@ -11,6 +11,7 @@ import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +24,8 @@ public class ParcelableGenerator extends CodeGenerator {
     private final String parcelablePackage;
     private final List<LightbulbParcelableDescription> parcelableDescriptions;
 
-    public ParcelableGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, annotationResultsRegistry);
+    public ParcelableGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer,elements, annotationResultsRegistry);
         parcelablePackage = PackageNames.getParcelablePackage();
         parcelableDescriptions = annotationResultsRegistry.getParcelableDescriptions();
     }

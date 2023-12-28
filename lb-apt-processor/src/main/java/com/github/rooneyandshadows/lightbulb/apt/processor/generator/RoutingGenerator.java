@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
@@ -9,6 +9,7 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
@@ -20,8 +21,8 @@ import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNam
 public class RoutingGenerator extends CodeGenerator {
     private final ClassName screensClassName;
 
-    public RoutingGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, annotationResultsRegistry);
+    public RoutingGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer,elements, annotationResultsRegistry);
         screensClassName = ClassNames.getRoutingScreensClassName();
     }
 
@@ -180,7 +181,7 @@ public class RoutingGenerator extends CodeGenerator {
                     .addAnnotation(Override.class)
                     .returns(fragmentClassName);
 
-            fragmentInfo.getParameters().forEach(paramInfo -> {
+            fragmentInfo.getScreenParameterFields().forEach(paramInfo -> {
                 String parameterName = paramInfo.getName();
                 TypeName parameterType = paramInfo.getTypeInformation().getTypeName();
                 FieldSpec.Builder field = FieldSpec.builder(parameterType, parameterName, Modifier.PRIVATE);
@@ -255,11 +256,11 @@ public class RoutingGenerator extends CodeGenerator {
                 .build();
     }
 
-    private String generateCommaSeparatedParamsString(boolean includeOptional, LightbulbFragmentDescription fragmentData, Consumer<Parameter> consumer) {
+    private String generateCommaSeparatedParamsString(boolean includeOptional, LightbulbFragmentDescription fragmentData, Consumer<FieldScreenParameter> consumer) {
         String paramsString = "";
-        List<Parameter> collection = fragmentData.getFragmentParameters(includeOptional);
+        List<FieldScreenParameter> collection = fragmentData.getFragmentParameters(includeOptional);
         for (int index = 0; index < collection.size(); index++) {
-            Parameter param = collection.get(index);
+            FieldScreenParameter param = collection.get(index);
             boolean isLast = index == collection.size() - 1;
             consumer.accept(param);
             paramsString = paramsString.concat(param.getName());

@@ -9,12 +9,11 @@ import javax.lang.model.element.Modifier;
 
 
 @SuppressWarnings("DuplicatedCode")
-public class Field {
-    protected final String name;
-    protected final TypeInformation typeInformation;
+public class Field extends Variable {
+    protected final Element element;
+    protected final Element enclosingClassElement;
     protected final String setterName;
     protected final String getterName;
-    protected final Element element;
     protected final Modifier accessModifier;
     protected final Modifier setterAccessModifier;
     protected final Modifier getterAccessModifier;
@@ -24,19 +23,19 @@ public class Field {
     protected final boolean hasGetter;
 
     public Field(Element fieldElement) {
-        Element classElement = fieldElement.getEnclosingElement();
+        super(ElementUtils.getSimpleName(fieldElement),fieldElement.asType());
+        this.enclosingClassElement = fieldElement.getEnclosingElement();
         this.element = fieldElement;
-        this.typeInformation = new TypeInformation(fieldElement.asType());
-        this.name = ElementUtils.getSimpleName(fieldElement);
         this.setterName = MemberUtils.getFieldSetterName(name);
         this.getterName = MemberUtils.getFieldGetterName(name);
         this.accessModifier = ElementUtils.getAccessModifier(fieldElement);
-        this.setterAccessModifier = ElementUtils.getMethodAccessModifier(classElement, setterName);
-        this.getterAccessModifier = ElementUtils.getMethodAccessModifier(classElement, getterName);
+        this.setterAccessModifier = ElementUtils.getMethodAccessModifier(enclosingClassElement, setterName);
+        this.getterAccessModifier = ElementUtils.getMethodAccessModifier(enclosingClassElement, getterName);
         this.isFinal = ElementUtils.isFinal(fieldElement);
         this.isNullable = fieldElement.getAnnotation(Nullable.class) != null;
-        this.hasSetter = ElementUtils.scanForSetter(classElement, name);
-        this.hasGetter = ElementUtils.scanForGetter(classElement, name);
+        this.hasSetter = ElementUtils.scanForSetter(enclosingClassElement, name);
+        this.hasGetter = ElementUtils.scanForGetter(enclosingClassElement, name);
+
     }
 
     public boolean accessModifierAtLeast(Modifier target) {
@@ -46,14 +45,6 @@ public class Field {
         }
 
         return accessModifier.ordinal() <= target.ordinal();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public TypeInformation getTypeInformation() {
-        return typeInformation;
     }
 
     public String getSetterName() {

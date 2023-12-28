@@ -9,6 +9,7 @@ import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +21,8 @@ public class StorageGenerator extends CodeGenerator {
     private final String storageKeyFieldName = "STORAGE_KEY";
     private final String storagePackage;
 
-    public StorageGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, annotationResultsRegistry);
+    public StorageGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, elements, annotationResultsRegistry);
         storagePackage = PackageNames.getStoragePackage();
     }
 

@@ -7,6 +7,8 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.Element;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +20,8 @@ public class ActivityGenerator extends CodeGenerator {
     private final boolean hasRouter;
     private final boolean hasStorage;
 
-    public ActivityGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, annotationResultsRegistry);
+    public ActivityGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, elements, annotationResultsRegistry);
         hasRouter = annotationResultsRegistry.hasRoutingScreens();
         hasStorage = annotationResultsRegistry.hasStorageDescriptions();
     }

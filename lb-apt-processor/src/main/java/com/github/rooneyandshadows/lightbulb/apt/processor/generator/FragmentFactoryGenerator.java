@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
@@ -12,6 +12,7 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,8 @@ import static javax.lang.model.element.Modifier.*;
 public class FragmentFactoryGenerator extends CodeGenerator {
     private final String fragmentsFactoryPackage;
 
-    public FragmentFactoryGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, annotationResultsRegistry);
+    public FragmentFactoryGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer,elements, annotationResultsRegistry);
         fragmentsFactoryPackage = PackageNames.getFragmentsFactoryPackage();
     }
 
@@ -106,7 +107,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private CodeBlock generateWriteParamIntoBundleBlock(Parameter parameter, String bundleVariableName) {
+    private CodeBlock generateWriteParamIntoBundleBlock(FieldScreenParameter parameter, String bundleVariableName) {
         TypeInformation parameterTypeInfo = parameter.getTypeInformation();
         String variableName = parameter.getName();
         CodeBlock.Builder writeIntoBundleCodeBlock = CodeBlock.builder();

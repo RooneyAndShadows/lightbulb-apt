@@ -1,9 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.data.description;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.base.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldPersisted;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.ViewBinding;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldViewBinding;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.ClassName;
 
@@ -18,9 +19,9 @@ public final class LightbulbFragmentDescription extends BaseDescription {
     private final String screenGroupName;
     private final String screenName;
     private final String layoutName;
-    private final List<Parameter> parameters;
-    private final List<Field> persistedVariables;
-    private final List<ViewBinding> viewBindings;
+    private final List<FieldScreenParameter> screenParameterFields;
+    private final List<FieldPersisted> persistedFields;
+    private final List<FieldViewBinding> viewBindingFields;
 
     public LightbulbFragmentDescription(
             ClassName className,
@@ -30,18 +31,18 @@ public final class LightbulbFragmentDescription extends BaseDescription {
             String screenGroupName,
             String screenName,
             String layoutName,
-            List<Parameter> parameters,
-            List<Field> persistedVariables,
-            List<ViewBinding> viewBindings
+            List<FieldScreenParameter> screenParameterFields,
+            List<FieldPersisted> persistedFields,
+            List<FieldViewBinding> viewBindingFields
     ) {
         super(className, superClassName, instrumentedClassName, canBeInstantiated);
         this.canBeInstantiated = canBeInstantiated;
         this.screenGroupName = (screenGroupName == null || screenGroupName.isEmpty()) ? "Common" : screenGroupName;
         this.screenName = screenName;
         this.layoutName = layoutName;
-        this.parameters = parameters;
-        this.persistedVariables = persistedVariables;
-        this.viewBindings = viewBindings;
+        this.screenParameterFields = screenParameterFields;
+        this.persistedFields = persistedFields;
+        this.viewBindingFields = viewBindingFields;
     }
 
     public boolean isScreen() {
@@ -64,35 +65,35 @@ public final class LightbulbFragmentDescription extends BaseDescription {
         return layoutName;
     }
 
-    public List<Parameter> getParameters() {
-        return parameters;
+    public List<FieldScreenParameter> getScreenParameterFields() {
+        return screenParameterFields;
     }
 
-    public List<Field> getPersistedVariables() {
-        return persistedVariables;
+    public List<FieldPersisted> getPersistedFields() {
+        return persistedFields;
     }
 
-    public List<ViewBinding> getViewBindings() {
-        return viewBindings;
+    public List<FieldViewBinding> getViewBindingFields() {
+        return viewBindingFields;
     }
 
-    public List<Parameter> getFragmentParameters(boolean includeOptional) {
-        return includeOptional ? parameters : parameters.stream()
+    public List<FieldScreenParameter> getFragmentParameters(boolean includeOptional) {
+        return includeOptional ? screenParameterFields : screenParameterFields.stream()
                 .filter(paramInfo -> !paramInfo.isOptional())
                 .collect(Collectors.toList());
     }
 
     public boolean hasOptionalParameters() {
-        return parameters.stream().anyMatch(Parameter::isOptional);
+        return screenParameterFields.stream().anyMatch(FieldScreenParameter::isOptional);
     }
 
     public static final class Builder extends BaseDescriptionBuilder<LightbulbFragmentDescription> {
         private String screenName;
         private String screenGroupName;
         private String layoutName;
-        private final List<Parameter> parameters = new ArrayList<>();
-        private final List<Field> persistedVariables = new ArrayList<>();
-        private final List<ViewBinding> viewBindings = new ArrayList<>();
+        private final List<FieldScreenParameter> parameters = new ArrayList<>();
+        private final List<FieldPersisted> persistedVariables = new ArrayList<>();
+        private final List<FieldViewBinding> viewBindings = new ArrayList<>();
 
         public Builder(Elements elements, TypeElement fragmentClassElement) {
             super(elements, fragmentClassElement, PackageNames.getFragmentsPackage());
@@ -126,15 +127,15 @@ public final class LightbulbFragmentDescription extends BaseDescription {
             this.layoutName = layoutName;
         }
 
-        public void withParameter(Parameter parameter) {
+        public void withParameter(FieldScreenParameter parameter) {
             this.parameters.add(parameter);
         }
 
-        public void withPersistedVariable(Field persistedVariable) {
+        public void withPersistedVariable(FieldPersisted persistedVariable) {
             this.persistedVariables.add(persistedVariable);
         }
 
-        public void withViewBinding(ViewBinding viewBinding) {
+        public void withViewBinding(FieldViewBinding viewBinding) {
             this.viewBindings.add(viewBinding);
         }
     }

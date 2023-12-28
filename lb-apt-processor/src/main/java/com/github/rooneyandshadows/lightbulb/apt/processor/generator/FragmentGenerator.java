@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator;
@@ -12,6 +12,7 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +26,8 @@ import static javax.lang.model.element.Modifier.*;
 public class FragmentGenerator extends CodeGenerator {
     protected final ClassName ANDROID_R;
 
-    public FragmentGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, annotationResultsRegistry);
+    public FragmentGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer,elements, annotationResultsRegistry);
         this.ANDROID_R = ClassNames.androidResources();
     }
 
@@ -75,9 +76,9 @@ public class FragmentGenerator extends CodeGenerator {
 
     private void generateFields(LightbulbFragmentDescription fragment, List<FieldSpec> fields, List<MethodSpec> methods) {
         List<Field> targets = new ArrayList<>();
-        targets.addAll(fragment.getParameters());
-        targets.addAll(fragment.getPersistedVariables());
-        targets.addAll(fragment.getViewBindings());
+        targets.addAll(fragment.getScreenParameterFields());
+        targets.addAll(fragment.getPersistedFields());
+        targets.addAll(fragment.getViewBindingFields());
 
         targets.forEach(field -> {
             boolean hasSetter = field.hasSetter();
@@ -116,8 +117,8 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private void generateOnCreateMethod(LightbulbFragmentDescription fragment, List<MethodSpec> destination) {
-        boolean hasParameters = !fragment.getParameters().isEmpty();
-        boolean hasPersistedVars = !fragment.getPersistedVariables().isEmpty();
+        boolean hasParameters = !fragment.getScreenParameterFields().isEmpty();
+        boolean hasPersistedVars = !fragment.getPersistedFields().isEmpty();
 
         if (!hasParameters && !hasPersistedVars) {
             return;
@@ -174,7 +175,7 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private void generateOnViewCreatedMethod(LightbulbFragmentDescription fragment, List<MethodSpec> destination) {
-        if (fragment.getViewBindings().isEmpty()) {
+        if (fragment.getViewBindingFields().isEmpty()) {
             return;
         }
 
@@ -186,7 +187,7 @@ public class FragmentGenerator extends CodeGenerator {
                 .addStatement("super.onViewCreated(fragmentView,savedInstanceState)")
                 .returns(void.class);
 
-        fragment.getViewBindings().forEach(bindingInfo -> {
+        fragment.getViewBindingFields().forEach(bindingInfo -> {
             String fieldName = bindingInfo.getName();
             String fieldSetterName = bindingInfo.getSetterName();
             String resourceName = bindingInfo.getResourceName();
@@ -204,8 +205,8 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private void generateOnSaveInstanceStateMethod(LightbulbFragmentDescription fragment, List<MethodSpec> destination) {
-        boolean hasParameters = !fragment.getParameters().isEmpty();
-        boolean hasPersistedVars = !fragment.getPersistedVariables().isEmpty();
+        boolean hasParameters = !fragment.getScreenParameterFields().isEmpty();
+        boolean hasPersistedVars = !fragment.getPersistedFields().isEmpty();
 
         if (!hasParameters && !hasPersistedVars) {
             return;
@@ -230,11 +231,11 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ClassNames.ANDROID_BUNDLE, argumentsParameterName)
                 .returns(void.class);
 
-        if (fragment.getParameters().isEmpty()) {
+        if (fragment.getScreenParameterFields().isEmpty()) {
             return;
         }
 
-        fragment.getParameters().forEach(param -> {
+        fragment.getScreenParameterFields().forEach(param -> {
             CodeBlock readStatement = generateReadParameterFromBundle(param, argumentsParameterName);
             builder.addCode(readStatement);
         });
@@ -250,8 +251,8 @@ public class FragmentGenerator extends CodeGenerator {
                 .returns(void.class);
 
         List<Field> fieldsToSave = new ArrayList<>();
-        fieldsToSave.addAll(fragmentInfo.getParameters());
-        fieldsToSave.addAll(fragmentInfo.getPersistedVariables());
+        fieldsToSave.addAll(fragmentInfo.getScreenParameterFields());
+        fieldsToSave.addAll(fragmentInfo.getPersistedFields());
 
         if (fieldsToSave.isEmpty()) {
             return;
@@ -272,13 +273,13 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ClassNames.ANDROID_BUNDLE, "fragmentSavedInstanceState")
                 .returns(void.class);
 
-        if (fragmentInfo.getParameters().isEmpty() && fragmentInfo.getPersistedVariables().isEmpty()) {
+        if (fragmentInfo.getScreenParameterFields().isEmpty() && fragmentInfo.getPersistedFields().isEmpty()) {
             return;
         }
 
         List<Field> fieldsToRestore = new ArrayList<>();
-        fieldsToRestore.addAll(fragmentInfo.getParameters());
-        fieldsToRestore.addAll(fragmentInfo.getPersistedVariables());
+        fieldsToRestore.addAll(fragmentInfo.getScreenParameterFields());
+        fieldsToRestore.addAll(fragmentInfo.getPersistedFields());
 
         fieldsToRestore.forEach(field -> {
             CodeBlock readStatement = generateReadFromBundleBlock(field, "fragmentSavedInstanceState");
@@ -288,7 +289,7 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private CodeBlock generateReadParameterFromBundle(Parameter parameter, String bundleVariableName) {
+    private CodeBlock generateReadParameterFromBundle(FieldScreenParameter parameter, String bundleVariableName) {
         TypeInformation type = parameter.getTypeInformation();
         String varName = parameter.getName();
         String tmpVarName = varName.concat("FromBundle");

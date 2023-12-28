@@ -3,10 +3,10 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.com
 import javax.lang.model.element.Element;
 
 @SuppressWarnings("DuplicatedCode")
-public class Parameter extends Field {
+public class FieldScreenParameter extends Field {
     private final boolean optional;
 
-    public Parameter(Element element, boolean optional) {
+    public FieldScreenParameter(Element element, boolean optional) {
         super(element);
         this.optional = optional;
     }

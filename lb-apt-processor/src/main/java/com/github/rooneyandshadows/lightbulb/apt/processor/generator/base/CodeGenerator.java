@@ -1,27 +1,27 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.util.Elements;
 
 import java.lang.annotation.Annotation;
-
-import static com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator.*;
 
 @SuppressWarnings("SameParameterValue")
 public abstract class CodeGenerator {
     protected final Filer filer;
+    protected final Elements elements;
     private final AnnotationResultsRegistry annotationResultsRegistry;
 
-    public CodeGenerator(Filer filer, AnnotationResultsRegistry annotationResultsRegistry) {
+    public CodeGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
         this.filer = filer;
+        this.elements = elements;
         this.annotationResultsRegistry = annotationResultsRegistry;
     }
 
@@ -35,7 +35,7 @@ public abstract class CodeGenerator {
         }
     }
 
-    public ParameterSpec generateParameterSpec(Parameter parameter) {
+    public ParameterSpec generateParameterSpec(FieldScreenParameter parameter) {
         boolean isNullable = parameter.isNullable() || parameter.isOptional();
         Class<? extends Annotation> nullabilityAnnotation = isNullable ? Nullable.class : NotNull.class;
 

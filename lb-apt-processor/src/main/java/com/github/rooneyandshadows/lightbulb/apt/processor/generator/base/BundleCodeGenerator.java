@@ -1,12 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DATE_UTILS;
 
 public class BundleCodeGenerator {
 

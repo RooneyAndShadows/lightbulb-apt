@@ -25,6 +25,15 @@ public class ElementUtils {
         return classElement.getKind() == ElementKind.CLASS && !classElement.getModifiers().contains(Modifier.ABSTRACT);
     }
 
+    public static TypeMirror getTypeMirror(Elements elements, Class<?> clazz) {
+        return getTypeMirror(elements,clazz.getCanonicalName());
+    }
+
+    public static TypeMirror getTypeMirror(Elements elements, String canonicalName) {
+        TypeElement t = elements.getTypeElement(canonicalName);
+        return t.asType();
+    }
+
     public static String getPackage(Elements elements, Element element) {
         return elements.getPackageOf(element)
                 .getQualifiedName()
