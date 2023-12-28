@@ -6,9 +6,12 @@ import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
@@ -36,11 +39,19 @@ public class TypeInformation {
     protected final TypeMirror typeMirror;
     protected final TypeName typeName;
     protected final boolean isPrimitive;
+    protected final boolean canBeInstantiated;
 
-    public TypeInformation(Element element) {
-        this.typeMirror = element.asType();
+    public TypeInformation(TypeMirror typeMirror) {
+        this.typeMirror = typeMirror;
         this.isPrimitive = !(typeMirror instanceof DeclaredType);
         this.typeName = ClassName.get(typeMirror);
+        if (isPrimitive) {
+            this.canBeInstantiated = false;
+        } else {
+            DeclaredType declaredType = ((DeclaredType) typeMirror);
+            TypeElement typeElement = (TypeElement) declaredType.asElement();
+            this.canBeInstantiated = typeElement.getKind() == ElementKind.CLASS && !typeElement.getModifiers().contains(Modifier.ABSTRACT);
+        }
     }
 
     public TypeMirror getTypeMirror() {
@@ -61,8 +72,7 @@ public class TypeInformation {
         DeclaredType type = (DeclaredType) typeMirror;
 
         type.getTypeArguments().forEach(typeArg -> {
-            TypeElement typeArgElement = (TypeElement) ((DeclaredType) typeArg).asElement();
-            result.add(new TypeInformation(typeArgElement));
+            result.add(new TypeInformation(typeArg));
         });
 
         return result;

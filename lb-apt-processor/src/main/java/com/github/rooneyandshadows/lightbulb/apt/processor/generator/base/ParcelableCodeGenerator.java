@@ -6,6 +6,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.squareup.javapoet.TypeName.*;
 
 @SuppressWarnings("DuplicatedCode")
 public class ParcelableCodeGenerator {
@@ -83,7 +84,7 @@ public class ParcelableCodeGenerator {
         String tmpVarName = variableName.concat("OffsetDateString");
         String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
         cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
         cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                 .addStatement("$T $L = $T.getOffsetDateString($L)", STRING, tmpVarName, DATE_UTILS, fieldAccessor)
@@ -98,7 +99,7 @@ public class ParcelableCodeGenerator {
         String tmpVarName = variableName.concat("OffsetDateString");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$T $L = $L.readString()", STRING, tmpVarName, parcelVariableName)
                 .addStatement("$L = $T.getOffsetDateFromString($L)", variableName, DATE_UTILS, tmpVarName)
@@ -111,7 +112,7 @@ public class ParcelableCodeGenerator {
         String nullMarkerVariable = variableName.concat("Marker");
         String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
         cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
         cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                 .addStatement("$T $L = $T.getDateString($L)", STRING, tmpVarName, DATE_UTILS, fieldAccessor)
@@ -126,7 +127,7 @@ public class ParcelableCodeGenerator {
         String tmpVarName = variableName.concat("DateString");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$T $L = $L.readString()", STRING, tmpVarName, parcelVariableName)
                 .addStatement("$L = $T.getDateFromString($L)", variableName, DATE_UTILS, tmpVarName)
@@ -144,7 +145,7 @@ public class ParcelableCodeGenerator {
             String variableName = field.getName();
             String nullMarkerVariable = variableName.concat("Marker");
 
-            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
             cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
             cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                     .addStatement("$L.writeInt($L)", parcelVariableName, fieldAccessor)
@@ -162,7 +163,7 @@ public class ParcelableCodeGenerator {
         } else {
             String existenceVar = variableName.concat("Exists");
             cbBuilder.addStatement("$T $L = null", typeName, variableName);
-            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
                     .addStatement("$L = $L.readInt()", variableName, parcelVariableName)
                     .endControlFlow();
@@ -174,7 +175,7 @@ public class ParcelableCodeGenerator {
         String nullMarkerVariable = variableName.concat("Marker");
         String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
         cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
         cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                 .addStatement("$L.writeString($L)", parcelVariableName, fieldAccessor)
@@ -187,7 +188,7 @@ public class ParcelableCodeGenerator {
         String existenceVar = variableName.concat("Exists");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$L = $L.readString()", variableName, parcelVariableName)
                 .endControlFlow();
@@ -204,7 +205,7 @@ public class ParcelableCodeGenerator {
             String variableName = field.getName();
             String nullMarkerVariable = variableName.concat("Marker");
 
-            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
             cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
             cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                     .addStatement("$L.writeDouble($L)", parcelVariableName, fieldAccessor)
@@ -222,7 +223,7 @@ public class ParcelableCodeGenerator {
         } else {
             String existenceVar = variableName.concat("Exists");
             cbBuilder.addStatement("$T $L = null", typeName, variableName);
-            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
                     .addStatement("$L = $L.readDouble()", variableName, parcelVariableName)
                     .endControlFlow();
@@ -240,7 +241,7 @@ public class ParcelableCodeGenerator {
             String variableName = field.getName();
             String nullMarkerVariable = variableName.concat("Marker");
 
-            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
             cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
             cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                     .addStatement("$L.writeFloat($L)", parcelVariableName, fieldAccessor)
@@ -258,7 +259,7 @@ public class ParcelableCodeGenerator {
         } else {
             String existenceVar = variableName.concat("Exists");
             cbBuilder.addStatement("$T $L = null", typeName, variableName);
-            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
                     .addStatement("$L = $L.readFloat()", variableName, parcelVariableName)
                     .endControlFlow();
@@ -276,7 +277,7 @@ public class ParcelableCodeGenerator {
             String variableName = field.getName();
             String nullMarkerVariable = variableName.concat("Marker");
 
-            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
             cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
             cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                     .addStatement("$L.writeLong($L)", parcelVariableName, fieldAccessor)
@@ -294,7 +295,7 @@ public class ParcelableCodeGenerator {
         } else {
             String existenceVar = variableName.concat("Exists");
             cbBuilder.addStatement("$T $L = null", typeName, variableName);
-            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
                     .addStatement("$L = $L.readLong()", variableName, parcelVariableName)
                     .endControlFlow();
@@ -312,7 +313,7 @@ public class ParcelableCodeGenerator {
             String variableName = field.getName();
             String nullMarkerVariable = variableName.concat("Marker");
 
-            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
             cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
             cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                     .addStatement("$L.writeInt($L ? 1 : 0)", parcelVariableName, fieldAccessor)
@@ -330,7 +331,7 @@ public class ParcelableCodeGenerator {
         } else {
             String existenceVar = variableName.concat("Exists");
             cbBuilder.addStatement("$T $L = null", typeName, variableName);
-            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
             cbBuilder.beginControlFlow("if($L)", existenceVar)
                     .addStatement("$L = $L.readInt() == 1", variableName, parcelVariableName)
                     .endControlFlow();
@@ -343,7 +344,7 @@ public class ParcelableCodeGenerator {
         String tmpVarName = variableName.concat("uuidString");
         String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
         cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
         cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                 .addStatement("$T $L = $L.toString()", STRING, tmpVarName, fieldAccessor)
@@ -358,7 +359,7 @@ public class ParcelableCodeGenerator {
         String tmpVarName = variableName.concat("UuidString");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$T $L = $L.readString()", STRING, tmpVarName, parcelVariableName)
                 .addStatement("$L = $T.fromString($L)", variableName, UUID, tmpVarName)
@@ -370,7 +371,7 @@ public class ParcelableCodeGenerator {
         String nullMarkerVariable = variableName.concat("Marker");
         String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
         cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
         cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                 .addStatement("$L.writeParcelable($L,0)", parcelVariableName, fieldAccessor)
@@ -383,7 +384,7 @@ public class ParcelableCodeGenerator {
         String existenceVar = variableName.concat("Exists");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
                 .addStatement("$L = $L.readParcelable(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, typeName)
@@ -398,7 +399,7 @@ public class ParcelableCodeGenerator {
         String nullMarkerVariable = variableName.concat("Marker");
         String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
         cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
         cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                 .addStatement("$L.writeSparseArray($L)", parcelVariableName, fieldAccessor)
@@ -411,7 +412,7 @@ public class ParcelableCodeGenerator {
         String existenceVar = variableName.concat("Exists");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
                 .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, typeName)
@@ -426,7 +427,7 @@ public class ParcelableCodeGenerator {
         String nullMarkerVariable = variableName.concat("Marker");
         String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
         cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
         cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                 .addStatement("$L.writeList($L)", parcelVariableName, fieldAccessor)
@@ -440,7 +441,7 @@ public class ParcelableCodeGenerator {
         String existenceVar = variableName.concat("Exists");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$L = new $T()", variableName, typeName)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
@@ -456,7 +457,7 @@ public class ParcelableCodeGenerator {
         String nullMarkerVariable = variableName.concat("Marker");
         String fieldAccessor = String.format("this.%s", field.getName());
 
-        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", TypeName.BYTE, nullMarkerVariable, TypeName.BYTE, fieldAccessor);
+        cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, fieldAccessor);
         cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
         cbBuilder.beginControlFlow("if($L != null)", fieldAccessor)
                 .addStatement("$L.writeMap($L)", parcelVariableName, fieldAccessor)
@@ -471,7 +472,7 @@ public class ParcelableCodeGenerator {
         String existenceVar = variableName.concat("Exists");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", TypeName.BOOLEAN, existenceVar, TypeName.INT, parcelVariableName);
+        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$L = new $T()", variableName, typeName)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))

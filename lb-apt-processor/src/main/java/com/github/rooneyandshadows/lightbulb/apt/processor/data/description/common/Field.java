@@ -26,7 +26,7 @@ public class Field {
     public Field(Element fieldElement) {
         Element classElement = fieldElement.getEnclosingElement();
         this.element = fieldElement;
-        this.typeInformation = new TypeInformation(fieldElement);
+        this.typeInformation = new TypeInformation(fieldElement.asType());
         this.name = ElementUtils.getSimpleName(fieldElement);
         this.setterName = MemberUtils.getFieldSetterName(name);
         this.getterName = MemberUtils.getFieldGetterName(name);
