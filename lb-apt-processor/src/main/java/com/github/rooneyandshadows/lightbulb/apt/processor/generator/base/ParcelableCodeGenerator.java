@@ -5,6 +5,8 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.comm
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
+import java.util.List;
+
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 import static com.squareup.javapoet.TypeName.*;
 
@@ -45,7 +47,6 @@ public class ParcelableCodeGenerator {
 
     public static void generateReadStatement(CodeBlock.Builder cbBuilder, Field field, String bundleVariableName) {
         TypeInformation type = field.getTypeInformation();
-        String variableName = field.getName();
 
         if (type.isString()) {
             readString(cbBuilder, field, bundleVariableName);
@@ -389,7 +390,7 @@ public class ParcelableCodeGenerator {
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
                 .addStatement("$L = $L.readParcelable(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, typeName)
                 .nextControlFlow("else")
-                .addStatement("$L = $L.getParcelable(this.getClass().getClassLoader())", variableName, parcelVariableName)
+                .addStatement("$L = $L.readParcelable(this.getClass().getClassLoader())", variableName, parcelVariableName)
                 .endControlFlow()
                 .endControlFlow();
     }
@@ -407,15 +408,18 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readSparseArray(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
-        TypeName typeName = field.getTypeInformation().getTypeName();
+        TypeInformation type = field.getTypeInformation();
+        List<TypeInformation> typeArgs = type.getParametrizedTypes();
+        TypeName typeName = type.getTypeName();
+        TypeName valTypeName = typeArgs.get(0).getTypeName();
         String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
 
-        cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
-        cbBuilder.beginControlFlow("if($L)", existenceVar)
+        cbBuilder.addStatement("$T $L = null", typeName, variableName)
+                .addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName)
+                .beginControlFlow("if($L)", existenceVar)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, typeName)
+                .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, valTypeName)
                 .nextControlFlow("else")
                 .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader())", variableName, parcelVariableName)
                 .endControlFlow()
@@ -435,17 +439,19 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readList(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
-        TypeName typeName = field.getTypeInformation().getTypeName();
-        TypeName listTypeParamTypeName = field.getTypeInformation().getParametrizedTypes().get(0).getTypeName();
+        TypeInformation type = field.getTypeInformation();
+        List<TypeInformation> typeArgs = type.getParametrizedTypes();
+        TypeName typeName = type.getTypeName();
+        TypeName valTypeName = typeArgs.get(0).getTypeName();
         String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
 
-        cbBuilder.addStatement("$T $L = null", typeName, variableName);
-        cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
-        cbBuilder.beginControlFlow("if($L)", existenceVar)
-                .addStatement("$L = new $T()", variableName, typeName)
+        cbBuilder.addStatement("$T $L = null", typeName, variableName)
+                .addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName)
+                .beginControlFlow("if($L)", existenceVar)
+                .addStatement("$L = new $T()", variableName, type.canBeInstantiated() ? typeName : ARRAY_LIST)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L.readList($L,this.getClass().getClassLoader(),$T.class)", parcelVariableName, variableName, listTypeParamTypeName)
+                .addStatement("$L.readList($L,this.getClass().getClassLoader(),$T.class)", parcelVariableName, variableName, valTypeName)
                 .nextControlFlow("else")
                 .addStatement("$L.readList($L,this.getClass().getClassLoader())", parcelVariableName, variableName)
                 .endControlFlow()
@@ -465,18 +471,20 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readMap(CodeBlock.Builder cbBuilder, Field field, String parcelVariableName) {
-        TypeName typeName = field.getTypeInformation().getTypeName();
-        TypeName mapTypeParamKeyTypeName = field.getTypeInformation().getParametrizedTypes().get(0).getTypeName();
-        TypeName mapTypeParamValueTypeName = field.getTypeInformation().getParametrizedTypes().get(1).getTypeName();
+        TypeInformation type = field.getTypeInformation();
+        List<TypeInformation> typeArgs = type.getParametrizedTypes();
+        TypeName typeName = type.getTypeName();
+        TypeName keyTypeName = typeArgs.get(0).getTypeName();
+        TypeName valTypeName = typeArgs.get(1).getTypeName();
         String variableName = field.getName();
         String existenceVar = variableName.concat("Exists");
 
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
-                .addStatement("$L = new $T()", variableName, typeName)
+                .addStatement("$L = new $T()", variableName, type.canBeInstantiated() ? typeName : HASH_MAP)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L.readMap($L, this.getClass().getClassLoader(),$T.class,$T.class)", parcelVariableName, variableName, mapTypeParamKeyTypeName, mapTypeParamValueTypeName)
+                .addStatement("$L.readMap($L, this.getClass().getClassLoader(),$T.class,$T.class)", parcelVariableName, variableName, keyTypeName, valTypeName)
                 .nextControlFlow("else")
                 .addStatement("$L.readMap($L, this.getClass().getClassLoader())", parcelVariableName, variableName)
                 .endControlFlow()

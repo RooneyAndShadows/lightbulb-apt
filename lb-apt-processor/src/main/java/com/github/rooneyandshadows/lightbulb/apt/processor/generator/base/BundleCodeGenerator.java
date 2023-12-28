@@ -1,5 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
@@ -9,33 +10,33 @@ import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNam
 
 public class BundleCodeGenerator {
 
-    public static void generateWriteStatement(CodeBlock.Builder cbBuilder, TypeInformation type, String bundleVariableName, String variableAccessor, String key) {
+    public static void generateWriteStatement(CodeBlock.Builder cbBuilder, TypeInformation type, String bundleVariableName, String valueAccessor, String key) {
         boolean checkForNull = !type.isPrimitive();
 
         if (checkForNull) {
-            cbBuilder.beginControlFlow("if($L != null)", variableAccessor);
+            cbBuilder.beginControlFlow("if($L != null)", valueAccessor);
         }
 
         if (type.isString()) {
-            writeString(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeString(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.isUUID()) {
-            writeUUID(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeUUID(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.isInt()) {
-            writeInt(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeInt(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.isBoolean()) {
-            writeBoolean(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeBoolean(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.isFloat()) {
-            writeFloat(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeFloat(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.isLong()) {
-            writeLong(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeLong(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.isDouble()) {
-            writeDouble(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeDouble(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.isDate()) {
-            writeDate(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeDate(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.isOffsetDate()) {
-            writeOffsetDate(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeOffsetDate(cbBuilder, bundleVariableName, valueAccessor, key);
         } else if (type.is(ANDROID_PARCELABLE)) {
-            writeParcelable(cbBuilder, bundleVariableName, variableAccessor, key);
+            writeParcelable(cbBuilder, bundleVariableName, valueAccessor, key);
         } else {
             //NOT SUPPORTED TYPE
         }

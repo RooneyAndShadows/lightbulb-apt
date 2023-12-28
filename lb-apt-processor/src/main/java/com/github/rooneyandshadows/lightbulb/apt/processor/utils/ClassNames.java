@@ -6,10 +6,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
 import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.*;
 
@@ -59,6 +56,7 @@ public class ClassNames {
     public static final ClassName OBJECT = ClassName.get(Object.class);
     public static final ClassName MAP = ClassName.get(Map.class);
     public static final ClassName HASH_MAP = ClassName.get(HashMap.class);
+    public static final ClassName ARRAY_LIST = ClassName.get(ArrayList.class);
     public static final ClassName ILLEGAL_ARGUMENT_EXCEPTION = ClassName.get(IllegalArgumentException.class);
 
 

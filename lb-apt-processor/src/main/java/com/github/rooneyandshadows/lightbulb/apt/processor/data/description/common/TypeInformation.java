@@ -39,27 +39,21 @@ public class TypeInformation {
     protected final TypeMirror typeMirror;
     protected final TypeName typeName;
     protected final boolean isPrimitive;
-    protected final boolean canBeInstantiated;
 
     public TypeInformation(TypeMirror typeMirror) {
         this.typeMirror = typeMirror;
         this.isPrimitive = !(typeMirror instanceof DeclaredType);
         this.typeName = ClassName.get(typeMirror);
+    }
+
+    public boolean canBeInstantiated(){
         if (isPrimitive) {
-            this.canBeInstantiated = false;
+            return false;
         } else {
             DeclaredType declaredType = ((DeclaredType) typeMirror);
             TypeElement typeElement = (TypeElement) declaredType.asElement();
-            this.canBeInstantiated = typeElement.getKind() == ElementKind.CLASS && !typeElement.getModifiers().contains(Modifier.ABSTRACT);
+            return typeElement.getKind() == ElementKind.CLASS && !typeElement.getModifiers().contains(Modifier.ABSTRACT);
         }
-    }
-
-    public TypeMirror getTypeMirror() {
-        return typeMirror;
-    }
-
-    public TypeName getTypeName() {
-        return typeName;
     }
 
     public List<TypeInformation> getParametrizedTypes() {
@@ -76,6 +70,14 @@ public class TypeInformation {
         });
 
         return result;
+    }
+
+    public TypeMirror getTypeMirror() {
+        return typeMirror;
+    }
+
+    public TypeName getTypeName() {
+        return typeName;
     }
 
     public boolean isPrimitive() {
