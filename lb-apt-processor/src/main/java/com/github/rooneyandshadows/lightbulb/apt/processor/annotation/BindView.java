@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.annotations;
+package com.github.rooneyandshadows.lightbulb.apt.processor.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,8 +1,8 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common;
+package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
 import javax.lang.model.type.TypeMirror;
 
-public class Variable {
+public abstract class DeclaredEntity {
     protected final String name;
     protected final TypeInformation typeInformation;
 

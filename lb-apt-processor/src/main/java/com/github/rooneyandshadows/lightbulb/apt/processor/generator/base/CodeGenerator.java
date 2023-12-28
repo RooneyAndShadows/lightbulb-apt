@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldScreenParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.FieldScreenParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterSpec;

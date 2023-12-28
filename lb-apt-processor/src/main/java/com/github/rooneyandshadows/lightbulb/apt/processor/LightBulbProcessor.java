@@ -1,11 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbActivity;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbFragment;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentStatePersisted;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.BindView;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbActivity;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbFragment;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentStatePersisted;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.google.auto.service.AutoService;
 

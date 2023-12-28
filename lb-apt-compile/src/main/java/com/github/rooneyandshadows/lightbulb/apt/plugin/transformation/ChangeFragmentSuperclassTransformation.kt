@@ -2,10 +2,10 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation
 
 import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.IClassTransformer
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.BindView
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentStatePersisted
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbFragment
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.BindView
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentStatePersisted
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbFragment
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.*

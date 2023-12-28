@@ -1,11 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbStorage;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 
 import javax.annotation.processing.Messager;
@@ -19,10 +18,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata.*;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_STORAGE_DESCRIPTION;
 
 public class StorageAnnotationReader extends AnnotationReader {
-    private final List<LightbulbStorageDescription> storageDescriptions = new ArrayList<>();
+    private final List<StorageMetadata> storageMetadataList = new ArrayList<>();
 
     public StorageAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
         super(resultsRegistry, messager, elements, environment);
@@ -30,27 +30,29 @@ public class StorageAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        LightbulbStorageDescription.Builder storageDescriptionBuilder = new LightbulbStorageDescription.Builder(elements, target);
+        String name = null;
+        String[] subkeys = null;
+        List<TargetField> targetFields = ElementUtils.getFieldElements(target)
+                .stream()
+                .map(TargetField::new)
+                .toList();
 
-        annotatedElements.forEach(element -> {
+        for (AnnotatedElement element : annotatedElements) {
             Annotation annotation = element.getAnnotation();
             if (annotation instanceof LightbulbStorage lightbulbStorage) {
-                List<Field> fields = ElementUtils.getFieldElements((TypeElement) element.getElement())
-                        .stream()
-                        .map(Field::new)
-                        .toList();
-                storageDescriptionBuilder.withName(lightbulbStorage.name());
-                storageDescriptionBuilder.withSubKeys(lightbulbStorage.subKeys());
-                storageDescriptionBuilder.withFields(fields);
+                name = lightbulbStorage.name();
+                subkeys = lightbulbStorage.subKeys();
             }
-        });
+        }
 
-        storageDescriptions.add(storageDescriptionBuilder.build());
+        StorageMetadata metadata = new StorageMetadata(target, name, subkeys, targetFields);
+
+        storageMetadataList.add(metadata);
     }
 
     @Override
     protected void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry) {
-        resultRegistry.setResult(LIGHTBULB_STORAGE_DESCRIPTION, storageDescriptions);
+        resultRegistry.setResult(LIGHTBULB_STORAGE_DESCRIPTION, storageMetadataList);
     }
 
     @Override

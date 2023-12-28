@@ -1,8 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbApplication;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbApplication;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ApplicationMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbApplicationDescription;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
@@ -20,7 +21,7 @@ import java.util.Map;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_APPLICATION_DESCRIPTION;
 
 public class ApplicationAnnotationReader extends AnnotationReader {
-    private final List<LightbulbApplicationDescription> applicationDescriptions = new ArrayList<>();
+    private final List<ApplicationMetadata> applicationMetadataList = new ArrayList<>();
 
     public ApplicationAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
         super(resultsRegistry, messager, elements, environment);
@@ -28,14 +29,14 @@ public class ApplicationAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        LightbulbApplicationDescription.Builder applicationDataBuilder = new LightbulbApplicationDescription.Builder(elements, target);
+        ApplicationMetadata metadata = new ApplicationMetadata(target);
 
-        applicationDescriptions.add(applicationDataBuilder.build());
+        applicationMetadataList.add(metadata);
     }
 
     @Override
     protected void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry) {
-        resultRegistry.setResult(LIGHTBULB_APPLICATION_DESCRIPTION, applicationDescriptions);
+        resultRegistry.setResult(LIGHTBULB_APPLICATION_DESCRIPTION, applicationMetadataList);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.data;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.metadata.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,23 +21,23 @@ public final class AnnotationResultsRegistry {
         return (T) results.get(key);
     }
 
-    public List<LightbulbApplicationDescription> getApplicationDescriptions() {
+    public List<ApplicationMetadata> getApplicationDescriptions() {
         return getResult(LIGHTBULB_APPLICATION_DESCRIPTION);
     }
 
-    public List<LightbulbFragmentDescription> getFragmentDescriptions() {
+    public List<FragmentMetadata> getFragmentDescriptions() {
         return getResult(LIGHTBULB_FRAGMENT_DESCRIPTION);
     }
 
-    public List<LightbulbActivityDescription> getActivityDescriptions() {
+    public List<ActivityMetadata> getActivityDescriptions() {
         return getResult(LIGHTBULB_ACTIVITY_DESCRIPTION);
     }
 
-    public List<LightbulbStorageDescription> getStorageDescriptions() {
+    public List<StorageMetadata> getStorageDescriptions() {
         return getResult(LIGHTBULB_STORAGE_DESCRIPTION);
     }
 
-    public List<LightbulbParcelableDescription> getParcelableDescriptions() {
+    public List<ParcelableMetadata> getParcelableDescriptions() {
         return getResult(LIGHTBULB_PARCELABLE_DESCRIPTION);
     }
 
@@ -61,8 +62,8 @@ public final class AnnotationResultsRegistry {
     }
 
     public boolean hasRoutingScreens() {
-        List<LightbulbFragmentDescription> fragmentBindings = getFragmentDescriptions();
-        return fragmentBindings.stream().anyMatch(LightbulbFragmentDescription::isScreen);
+        List<FragmentMetadata> fragmentBindings = getFragmentDescriptions();
+        return fragmentBindings.stream().anyMatch(FragmentMetadata::isScreen);
     }
 
     public enum AnnotationResultTypes {

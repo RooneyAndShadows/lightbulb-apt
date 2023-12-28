@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common;
+package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;

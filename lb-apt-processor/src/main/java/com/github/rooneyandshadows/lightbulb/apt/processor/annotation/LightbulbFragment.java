@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.annotations;
+package com.github.rooneyandshadows.lightbulb.apt.processor.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,8 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface FragmentScreen {
-    String screenName() default "";
-
-    String screenGroup() default "";
+public @interface LightbulbFragment {
+    String layoutName() default "";
 }

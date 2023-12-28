@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.annotations;
+package com.github.rooneyandshadows.lightbulb.apt.processor.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,8 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface LightbulbStorage {
-    String name() default "Common";
-
-    String[] subKeys() default {};
+public @interface LightbulbActivity {
+    String fragmentContainerId() default "fragmentContainer";
 }

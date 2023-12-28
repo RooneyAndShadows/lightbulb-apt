@@ -1,9 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbParcelable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbParcelable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata.TargetField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbParcelableDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
@@ -20,10 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_PARCELABLE_DESCRIPTION;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_STORAGE_DESCRIPTION;
 
 public class ParcelableAnnotationReader extends AnnotationReader {
-    private final List<LightbulbParcelableDescription> parcelableDescriptions = new ArrayList<>();
+    private final List<ParcelableMetadata> parcelableMetadataList = new ArrayList<>();
 
     public ParcelableAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
         super(resultsRegistry, messager, elements, environment);
@@ -31,27 +30,19 @@ public class ParcelableAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        LightbulbParcelableDescription.Builder parcelableDescriptionBuilder = new LightbulbParcelableDescription.Builder(elements, target);
+        List<TargetField> targetFields = ElementUtils.getFieldElements(target)
+                .stream()
+                .map(TargetField::new)
+                .toList();
 
-        annotatedElements.forEach(element -> {
-            Annotation annotation = element.getAnnotation();
+        ParcelableMetadata metadata = new ParcelableMetadata(target, targetFields);
 
-            if (annotation instanceof LightbulbParcelable lightbulbParcelable) {
-                List<Field> fields = ElementUtils.getFieldElements((TypeElement) element.getElement())
-                        .stream()
-                        .map(Field::new)
-                        .toList();
-
-                parcelableDescriptionBuilder.withFields(fields);
-            }
-        });
-
-        parcelableDescriptions.add(parcelableDescriptionBuilder.build());
+        parcelableMetadataList.add(metadata);
     }
 
     @Override
     protected void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry) {
-        resultRegistry.setResult(LIGHTBULB_PARCELABLE_DESCRIPTION, parcelableDescriptions);
+        resultRegistry.setResult(LIGHTBULB_PARCELABLE_DESCRIPTION, parcelableMetadataList);
     }
 
     @Override

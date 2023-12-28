@@ -1,9 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.FieldScreenParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.common.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.FieldScreenParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;

@@ -1,9 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbActivityDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbActivity;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
 import javax.annotation.processing.Messager;
@@ -20,7 +20,7 @@ import java.util.Map;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_ACTIVITY_DESCRIPTION;
 
 public class ActivityAnnotationReader extends AnnotationReader {
-    private final List<LightbulbActivityDescription> activityBindings = new ArrayList<>();
+    private final List<ActivityMetadata> activityMetadataList = new ArrayList<>();
 
     public ActivityAnnotationReader(AnnotationResultsRegistry resultsRegistry, Messager messager, Elements elements, RoundEnvironment environment) {
         super(resultsRegistry, messager, elements, environment);
@@ -28,21 +28,23 @@ public class ActivityAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        LightbulbActivityDescription.Builder activityDataBuilder = new LightbulbActivityDescription.Builder(elements, target);
+        String fragmentContainerId = null;
 
-        annotatedElements.forEach(element -> {
+        for (AnnotatedElement element : annotatedElements) {
             Annotation annotation = element.getAnnotation();
-            if(annotation instanceof LightbulbActivity lightbulbActivity){
-                activityDataBuilder.withFragmentContainerId(lightbulbActivity.fragmentContainerId());
+            if (annotation instanceof LightbulbActivity lightbulbActivity) {
+                fragmentContainerId = lightbulbActivity.fragmentContainerId();
             }
-        });
+        }
 
-        activityBindings.add(activityDataBuilder.build());
+        ActivityMetadata metadata = new ActivityMetadata(target, fragmentContainerId);
+
+        activityMetadataList.add(metadata);
     }
 
     @Override
     protected void onAnnotationsExtracted(AnnotationResultsRegistry resultRegistry) {
-        resultRegistry.setResult(LIGHTBULB_ACTIVITY_DESCRIPTION, activityBindings);
+        resultRegistry.setResult(LIGHTBULB_ACTIVITY_DESCRIPTION, activityMetadataList);
     }
 
     @Override
