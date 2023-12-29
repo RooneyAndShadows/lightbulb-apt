@@ -4,8 +4,8 @@ package com.github.rooneyandshadows.lightbulb.apt.android.sample;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbActivity;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbActivity;
 
 @LightbulbActivity()
 public class MainActivity extends AppCompatActivity {

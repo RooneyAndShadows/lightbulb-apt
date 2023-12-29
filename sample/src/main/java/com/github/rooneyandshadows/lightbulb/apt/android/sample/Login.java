@@ -5,9 +5,9 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbFragment;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbFragment;
 
 
 @LightbulbFragment(layoutName = "frag_main")

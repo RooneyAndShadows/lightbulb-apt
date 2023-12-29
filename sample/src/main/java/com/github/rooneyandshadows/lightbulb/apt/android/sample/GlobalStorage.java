@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.sample;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotations.LightbulbStorage;
+
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbStorage;
 
 @LightbulbStorage(name = "global_storage")
 public class GlobalStorage {

@@ -10,6 +10,7 @@ import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.generateInstrumentedClassName;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getActivitiesPackage;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getStoragePackage;
 
 public final class StorageMetadata extends BaseMetadata<TypeElement> {
     private final String name;
@@ -26,7 +27,7 @@ public final class StorageMetadata extends BaseMetadata<TypeElement> {
         this.targetFields = targetFields;
         this.className = ClassNames.getClassName(element);
         this.superClassName = ClassNames.getSuperClassName(element);
-        this.instrumentedClassName = generateInstrumentedClassName(getActivitiesPackage(), className.simpleName());
+        this.instrumentedClassName = generateInstrumentedClassName(getStoragePackage(), className.simpleName());
     }
 
     public String getName() {

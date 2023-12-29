@@ -2,22 +2,18 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata.TargetField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredEntity;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 @SuppressWarnings("DuplicatedCode")
-public class Field extends DeclaredEntity {
+public class Field extends DeclaredValueHolder {
     protected final Element element;
     protected final Element enclosingClassElement;
     protected final String setterName;
@@ -63,6 +59,21 @@ public class Field extends DeclaredEntity {
 
     public static Field from(StorageMetadata.TargetField targetField) {
         return new Field(targetField.element());
+    }
+
+    @Override
+    public String getValueAccessor() {
+        String accessorStatement = (hasGetter()) ? getGetterName().concat("()") : name;
+        return String.format("this.%s", accessorStatement);
+    }
+
+    @Override
+    public String getValueSetStatement(String setVarName) {
+        if (hasSetter()) {
+            return String.format("this.%s(%s)", setterName, setVarName);
+        } else {
+            return String.format("this.%s = %s", name, setVarName);
+        }
     }
 
     public String getSetterName() {

@@ -4,8 +4,6 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegi
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.TypeInformation;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -15,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator.generateReadStatement;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator.generateWriteStatement;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getFragmentsPackage;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings({"SameParameterValue", "DuplicatedCode"})
@@ -225,8 +223,10 @@ public class FragmentGenerator extends CodeGenerator {
                 .returns(void.class);
 
         fragmentMetadata.getScreenParameters().forEach(parameter -> {
-            CodeBlock readStatement = generateReadParameterFromBundle(parameter, "arguments");
-            builder.addCode(readStatement);
+            Field field = Field.from(parameter);
+            CodeBlock readCodeBlock = generateReadStatement(field, "arguments", !parameter.optional(), !field.isNullable());
+
+            builder.addCode(readCodeBlock);
         });
 
         destination.add(builder.build());
@@ -253,7 +253,8 @@ public class FragmentGenerator extends CodeGenerator {
                 .returns(void.class);
 
         fieldsToSave.forEach(field -> {
-            CodeBlock writeStatement = generateWriteFieldIntoBundleBlock(field, "outState");
+            CodeBlock writeStatement = generateWriteStatement(field, "outState");
+
             builder.addCode(writeStatement);
         });
 
@@ -281,68 +282,10 @@ public class FragmentGenerator extends CodeGenerator {
                 .returns(void.class);
 
         fieldsToRestore.forEach(field -> {
-            CodeBlock readStatement = generateReadFromBundleBlock(field, "fragmentSavedInstanceState");
+            CodeBlock readStatement = generateReadStatement(field, "fragmentSavedInstanceState");
             builder.addCode(readStatement);
         });
 
         destination.add(builder.build());
-    }
-
-    private CodeBlock generateReadParameterFromBundle(FragmentMetadata.Parameter parameter, String bundleVariableName) {
-        Field field = Field.from(parameter);
-        TypeInformation type = field.getTypeInformation();
-        String varName = field.getName();
-        String tmpVarName = varName.concat("FromBundle");
-        boolean isOptional = parameter.optional();
-        boolean isNullable = field.isNullable();
-        boolean isNullableOrOptional = isNullable || isOptional;
-        boolean isPrimitive = type.isPrimitive();
-        CodeBlock.Builder codeBlock = CodeBlock.builder();
-
-        if (!isPrimitive && !isNullableOrOptional) {
-            codeBlock.beginControlFlow("if(!$L.containsKey($S))", bundleVariableName, varName)
-                    .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, String.format("%s is not optional.", varName))
-                    .endControlFlow();
-
-            generateReadStatement(codeBlock, type, bundleVariableName, tmpVarName, varName);
-            generateFieldSetValueStatement(codeBlock, field, tmpVarName);
-
-            codeBlock.beginControlFlow("if($L == null)", tmpVarName)
-                    .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, String.format("%s can not be null but null value received from bundle.", varName))
-                    .endControlFlow();
-        } else {
-            codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, varName);
-            generateReadStatement(codeBlock, type, bundleVariableName, tmpVarName, varName);
-            generateFieldSetValueStatement(codeBlock, field, tmpVarName);
-            codeBlock.endControlFlow();
-        }
-
-        return codeBlock.build();
-    }
-
-    private CodeBlock generateWriteFieldIntoBundleBlock(Field field, String bundleVariableName) {
-        TypeInformation parameterTypeInfo = field.getTypeInformation();
-        String fieldName = field.getName();
-        CodeBlock.Builder writeIntoBundleCodeBlock = CodeBlock.builder();
-        String accessorStatement = (field.hasGetter()) ? field.getGetterName().concat("()") : fieldName;
-        String variableAccessor = String.format("this.%s", accessorStatement);
-
-        BundleCodeGenerator.generateWriteStatement(writeIntoBundleCodeBlock, parameterTypeInfo, bundleVariableName, variableAccessor, fieldName);
-
-        return writeIntoBundleCodeBlock.build();
-    }
-
-    private CodeBlock generateReadFromBundleBlock(Field variable, String bundleVariableName) {
-        String varName = variable.getName();
-        String tmpVarName = String.format("%s%s", varName, "FromBundle");
-
-        CodeBlock.Builder codeBlock = CodeBlock.builder();
-
-        codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, varName);
-        generateReadStatement(codeBlock, variable.getTypeInformation(), bundleVariableName, tmpVarName, varName);
-        generateFieldSetValueStatement(codeBlock, variable, tmpVarName);
-        codeBlock.endControlFlow();
-
-        return codeBlock.build();
     }
 }

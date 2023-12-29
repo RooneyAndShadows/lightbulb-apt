@@ -15,6 +15,8 @@ import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getParcelablePackage;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ParcelableCodeGenerator.generateReadStatement;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ParcelableCodeGenerator.generateWriteStatement;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings({"SameParameterValue", "DuplicatedCode"})
@@ -75,7 +77,7 @@ public class ParcelableGenerator extends CodeGenerator {
         parcelableMetadata.getTargetFields().forEach(targetField -> {
             Field field = Field.from(targetField);
 
-            CodeBlock readFromParcelBlock = generateReadFromParcelBlock(field, "in");
+            CodeBlock readFromParcelBlock = generateReadStatement(field, "in");
             constructorMethodBuilder.addCode(readFromParcelBlock);
         });
 
@@ -109,7 +111,7 @@ public class ParcelableGenerator extends CodeGenerator {
         parcelableMetadata.getTargetFields().forEach(targetField -> {
             Field field = Field.from(targetField);
 
-            CodeBlock writeIntoParcelBlock = generateWriteIntoParcelBlock(field, "dest");
+            CodeBlock writeIntoParcelBlock = generateWriteStatement(field, "dest");
             writeToParcelMethodBuilder.addCode(writeIntoParcelBlock);
         });
 
@@ -151,23 +153,5 @@ public class ParcelableGenerator extends CodeGenerator {
                 .build();
 
         fields.add(fieldSpec);
-    }
-
-    private CodeBlock generateWriteIntoParcelBlock(Field field, String bundleVariableName) {
-        CodeBlock.Builder codeBlock = CodeBlock.builder();
-
-        ParcelableCodeGenerator.generateWriteStatement(codeBlock, field, bundleVariableName);
-
-        return codeBlock.build();
-    }
-
-    private CodeBlock generateReadFromParcelBlock(Field field, String parcelVariableName) {
-        String fieldName = field.getName();
-        CodeBlock.Builder codeBlock = CodeBlock.builder();
-
-        ParcelableCodeGenerator.generateReadStatement(codeBlock, field, parcelVariableName);
-        generateFieldSetValueStatement(codeBlock, field, fieldName);
-
-        return codeBlock.build();
     }
 }

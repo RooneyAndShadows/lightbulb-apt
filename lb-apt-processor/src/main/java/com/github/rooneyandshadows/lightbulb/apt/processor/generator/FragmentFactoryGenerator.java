@@ -2,8 +2,8 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.Parameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator;
 import com.squareup.javapoet.*;
@@ -13,7 +13,8 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_BUNDLE;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.FRAGMENT_FACTORY_CLASS_NAME;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getFragmentsFactoryPackage;
 import static javax.lang.model.element.Modifier.*;
 
@@ -87,8 +88,9 @@ public class FragmentFactoryGenerator extends CodeGenerator {
                 .addStatement("$T arguments = new $T()", ANDROID_BUNDLE, ANDROID_BUNDLE);
 
         fragmentMetadata.getScreenParameters(includeOptionalParams).forEach(parameter -> {
+            Variable variable = Variable.from(parameter);
+            CodeBlock writeIntoBundleCodeBlock = BundleCodeGenerator.generateWriteStatement(variable, "arguments");
             ParameterSpec parameterSpec = generateParameterSpec(parameter);
-            CodeBlock writeIntoBundleCodeBlock = generateWriteParamIntoBundleBlock(parameter, "arguments");
 
             builder.addParameter(parameterSpec);
             builder.addCode(writeIntoBundleCodeBlock);
@@ -98,15 +100,5 @@ public class FragmentFactoryGenerator extends CodeGenerator {
         builder.addStatement("return fragment");
 
         destination.add(builder.build());
-    }
-
-    private CodeBlock generateWriteParamIntoBundleBlock(Parameter parameter, String bundleVariableName) {
-        TypeInformation parameterTypeInfo = parameter.getTypeInformation();
-        String variableName = parameter.getName();
-        CodeBlock.Builder writeIntoBundleCodeBlock = CodeBlock.builder();
-
-        BundleCodeGenerator.generateWriteStatement(writeIntoBundleCodeBlock, parameterTypeInfo, bundleVariableName, variableName, variableName);
-
-        return writeIntoBundleCodeBlock.build();
     }
 }
