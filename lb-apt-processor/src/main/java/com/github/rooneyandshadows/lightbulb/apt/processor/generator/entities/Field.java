@@ -1,5 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata.TargetField;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredEntity;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
@@ -8,6 +12,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @SuppressWarnings("DuplicatedCode")
@@ -24,8 +30,8 @@ public class Field extends DeclaredEntity {
     protected final boolean hasSetter;
     protected final boolean hasGetter;
 
-    public Field(Element fieldElement, BaseMetadata metadata) {
-        super(ElementUtils.getSimpleName(fieldElement), fieldElement.asType(), metadata);
+    public Field(Element fieldElement) {
+        super(ElementUtils.getSimpleName(fieldElement), fieldElement.asType());
         this.enclosingClassElement = fieldElement.getEnclosingElement();
         this.element = fieldElement;
         this.setterName = MemberUtils.getFieldSetterName(name);
@@ -39,17 +45,24 @@ public class Field extends DeclaredEntity {
         this.hasGetter = ElementUtils.scanForGetter(enclosingClassElement, name);
     }
 
-    public Field(Element fieldElement) {
-        this(fieldElement, null);
+    public static Field from(FragmentMetadata.Parameter fragmentParameter) {
+        return new Field(fragmentParameter.element());
     }
 
-    public boolean accessModifierAtLeast(Modifier target) {
+    public static Field from(FragmentMetadata.ViewBinding viewBinding) {
+        return new Field(viewBinding.element());
+    }
 
-        if (target == null || accessModifier == null) {
-            return false;
-        }
+    public static Field from(FragmentMetadata.StatePersisted statePersisted) {
+        return new Field(statePersisted.element());
+    }
 
-        return accessModifier.ordinal() <= target.ordinal();
+    public static Field from(ParcelableMetadata.TargetField targetField) {
+        return new Field(targetField.element());
+    }
+
+    public static Field from(StorageMetadata.TargetField targetField) {
+        return new Field(targetField.element());
     }
 
     public String getSetterName() {
@@ -86,5 +99,14 @@ public class Field extends DeclaredEntity {
 
     public Modifier getGetterAccessModifier() {
         return getterAccessModifier;
+    }
+
+    public boolean accessModifierAtLeast(Modifier target) {
+
+        if (target == null || accessModifier == null) {
+            return false;
+        }
+
+        return accessModifier.ordinal() <= target.ordinal();
     }
 }

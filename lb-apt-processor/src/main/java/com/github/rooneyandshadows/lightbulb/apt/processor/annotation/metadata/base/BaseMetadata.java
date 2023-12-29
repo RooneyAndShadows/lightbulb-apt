@@ -2,10 +2,14 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.
 
 import javax.lang.model.element.Element;
 
-public class BaseMetadata {
-    protected Element element;
+public class BaseMetadata<T extends Element> {
+    protected T element;
 
-    public BaseMetadata(Element element) {
+    public BaseMetadata(T element) {
         this.element = element;
+    }
+
+    public T getElement() {
+        return element;
     }
 }

@@ -1,6 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
 import com.squareup.javapoet.ClassName;
+import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -64,26 +67,30 @@ public class ClassNames {
         return ClassName.get(PackageNames.getRootPackage(), "R");
     }
 
-    public static String getClassPackage(Elements elements, TypeElement element) {
-        return ElementUtils.getPackage(elements, element);
+    public static String getClassPackage(TypeElement element) {
+        return ElementUtils.getPackage(element);
     }
 
-    public static ClassName generateClassNameWithSuffix(String classPackage, String className, String classNameSuffix) {
-        return ClassName.get(classPackage, className.concat(classNameSuffix));
+    public static ClassName getClassName(TypeElement typeElement) {
+        return ClassName.get(typeElement);
+    }
+
+    public static ClassName getSuperClassName(TypeElement typeElement) {
+        TypeElement superTypeElement = ElementUtils.getSuperType(typeElement);
+
+        if (superTypeElement == null) {
+            return null;
+        }
+
+        return ClassName.get(superTypeElement);
+    }
+
+    public static ClassName generateInstrumentedClassName(String classPackage, String className) {
+        return generateClassNameWithPrefix(classPackage, className, DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX);
     }
 
     public static ClassName generateClassNameWithPrefix(String classPackage, String className, String classNamePrefix) {
         return ClassName.get(classPackage, classNamePrefix.concat(className));
-    }
-
-    public static ClassName generateClassName(TypeElement element, Elements elements) {
-        String classPackage = ElementUtils.getPackage(elements, element);
-        return ClassName.get(classPackage, element.getSimpleName().toString());
-    }
-
-    public static ClassName generateSuperClassName(TypeElement element, Elements elements) {
-        TypeElement superClassElement = ElementUtils.getSuperType(element);
-        return generateClassName(superClassElement, elements);
     }
 
     public static ClassName generateVersionCodeClassName(String versionCode) {

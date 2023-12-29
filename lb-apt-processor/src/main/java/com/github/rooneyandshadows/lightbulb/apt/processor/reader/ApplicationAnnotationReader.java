@@ -1,9 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbApplication;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ApplicationMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
@@ -18,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_APPLICATION_DESCRIPTION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_APPLICATION_DESCRIPTION;
 
 public class ApplicationAnnotationReader extends AnnotationReader {
     private final List<ApplicationMetadata> applicationMetadataList = new ArrayList<>();

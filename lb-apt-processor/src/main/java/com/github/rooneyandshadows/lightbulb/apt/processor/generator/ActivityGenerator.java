@@ -1,34 +1,58 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.squareup.javapoet.*;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.util.Elements;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 import static javax.lang.model.element.Modifier.*;
 
+@SuppressWarnings("unused")
 public class ActivityGenerator extends CodeGenerator {
     private final String ROUTER_FIELD_NAME = "router";
     private final boolean hasRouter;
-    private final boolean hasStorage;
+    private final List<ActivityMetadata> activityMetadataList;
 
     public ActivityGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, annotationResultsRegistry);
         hasRouter = annotationResultsRegistry.hasRoutingScreens();
-        hasStorage = annotationResultsRegistry.hasStorageDescriptions();
+        activityMetadataList = annotationResultsRegistry.getActivityDescriptions();
     }
 
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
-        List<LightbulbActivityDescription> activityDescriptions = annotationResultsRegistry.getActivityDescriptions();
+        activityMetadataList.forEach(activityMetadata -> {
+            ClassName activityClassName = activityMetadata.getClassName();
+            ClassName activitySuperClassName = activityMetadata.getSuperClassName();
+            ClassName instrumentedClassName = activityMetadata.getInstrumentedClassName();
+            List<FieldSpec> fields = new ArrayList<>();
+            List<MethodSpec> methods = new ArrayList<>();
 
-        generateActivities(activityDescriptions);
+            generateFields(fields);
+            generateOnCreateMethod(activityMetadata, methods);
+            generateOnSaveInstanceStateMethod(methods);
+            generateOnDestroyMethod(methods);
+
+            TypeSpec.Builder activityClassBuilder = TypeSpec.classBuilder(instrumentedClassName)
+                    .addModifiers(PUBLIC, ABSTRACT)
+                    .addFields(fields)
+                    .addMethods(methods);
+
+            if (activitySuperClassName != null) {
+                activityClassBuilder.superclass(activitySuperClassName);
+            }
+
+            writeClassFile(instrumentedClassName.packageName(), activityClassBuilder);
+        });
     }
 
     @Override
@@ -36,45 +60,16 @@ public class ActivityGenerator extends CodeGenerator {
         return annotationResultsRegistry.hasActivityDescriptions();
     }
 
-
-    private void generateActivities(List<LightbulbActivityDescription> activityBindings) {
-        activityBindings.forEach(activityInfo -> {
-            ClassName instrumentedClassName = activityInfo.getInstrumentedClassName();
-            ClassName superclassName = activityInfo.getSuperClassName();
-
-            List<FieldSpec> fields = new ArrayList<>();
-            List<MethodSpec> methods = new ArrayList<>();
-
-            generateFields(activityInfo, fields);
-            generateOnCreateMethod(activityInfo, methods);
-            generateOnSaveInstanceStateMethod(activityInfo, methods);
-            generateOnDestroyMethod(activityInfo, methods);
-
-            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(instrumentedClassName)
-                    .addModifiers(PUBLIC, ABSTRACT)
-                    .superclass(superclassName)
-                    .addFields(fields)
-                    .addMethods(methods);
-            try {
-                JavaFile.builder(instrumentedClassName.packageName(), generatedClass.build())
-                        .build()
-                        .writeTo(filer);
-            } catch (IOException e) {
-                //e.printStackTrace();
-            }
-        });
-    }
-
-    private void generateFields(LightbulbActivityDescription activityBindingData, List<FieldSpec> destination) {
+    private void generateFields(List<FieldSpec> destination) {
         if (hasRouter) {
-            ClassName appRouterClassName = ClassNames.getAppRouterClassName();
+            ClassName appRouterClassName = getAppRouterClassName();
             FieldSpec fieldSpec = FieldSpec.builder(appRouterClassName, ROUTER_FIELD_NAME, PRIVATE).build();
             destination.add(fieldSpec);
         }
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnCreateMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
+    private void generateOnCreateMethod(ActivityMetadata activityMetadata, List<MethodSpec> destination) {
         if (!hasRouter) {
             return;
         }
@@ -82,17 +77,17 @@ public class ActivityGenerator extends CodeGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreate")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(ClassNames.ANDROID_BUNDLE, "savedInstanceState")
+                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .returns(void.class)
                 .addStatement("super.onCreate(savedInstanceState)");
 
         if (hasRouter) {
-            ClassName routerClassName = ClassNames.getAppRouterClassName();
-            ClassName appNavigatorClassName = ClassNames.getLightbulbServiceClassName();
-            ClassName RClassName = ClassNames.androidResources();
-            String fragmentContainerId = activityBindingData.getFragmentContainerId();
+            ClassName routerClassName = getAppRouterClassName();
+            ClassName appNavigatorClassName = getLightbulbServiceClassName();
+            ClassName RClassName = androidResources();
+            String fragmentContainerId = activityMetadata.getFragmentContainerId();
 
-            builder.addStatement("$T $L = $T.id.$L", ClassNames.INTEGER, "fragmentContainerId", RClassName, fragmentContainerId);
+            builder.addStatement("$T $L = $T.id.$L", INTEGER, "fragmentContainerId", RClassName, fragmentContainerId);
             builder.addStatement("$L = new $T($L,$L)", ROUTER_FIELD_NAME, routerClassName, "this", "fragmentContainerId");
             builder.beginControlFlow("if(savedInstanceState != null)")
                     .addStatement("$L.restoreState(savedInstanceState)", ROUTER_FIELD_NAME)
@@ -104,7 +99,7 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnSaveInstanceStateMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
+    private void generateOnSaveInstanceStateMethod(List<MethodSpec> destination) {
         if (!hasRouter) {
             return;
         }
@@ -112,7 +107,7 @@ public class ActivityGenerator extends CodeGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onSaveInstanceState")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(ClassNames.ANDROID_BUNDLE, "outState")
+                .addParameter(ANDROID_BUNDLE, "outState")
                 .returns(void.class)
                 .addStatement("super.onSaveInstanceState(outState)");
 
@@ -124,7 +119,7 @@ public class ActivityGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnDestroyMethod(LightbulbActivityDescription activityBindingData, List<MethodSpec> destination) {
+    private void generateOnDestroyMethod(List<MethodSpec> destination) {
         if (!hasRouter) {
             return;
         }
@@ -136,7 +131,7 @@ public class ActivityGenerator extends CodeGenerator {
                 .addStatement("super.onDestroy()");
 
         if (hasRouter) {
-            ClassName appNavigatorClassName = ClassNames.getLightbulbServiceClassName();
+            ClassName appNavigatorClassName = getLightbulbServiceClassName();
             builder.addStatement("$L.getInstance().unbindRouter()", appNavigatorClassName);
         }
 

@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.base.GenerationStep;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;

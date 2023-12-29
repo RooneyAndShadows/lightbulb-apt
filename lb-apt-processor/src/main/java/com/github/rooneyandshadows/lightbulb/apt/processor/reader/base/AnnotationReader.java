@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;

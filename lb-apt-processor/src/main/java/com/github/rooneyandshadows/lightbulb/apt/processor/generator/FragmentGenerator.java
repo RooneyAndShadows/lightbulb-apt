@@ -1,41 +1,63 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbFragmentDescription;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.FieldScreenParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.TypeInformation;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-//TODO ADD ANNOTATIONS FOR BYTECODE TRANSFORMATIONS
-import static com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.BundleCodeGenerator.generateReadStatement;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ILLEGAL_ARGUMENT_EXCEPTION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator.generateReadStatement;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getFragmentsPackage;
 import static javax.lang.model.element.Modifier.*;
 
-@SuppressWarnings("SameParameterValue")
+@SuppressWarnings({"SameParameterValue", "DuplicatedCode"})
 public class FragmentGenerator extends CodeGenerator {
-    protected final ClassName ANDROID_R;
+    private final ClassName ANDROID_R;
+    private final List<FragmentMetadata> fragmentMetadataList;
 
     public FragmentGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer,elements, annotationResultsRegistry);
-        this.ANDROID_R = ClassNames.androidResources();
+        super(filer, elements, annotationResultsRegistry);
+        this.ANDROID_R = androidResources();
+        fragmentMetadataList = annotationResultsRegistry.getFragmentDescriptions();
     }
 
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
-        List<LightbulbFragmentDescription> fragmentDescriptions = annotationResultsRegistry.getFragmentDescriptions();
+        fragmentMetadataList.forEach(fragmentMetadata -> {
+            ClassName fragmentSuperClassName = fragmentMetadata.getSuperClassName();
+            ClassName instrumentedClassName = fragmentMetadata.getInstrumentedClassName();
+            List<FieldSpec> fields = new ArrayList<>();
+            List<MethodSpec> methods = new ArrayList<>();
 
-        generateFragments(fragmentDescriptions);
+            generateFields(fragmentMetadata, fields, methods);
+            generateOnCreateMethod(fragmentMetadata, methods);
+            generateOnCreateViewMethod(fragmentMetadata, methods);
+            generateOnViewCreatedMethod(fragmentMetadata, methods);
+            generateOnSaveInstanceStateMethod(fragmentMetadata, methods);
+            generateFragmentParametersMethod(fragmentMetadata, methods);
+            generateSaveVariablesMethod(fragmentMetadata, methods);
+            generateRestoreVariablesMethod(fragmentMetadata, methods);
+
+            TypeSpec.Builder fragmentClassBuilder = TypeSpec.classBuilder(instrumentedClassName)
+                    .addModifiers(PUBLIC, ABSTRACT)
+                    .addFields(fields)
+                    .addMethods(methods);
+
+            if (fragmentSuperClassName != null) {
+                fragmentClassBuilder.superclass(fragmentSuperClassName);
+            }
+
+            writeClassFile(instrumentedClassName.packageName(), fragmentClassBuilder);
+        });
     }
 
     @Override
@@ -43,42 +65,14 @@ public class FragmentGenerator extends CodeGenerator {
         return annotationResultsRegistry.hasFragmentDescriptions();
     }
 
-    private void generateFragments(List<LightbulbFragmentDescription> fragmentDescriptions) {
-        fragmentDescriptions.forEach(fragmentInfo -> {
-            ClassName instrumentedClassName = fragmentInfo.getInstrumentedClassName();
-            ClassName superClassName = fragmentInfo.getSuperClassName();
-            List<FieldSpec> fields = new ArrayList<>();
-            List<MethodSpec> methods = new ArrayList<>();
-
-            generateFields(fragmentInfo, fields, methods);
-            generateOnCreateMethod(fragmentInfo, methods);
-            generateOnCreateViewMethod(fragmentInfo, methods);
-            generateOnViewCreatedMethod(fragmentInfo, methods);
-            generateOnSaveInstanceStateMethod(fragmentInfo, methods);
-            generateFragmentParametersMethod(fragmentInfo, methods);
-            generateSaveVariablesMethod(fragmentInfo, methods);
-            generateRestoreVariablesMethod(fragmentInfo, methods);
-
-            TypeSpec.Builder generatedClass = TypeSpec.classBuilder(instrumentedClassName)
-                    .addModifiers(PUBLIC, ABSTRACT)
-                    .addFields(fields)
-                    .superclass(superClassName)
-                    .addMethods(methods);
-            try {
-                JavaFile.builder(instrumentedClassName.packageName(), generatedClass.build())
-                        .build()
-                        .writeTo(filer);
-            } catch (IOException e) {
-                //e.printStackTrace();
-            }
-        });
-    }
-
-    private void generateFields(LightbulbFragmentDescription fragment, List<FieldSpec> fields, List<MethodSpec> methods) {
+    private void generateFields(FragmentMetadata fragmentMetadata, List<FieldSpec> fields, List<MethodSpec> methods) {
+        List<Field> paramFields = fragmentMetadata.getScreenParameters().stream().map(Field::from).toList();
+        List<Field> viewBindingFields = fragmentMetadata.getViewBindings().stream().map(Field::from).toList();
+        List<Field> persistedValueFields = fragmentMetadata.getPersistedValues().stream().map(Field::from).toList();
         List<Field> targets = new ArrayList<>();
-        targets.addAll(fragment.getScreenParameterFields());
-        targets.addAll(fragment.getPersistedFields());
-        targets.addAll(fragment.getViewBindingFields());
+        targets.addAll(paramFields);
+        targets.addAll(viewBindingFields);
+        targets.addAll(persistedValueFields);
 
         targets.forEach(field -> {
             boolean hasSetter = field.hasSetter();
@@ -116,9 +110,9 @@ public class FragmentGenerator extends CodeGenerator {
         });
     }
 
-    private void generateOnCreateMethod(LightbulbFragmentDescription fragment, List<MethodSpec> destination) {
-        boolean hasParameters = !fragment.getScreenParameterFields().isEmpty();
-        boolean hasPersistedVars = !fragment.getPersistedFields().isEmpty();
+    private void generateOnCreateMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
+        boolean hasParameters = fragmentMetadata.hasParameters();
+        boolean hasPersistedVars = fragmentMetadata.hasPersistedValues();
 
         if (!hasParameters && !hasPersistedVars) {
             return;
@@ -127,34 +121,28 @@ public class FragmentGenerator extends CodeGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreate")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(ClassNames.ANDROID_BUNDLE, "savedInstanceState")
+                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .returns(void.class)
                 .addStatement("super.onCreate(savedInstanceState)");
 
-        if (hasParameters && hasPersistedVars) {
+        if (!hasParameters) {
+            builder.beginControlFlow("if(savedInstanceState != null)")
+                    .addStatement("restoreVariablesState(savedInstanceState)")
+                    .endControlFlow();
+        } else {
             builder.beginControlFlow("if(savedInstanceState == null)")
-                    .addStatement("$T arguments = getArguments()", ClassNames.ANDROID_BUNDLE)
+                    .addStatement("$T arguments = getArguments()", ANDROID_BUNDLE)
                     .addStatement("generateParameters(arguments)")
                     .nextControlFlow("else")
                     .addStatement("restoreVariablesState(savedInstanceState)")
                     .endControlFlow();
-        } else if (hasParameters) {
-            builder.beginControlFlow("if(savedInstanceState == null)")
-                    .addStatement("$T arguments = getArguments()", ClassNames.ANDROID_BUNDLE)
-                    .addStatement("generateParameters(arguments)")
-                    .endControlFlow();
-        } else {
-            builder.beginControlFlow("if(savedInstanceState != null)")
-                    .addStatement("restoreVariablesState(savedInstanceState)")
-                    .endControlFlow();
         }
-
 
         destination.add(builder.build());
     }
 
-    private void generateOnCreateViewMethod(LightbulbFragmentDescription fragment, List<MethodSpec> destination) {
-        String layoutName = fragment.getLayoutName();
+    private void generateOnCreateViewMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
+        String layoutName = fragmentMetadata.getLayoutName();
 
         if (layoutName == null || layoutName.isBlank()) {
             return;
@@ -163,50 +151,51 @@ public class FragmentGenerator extends CodeGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreateView")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(ClassNames.ANDROID_LAYOUT_INFLATER, "inflater")
-                .addParameter(ClassNames.ANDROID_VIEW_GROUP, "container")
-                .addParameter(ClassNames.ANDROID_BUNDLE, "savedInstanceState")
-                .returns(ClassNames.ANDROID_VIEW)
+                .addParameter(ANDROID_LAYOUT_INFLATER, "inflater")
+                .addParameter(ANDROID_VIEW_GROUP, "container")
+                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
+                .returns(ANDROID_VIEW)
                 .addStatement("super.onCreateView(inflater,container,savedInstanceState)")
-                .addStatement("$T layout = inflater.inflate($T.layout.$L, null)", ClassNames.ANDROID_VIEW, ANDROID_R, layoutName)
+                .addStatement("$T layout = inflater.inflate($T.layout.$L, null)", ANDROID_VIEW, ANDROID_R, layoutName)
                 .addStatement("return layout");
 
         destination.add(builder.build());
     }
 
-    private void generateOnViewCreatedMethod(LightbulbFragmentDescription fragment, List<MethodSpec> destination) {
-        if (fragment.getViewBindingFields().isEmpty()) {
+    private void generateOnViewCreatedMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
+        if (!fragmentMetadata.hasViewBindings()) {
             return;
         }
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onViewCreated")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(ClassNames.ANDROID_VIEW, "fragmentView")
-                .addParameter(ClassNames.ANDROID_BUNDLE, "savedInstanceState")
+                .addParameter(ANDROID_VIEW, "fragmentView")
+                .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .addStatement("super.onViewCreated(fragmentView,savedInstanceState)")
                 .returns(void.class);
 
-        fragment.getViewBindingFields().forEach(bindingInfo -> {
-            String fieldName = bindingInfo.getName();
-            String fieldSetterName = bindingInfo.getSetterName();
-            String resourceName = bindingInfo.getResourceName();
-            builder.addStatement("$T view = getView()", ClassNames.ANDROID_VIEW);
-            if (bindingInfo.hasSetter()) {
+        fragmentMetadata.getViewBindings().forEach(viewBinding -> {
+            Field field = Field.from(viewBinding);
+            String resourceName = viewBinding.name();
+
+            builder.addStatement("$T view = getView()", ANDROID_VIEW);
+
+            if (field.hasSetter()) {
                 String statement = "$L(view.findViewById($T.id.$L))";
-                builder.addStatement(statement, fieldSetterName, ANDROID_R, resourceName);
+                builder.addStatement(statement, field.getSetterName(), ANDROID_R, resourceName);
             } else {
                 String statement = "$L = view.findViewById($T.id.$L)";
-                builder.addStatement(statement, fieldName, ANDROID_R, resourceName);
+                builder.addStatement(statement, field.getName(), ANDROID_R, resourceName);
             }
         });
 
         destination.add(builder.build());
     }
 
-    private void generateOnSaveInstanceStateMethod(LightbulbFragmentDescription fragment, List<MethodSpec> destination) {
-        boolean hasParameters = !fragment.getScreenParameterFields().isEmpty();
-        boolean hasPersistedVars = !fragment.getPersistedFields().isEmpty();
+    private void generateOnSaveInstanceStateMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
+        boolean hasParameters = fragmentMetadata.hasParameters();
+        boolean hasPersistedVars = fragmentMetadata.hasPersistedValues();
 
         if (!hasParameters && !hasPersistedVars) {
             return;
@@ -215,7 +204,7 @@ public class FragmentGenerator extends CodeGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onSaveInstanceState")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(ClassNames.ANDROID_BUNDLE, "outState")
+                .addParameter(ANDROID_BUNDLE, "outState")
                 .addStatement("super.onSaveInstanceState(outState)")
                 .addStatement("saveVariablesState(outState)")
                 .returns(void.class);
@@ -223,40 +212,45 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private void generateFragmentParametersMethod(LightbulbFragmentDescription fragment, List<MethodSpec> destination) {
-        String argumentsParameterName = "arguments";
+    private void generateFragmentParametersMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
+        boolean hasParameters = fragmentMetadata.hasParameters();
 
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("generateParameters")
-                .addModifiers(PRIVATE)
-                .addParameter(ClassNames.ANDROID_BUNDLE, argumentsParameterName)
-                .returns(void.class);
-
-        if (fragment.getScreenParameterFields().isEmpty()) {
+        if (!hasParameters) {
             return;
         }
 
-        fragment.getScreenParameterFields().forEach(param -> {
-            CodeBlock readStatement = generateReadParameterFromBundle(param, argumentsParameterName);
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("generateParameters")
+                .addModifiers(PRIVATE)
+                .addParameter(ANDROID_BUNDLE, "arguments")
+                .returns(void.class);
+
+        fragmentMetadata.getScreenParameters().forEach(parameter -> {
+            CodeBlock readStatement = generateReadParameterFromBundle(parameter, "arguments");
             builder.addCode(readStatement);
         });
 
         destination.add(builder.build());
     }
 
-    private void generateSaveVariablesMethod(LightbulbFragmentDescription fragmentInfo, List<MethodSpec> destination) {
+    private void generateSaveVariablesMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
+        boolean hasParameters = fragmentMetadata.hasParameters();
+        boolean hasPersistedValues = fragmentMetadata.hasPersistedValues();
+
+        if (!hasParameters && !hasPersistedValues) {
+            return;
+        }
+
+        List<Field> paramFields = fragmentMetadata.getScreenParameters().stream().map(Field::from).toList();
+        List<Field> persistedValueFields = fragmentMetadata.getPersistedValues().stream().map(Field::from).toList();
+        List<Field> fieldsToSave = new ArrayList<>();
+        fieldsToSave.addAll(paramFields);
+        fieldsToSave.addAll(persistedValueFields);
+
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("saveVariablesState")
                 .addModifiers(PRIVATE)
-                .addParameter(ClassNames.ANDROID_BUNDLE, "outState")
+                .addParameter(ANDROID_BUNDLE, "outState")
                 .returns(void.class);
-
-        List<Field> fieldsToSave = new ArrayList<>();
-        fieldsToSave.addAll(fragmentInfo.getScreenParameterFields());
-        fieldsToSave.addAll(fragmentInfo.getPersistedFields());
-
-        if (fieldsToSave.isEmpty()) {
-            return;
-        }
 
         fieldsToSave.forEach(field -> {
             CodeBlock writeStatement = generateWriteFieldIntoBundleBlock(field, "outState");
@@ -266,20 +260,25 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private void generateRestoreVariablesMethod(LightbulbFragmentDescription fragmentInfo, List<MethodSpec> destination) {
-        MethodSpec.Builder builder = MethodSpec
-                .methodBuilder("restoreVariablesState")
-                .addModifiers(PRIVATE)
-                .addParameter(ClassNames.ANDROID_BUNDLE, "fragmentSavedInstanceState")
-                .returns(void.class);
+    private void generateRestoreVariablesMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
+        boolean hasParameters = fragmentMetadata.hasParameters();
+        boolean hasPersistedValues = fragmentMetadata.hasPersistedValues();
 
-        if (fragmentInfo.getScreenParameterFields().isEmpty() && fragmentInfo.getPersistedFields().isEmpty()) {
+        if (!hasParameters && !hasPersistedValues) {
             return;
         }
 
+        List<Field> paramFields = fragmentMetadata.getScreenParameters().stream().map(Field::from).toList();
+        List<Field> persistedValueFields = fragmentMetadata.getPersistedValues().stream().map(Field::from).toList();
         List<Field> fieldsToRestore = new ArrayList<>();
-        fieldsToRestore.addAll(fragmentInfo.getScreenParameterFields());
-        fieldsToRestore.addAll(fragmentInfo.getPersistedFields());
+        fieldsToRestore.addAll(paramFields);
+        fieldsToRestore.addAll(persistedValueFields);
+
+        MethodSpec.Builder builder = MethodSpec
+                .methodBuilder("restoreVariablesState")
+                .addModifiers(PRIVATE)
+                .addParameter(ANDROID_BUNDLE, "fragmentSavedInstanceState")
+                .returns(void.class);
 
         fieldsToRestore.forEach(field -> {
             CodeBlock readStatement = generateReadFromBundleBlock(field, "fragmentSavedInstanceState");
@@ -289,12 +288,13 @@ public class FragmentGenerator extends CodeGenerator {
         destination.add(builder.build());
     }
 
-    private CodeBlock generateReadParameterFromBundle(FieldScreenParameter parameter, String bundleVariableName) {
-        TypeInformation type = parameter.getTypeInformation();
-        String varName = parameter.getName();
+    private CodeBlock generateReadParameterFromBundle(FragmentMetadata.Parameter parameter, String bundleVariableName) {
+        Field field = Field.from(parameter);
+        TypeInformation type = field.getTypeInformation();
+        String varName = field.getName();
         String tmpVarName = varName.concat("FromBundle");
-        boolean isOptional = parameter.isOptional();
-        boolean isNullable = parameter.isNullable();
+        boolean isOptional = parameter.optional();
+        boolean isNullable = field.isNullable();
         boolean isNullableOrOptional = isNullable || isOptional;
         boolean isPrimitive = type.isPrimitive();
         CodeBlock.Builder codeBlock = CodeBlock.builder();
@@ -305,7 +305,7 @@ public class FragmentGenerator extends CodeGenerator {
                     .endControlFlow();
 
             generateReadStatement(codeBlock, type, bundleVariableName, tmpVarName, varName);
-            generateFieldSetValueStatement(codeBlock, parameter, tmpVarName, true);
+            generateFieldSetValueStatement(codeBlock, field, tmpVarName);
 
             codeBlock.beginControlFlow("if($L == null)", tmpVarName)
                     .addStatement("throw new $T($S)", ILLEGAL_ARGUMENT_EXCEPTION, String.format("%s can not be null but null value received from bundle.", varName))
@@ -313,7 +313,7 @@ public class FragmentGenerator extends CodeGenerator {
         } else {
             codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, varName);
             generateReadStatement(codeBlock, type, bundleVariableName, tmpVarName, varName);
-            generateFieldSetValueStatement(codeBlock, parameter, tmpVarName, true);
+            generateFieldSetValueStatement(codeBlock, field, tmpVarName);
             codeBlock.endControlFlow();
         }
 
@@ -340,7 +340,7 @@ public class FragmentGenerator extends CodeGenerator {
 
         codeBlock.beginControlFlow("if($L.containsKey($S))", bundleVariableName, varName);
         generateReadStatement(codeBlock, variable.getTypeInformation(), bundleVariableName, tmpVarName, varName);
-        generateFieldSetValueStatement(codeBlock, variable, tmpVarName, true);
+        generateFieldSetValueStatement(codeBlock, variable, tmpVarName);
         codeBlock.endControlFlow();
 
         return codeBlock.build();

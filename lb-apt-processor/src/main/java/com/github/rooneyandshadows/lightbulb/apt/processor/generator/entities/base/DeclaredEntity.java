@@ -7,20 +7,11 @@ import javax.lang.model.type.TypeMirror;
 public abstract class DeclaredEntity {
     protected final String name;
     protected final TypeInformation typeInformation;
-    protected final BaseMetadata metadata;
-
-    public DeclaredEntity(String name, TypeMirror typeMirror, BaseMetadata metadata) {
-        this.name = name;
-        this.typeInformation = new TypeInformation(typeMirror);
-        this.metadata = metadata;
-    }
 
     public DeclaredEntity(String name, TypeMirror typeMirror) {
         this.name = name;
         this.typeInformation = new TypeInformation(typeMirror);
-        this.metadata = null;
     }
-
 
     public final String getName() {
         return name;
@@ -28,9 +19,5 @@ public abstract class DeclaredEntity {
 
     public final TypeInformation getTypeInformation() {
         return typeInformation;
-    }
-
-    public BaseMetadata getMetadata() {
-        return metadata;
     }
 }

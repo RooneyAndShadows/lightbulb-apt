@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
+package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.TypeInformation;
 import com.squareup.javapoet.CodeBlock;

@@ -1,8 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
@@ -25,14 +25,14 @@ public class ServiceGenerator extends CodeGenerator {
     private final String servicePackage;
     private final boolean hasRoutingElements;
     private final boolean hasStorageElements;
-    private final List<LightbulbStorageDescription> storageDescriptions;
+    private final List<StorageMetadata> storageMetadataList;
 
     public ServiceGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer,elements, annotationResultsRegistry);
         servicePackage = PackageNames.getServicePackage();
         hasRoutingElements = annotationResultsRegistry.hasRoutingScreens();
         hasStorageElements = annotationResultsRegistry.hasStorageDescriptions();
-        storageDescriptions = annotationResultsRegistry.getStorageDescriptions();
+        storageMetadataList = annotationResultsRegistry.getStorageDescriptions();
     }
 
     @Override
@@ -111,8 +111,8 @@ public class ServiceGenerator extends CodeGenerator {
                 .addStatement("this.$L = $L", contextFieldName, applicationContextVarName);
 
         if (hasStorageElements) {
-            storageDescriptions.forEach(lightbulbStorageDescription -> {
-                ClassName storageClassName = lightbulbStorageDescription.getInstrumentedClassName();
+            storageMetadataList.forEach(storageMetadata -> {
+                ClassName storageClassName = storageMetadata.getInstrumentedClassName();
                 String storageFieldName = MemberUtils.getFieldNameForClass(storageClassName.simpleName());
 
                 setterMethodBuilder.addStatement("this.$L = new $T($L)", storageFieldName, storageClassName, applicationContextVarName);
@@ -134,7 +134,7 @@ public class ServiceGenerator extends CodeGenerator {
     }
 
     private void generateStorageMembers(List<FieldSpec> fields, List<MethodSpec> methods) {
-        storageDescriptions.forEach(storageDescription -> {
+        storageMetadataList.forEach(storageDescription -> {
             ClassName generatedStorageClassName = storageDescription.getInstrumentedClassName();
             String generatedStorageSimpleClassName = generatedStorageClassName.simpleName();
             String fieldName = MemberUtils.getFieldNameForClass(generatedStorageSimpleClassName);

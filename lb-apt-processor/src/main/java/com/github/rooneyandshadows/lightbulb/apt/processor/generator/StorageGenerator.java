@@ -1,15 +1,15 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.description.LightbulbStorageDescription;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.util.Elements;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,18 +18,36 @@ import static javax.lang.model.element.Modifier.*;
 
 public class StorageGenerator extends CodeGenerator {
     private final String storageKeyFieldName = "STORAGE_KEY";
-    private final String storagePackage;
+    private final List<StorageMetadata> storageMetadataList;
 
     public StorageGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, annotationResultsRegistry);
-        storagePackage = PackageNames.getStoragePackage();
+        storageMetadataList = annotationResultsRegistry.getStorageDescriptions();
     }
 
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
-        List<LightbulbStorageDescription> storageDescriptions = annotationResultsRegistry.getStorageDescriptions();
+        storageMetadataList.forEach(storageDescription -> {
+            ClassName instrumentedClassName = storageDescription.getInstrumentedClassName();
+            ParameterizedTypeName superClass = ParameterizedTypeName.get(BASE_STORAGE, storageDescription.getClassName());
+            List<FieldSpec> fields = new ArrayList<>();
+            List<MethodSpec> methods = new ArrayList<>();
 
-        generateStorageImplementations(storageDescriptions);
+            generateStorageKeyField(storageDescription, fields);
+            generateConstructorMethod(methods);
+            generateGetStorageClassMethod(storageDescription, methods);
+            generateGetDefaultMethod(storageDescription, methods);
+            generateStorageFieldAccessors(storageDescription, methods);
+
+            TypeSpec.Builder rootClassBuilder = TypeSpec
+                    .classBuilder(instrumentedClassName)
+                    .addModifiers(PUBLIC, FINAL)
+                    .superclass(superClass)
+                    .addFields(fields)
+                    .addMethods(methods);
+
+            writeClassFile(PackageNames.getStoragePackage(), rootClassBuilder);
+        });
     }
 
     @Override
@@ -37,38 +55,10 @@ public class StorageGenerator extends CodeGenerator {
         return annotationResultsRegistry.hasStorageDescriptions();
     }
 
-    private void generateStorageImplementations(List<LightbulbStorageDescription> storageDescriptions) {
-        storageDescriptions.forEach(storageDescription -> {
-            ClassName instrumentedClassName = storageDescription.getInstrumentedClassName();
-            ParameterizedTypeName superClass = ParameterizedTypeName.get(BASE_STORAGE, storageDescription.getClassName());
-            List<FieldSpec> fields = new ArrayList<>();
-            List<MethodSpec> methods = new ArrayList<>();
+    private void generateStorageKeyField(StorageMetadata storageMetadata, List<FieldSpec> fields) {
+        String storageKeyFieldInitializer = String.format("%s.%s", PackageNames.getRootPackage(), storageMetadata.getName());
 
-            generateStorageKeyField(storageDescription, fields);
-            generateConstructorMethod(storageDescription, methods);
-            generateGetStorageClassMethod(storageDescription, methods);
-            generateGetDefaultMethod(storageDescription, methods);
-            generateStorageFieldAccessors(storageDescription, methods);
-
-            TypeSpec.Builder rootClass = TypeSpec
-                    .classBuilder(instrumentedClassName)
-                    .addModifiers(PUBLIC, FINAL)
-                    .superclass(superClass)
-                    .addFields(fields)
-                    .addMethods(methods);
-
-            try {
-                JavaFile.builder(storagePackage, rootClass.build()).build().writeTo(filer);
-            } catch (IOException e) {
-                //e.printStackTrace();
-            }
-        });
-    }
-
-    private void generateStorageKeyField(LightbulbStorageDescription storageDescription, List<FieldSpec> fields) {
-        String storageKeyFieldInitializer = String.format("%s.%s", PackageNames.getRootPackage(), storageDescription.getName());
-
-        for (int index = 0; index < storageDescription.getSubKeys().length; index++) {
+        for (int index = 0; index < storageMetadata.getSubKeys().length; index++) {
             storageKeyFieldInitializer = storageKeyFieldInitializer.concat("$%s");
         }
 
@@ -79,7 +69,7 @@ public class StorageGenerator extends CodeGenerator {
         fields.add(fieldSpec);
     }
 
-    private void generateConstructorMethod(LightbulbStorageDescription storageDescription, List<MethodSpec> methods) {
+    private void generateConstructorMethod(List<MethodSpec> methods) {
         ParameterSpec activityParam = ParameterSpec.builder(ANDROID_CONTEXT, "context")
                 .addAnnotation(NotNull.class)
                 .build();
@@ -93,8 +83,8 @@ public class StorageGenerator extends CodeGenerator {
         methods.add(constructorMethod);
     }
 
-    private void generateGetStorageClassMethod(LightbulbStorageDescription storageDescription, List<MethodSpec> methods) {
-        ClassName storageClassName = storageDescription.getClassName();
+    private void generateGetStorageClassMethod(StorageMetadata storageMetadata, List<MethodSpec> methods) {
+        ClassName storageClassName = storageMetadata.getClassName();
         ParameterizedTypeName storageClassTypeName = ParameterizedTypeName.get(CLASS, storageClassName);
 
         MethodSpec getStorageClassMethod = MethodSpec.methodBuilder("getStorageClass")
@@ -107,23 +97,24 @@ public class StorageGenerator extends CodeGenerator {
         methods.add(getStorageClassMethod);
     }
 
-    private void generateGetDefaultMethod(LightbulbStorageDescription storageDescription, List<MethodSpec> methods) {
+    private void generateGetDefaultMethod(StorageMetadata storageMetadata, List<MethodSpec> methods) {
         MethodSpec getDefaultMethod = MethodSpec.methodBuilder("getDefault")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
                 .addAnnotation(NotNull.class)
-                .returns(storageDescription.getClassName())
-                .addStatement("return new $T()", storageDescription.getClassName())
+                .returns(storageMetadata.getClassName())
+                .addStatement("return new $T()", storageMetadata.getClassName())
                 .build();
         methods.add(getDefaultMethod);
     }
 
-    private void generateStorageFieldAccessors(LightbulbStorageDescription storageDescription, List<MethodSpec> methods) {
-        ClassName storageClassName = storageDescription.getClassName();
+    private void generateStorageFieldAccessors(StorageMetadata storageMetadata, List<MethodSpec> methods) {
+        ClassName storageClassName = storageMetadata.getClassName();
 
-        storageDescription.getFields().forEach(field -> {
+        storageMetadata.getTargetFields().forEach(targetField -> {
+            Field field = Field.from(targetField);
             TypeName fieldTypeName = field.getTypeInformation().getTypeName();
-            String[] subKeys = storageDescription.getSubKeys();
+            String[] subKeys = storageMetadata.getSubKeys();
             List<ParameterSpec> keyParameters = new ArrayList<>();
             String keyParamsCommaSeparated = "";
 

@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.b
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -43,13 +44,15 @@ public final class TypeInformation {
         this.typeName = ClassName.get(typeMirror);
     }
 
-    public TypeInformation getSuperClassTypeInfo(){
+    @Nullable
+    public TypeInformation getSuperClassType() {
         TypeElement typeElement = (TypeElement) ((DeclaredType) typeMirror).asElement();
         TypeMirror superClassTypeMirror = typeElement.getSuperclass();
 
-        if ((superClassTypeMirror instanceof NoType)){
+        if ((superClassTypeMirror instanceof NoType)) {
             return null;
         }
+
         return new TypeInformation(superClassTypeMirror);
     }
 

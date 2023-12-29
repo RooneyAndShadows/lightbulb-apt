@@ -3,11 +3,9 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import java.util.List;
@@ -26,7 +24,7 @@ public class ElementUtils {
     }
 
     public static TypeMirror getTypeMirror(Elements elements, Class<?> clazz) {
-        return getTypeMirror(elements,clazz.getCanonicalName());
+        return getTypeMirror(elements, clazz.getCanonicalName());
     }
 
     public static TypeMirror getTypeMirror(Elements elements, String canonicalName) {
@@ -40,8 +38,24 @@ public class ElementUtils {
                 .toString();
     }
 
+    public static String getPackage(Element element) {
+        Element enclosing = element;
+
+        while (enclosing.getKind() != ElementKind.PACKAGE) {
+            enclosing = enclosing.getEnclosingElement();
+        }
+        PackageElement packageElement = (PackageElement) enclosing;
+
+        return packageElement.getQualifiedName().toString();
+    }
+
     public static TypeElement getSuperType(TypeElement element) {
         TypeMirror superClassTypeMirror = element.getSuperclass();
+
+        if ((superClassTypeMirror instanceof NoType)) {
+            return null;
+        }
+
         return (TypeElement) ((DeclaredType) superClassTypeMirror).asElement();
     }
 

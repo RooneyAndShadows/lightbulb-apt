@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.data;
+package com.github.rooneyandshadows.lightbulb.apt.processor;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.*;
 
@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.data.AnnotationResultsRegistry.AnnotationResultTypes.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry.AnnotationResultTypes.*;
 
 @SuppressWarnings({"unchecked", "SpellCheckingInspection"})
 public final class AnnotationResultsRegistry {
