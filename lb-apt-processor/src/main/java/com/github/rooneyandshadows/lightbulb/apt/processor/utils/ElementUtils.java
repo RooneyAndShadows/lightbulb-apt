@@ -121,7 +121,6 @@ public class ElementUtils {
     }
 
     public static Modifier accessModifierAtLeast(@NotNull Element test, @NotNull Modifier target) {
-
         Modifier accessModifier = getAccessModifier(test);
 
         if (accessModifier == null || target.ordinal() <= accessModifier.ordinal()) {
@@ -156,4 +155,5 @@ public class ElementUtils {
                 .stream()
                 .anyMatch(modifier -> modifier == Modifier.FINAL);
     }
+
 }

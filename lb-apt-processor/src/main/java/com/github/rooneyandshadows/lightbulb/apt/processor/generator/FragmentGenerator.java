@@ -34,7 +34,7 @@ public class FragmentGenerator extends CodeGenerator {
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         fragmentMetadataList.forEach(fragmentMetadata -> {
             ClassName fragmentSuperClassName = getSuperClassName(fragmentMetadata);
-            ClassName instrumentedClassName = getInstrumentedClassName(getFragmentsPackage(),fragmentMetadata);
+            ClassName instrumentedClassName = getInstrumentedClassName(getFragmentsPackage(), fragmentMetadata);
 
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();

@@ -79,25 +79,24 @@ public abstract class CodeGenerator {
             }
 
             if (hasGetter) {
-                Modifier getterAccess = ElementUtils.accessModifierAtLeast(fieldMetadata.getElement(), PROTECTED);
+                Modifier getterAccess = fieldMetadata.getGetterAccessModifier() == PRIVATE ? PROTECTED : fieldMetadata.getGetterAccessModifier();
 
-                MethodSpec getter = MethodSpec.methodBuilder(fieldMetadata.getGetterName())
-                        .returns(fieldTypeName)
-                        .addModifiers(getterAccess, ABSTRACT)
-                        .build();
+                MethodSpec.Builder getterBuilder = MethodSpec.methodBuilder(fieldMetadata.getGetterName())
+                        .addModifiers(getterAccess,ABSTRACT)
+                        .returns(fieldTypeName);
 
-                methods.add(getter);
+
+                methods.add(getterBuilder.build());
             }
 
             if (hasSetter) {
-                Modifier setterAccess = ElementUtils.accessModifierAtLeast(fieldMetadata.getElement(), PROTECTED);
+                Modifier setterAccess = fieldMetadata.getSetterAccessModifier() == PRIVATE ? PROTECTED : fieldMetadata.getSetterAccessModifier();
 
-                MethodSpec setter = MethodSpec.methodBuilder(fieldMetadata.getSetterName())
+                MethodSpec.Builder setterBuilder = MethodSpec.methodBuilder(fieldMetadata.getSetterName())
                         .addParameter(fieldTypeName, "value")
-                        .addModifiers(setterAccess, ABSTRACT)
-                        .build();
+                        .addModifiers(setterAccess,ABSTRACT);
 
-                methods.add(setter);
+                methods.add(setterBuilder.build());
             }
         });
     }

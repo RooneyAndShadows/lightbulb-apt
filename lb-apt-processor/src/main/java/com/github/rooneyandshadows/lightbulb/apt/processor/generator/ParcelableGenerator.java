@@ -5,9 +5,6 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.P
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ParcelableCodeGenerator;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -116,7 +113,7 @@ public class ParcelableGenerator extends CodeGenerator {
     }
 
     private void generateCreatorField(ParcelableMetadata parcelableMetadata, List<FieldSpec> fields) {
-        ClassName instrumentedClassName = getInstrumentedClassName(getParcelablePackage(),parcelableMetadata);
+        ClassName instrumentedClassName = getInstrumentedClassName(getParcelablePackage(), parcelableMetadata);
         ParameterizedTypeName typeName = ParameterizedTypeName.get(ANDROID_PARCELABLE_CREATOR, instrumentedClassName);
 
         TypeSpec.Builder creatorBuilder = TypeSpec.anonymousClassBuilder("")
