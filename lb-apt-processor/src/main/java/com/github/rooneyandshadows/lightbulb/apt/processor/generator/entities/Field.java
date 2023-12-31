@@ -1,123 +1,49 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
+import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
 
 
 @SuppressWarnings("DuplicatedCode")
 public class Field extends DeclaredValueHolder {
-    protected final Element element;
-    protected final Element enclosingClassElement;
-    protected final String setterName;
-    protected final String getterName;
-    protected final Modifier accessModifier;
-    protected final Modifier setterAccessModifier;
-    protected final Modifier getterAccessModifier;
-    protected final boolean isFinal;
-    protected final boolean isNullable;
-    protected final boolean hasSetter;
-    protected final boolean hasGetter;
+    private final String setter;
+    private final String getter;
 
-    public Field(Element fieldElement) {
-        super(ElementUtils.getSimpleName(fieldElement), fieldElement.asType());
-        this.enclosingClassElement = fieldElement.getEnclosingElement();
-        this.element = fieldElement;
-        this.setterName = MemberUtils.getFieldSetterName(name);
-        this.getterName = MemberUtils.getFieldGetterName(name);
-        this.accessModifier = ElementUtils.getAccessModifier(fieldElement);
-        this.setterAccessModifier = ElementUtils.getMethodAccessModifier(enclosingClassElement, setterName);
-        this.getterAccessModifier = ElementUtils.getMethodAccessModifier(enclosingClassElement, getterName);
-        this.isFinal = ElementUtils.isFinal(fieldElement);
-        this.isNullable = fieldElement.getAnnotation(Nullable.class) != null;
-        this.hasSetter = ElementUtils.scanForSetter(enclosingClassElement, name);
-        this.hasGetter = ElementUtils.scanForGetter(enclosingClassElement, name);
-    }
-
-    public static Field from(FragmentMetadata.Parameter fragmentParameter) {
-        return new Field(fragmentParameter.element());
-    }
-
-    public static Field from(FragmentMetadata.ViewBinding viewBinding) {
-        return new Field(viewBinding.element());
-    }
-
-    public static Field from(FragmentMetadata.StatePersisted statePersisted) {
-        return new Field(statePersisted.element());
-    }
-
-    public static Field from(ParcelableMetadata.TargetField targetField) {
-        return new Field(targetField.element());
-    }
-
-    public static Field from(StorageMetadata.TargetField targetField) {
-        return new Field(targetField.element());
+    public Field(String name, TypeInformation typeInformation, @Nullable String setterName, @Nullable String getterName) {
+        super(name, typeInformation);
+        this.setter = setterName;
+        this.getter = getterName;
     }
 
     @Override
     public String getValueAccessor() {
-        String accessorStatement = (hasGetter()) ? getGetterName().concat("()") : name;
-        return String.format("this.%s", accessorStatement);
+        if (getter == null || getter.isBlank()) {
+            return String.format("this.%s", name);
+        } else {
+            return String.format("this.%s()", getter);
+        }
     }
 
     @Override
     public String getValueSetStatement(String setVarName) {
-        if (hasSetter()) {
-            return String.format("this.%s(%s)", setterName, setVarName);
-        } else {
+        if (setter == null || setter.isBlank()) {
             return String.format("this.%s = %s", name, setVarName);
+        } else {
+            return String.format("this.%s(%s)", setter, setVarName);
         }
     }
 
-    public String getSetterName() {
-        return setterName;
-    }
-
-    public String getGetterName() {
-        return getterName;
-    }
-
-    public boolean isNullable() {
-        return isNullable;
-    }
-
-    public boolean isFinal() {
-        return isFinal;
-    }
-
-    public boolean hasSetter() {
-        return hasSetter;
-    }
-
-    public boolean hasGetter() {
-        return hasGetter;
-    }
-
-    public Modifier getAccessModifier() {
-        return accessModifier;
-    }
-
-    public Modifier getSetterAccessModifier() {
-        return setterAccessModifier;
-    }
-
-    public Modifier getGetterAccessModifier() {
-        return getterAccessModifier;
-    }
-
-    public boolean accessModifierAtLeast(Modifier target) {
-
-        if (target == null || accessModifier == null) {
-            return false;
-        }
-
-        return accessModifier.ordinal() <= target.ordinal();
+    @NotNull
+    public static Field from(FieldMetadata fieldMetadata) {
+        return new Field(
+                fieldMetadata.getName(),
+                fieldMetadata.getTypeInformation(),
+                fieldMetadata.getSetterName(),
+                fieldMetadata.getGetterName()
+        );
     }
 }

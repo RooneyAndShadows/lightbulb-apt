@@ -3,6 +3,9 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.ScreenParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.StatePersisted;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.ViewBinding;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
@@ -10,6 +13,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -33,9 +37,9 @@ public class FragmentAnnotationReader extends AnnotationReader {
         String layoutName = null;
         String screenName = null;
         String screenGroupName = null;
-        List<FragmentMetadata.Parameter> screenParameters = new ArrayList<>();
-        List<FragmentMetadata.StatePersisted> persistedValues = new ArrayList<>();
-        List<FragmentMetadata.ViewBinding> viewBindings = new ArrayList<>();
+        List<ScreenParameter> screenParameters = new ArrayList<>();
+        List<StatePersisted> persistedValues = new ArrayList<>();
+        List<ViewBinding> viewBindings = new ArrayList<>();
 
         for (AnnotatedElement annotatedElem : annotatedElements) {
             Annotation annotation = annotatedElem.getAnnotation();
@@ -45,13 +49,13 @@ public class FragmentAnnotationReader extends AnnotationReader {
                 screenName = fragmentScreen.screenName();
                 screenGroupName = fragmentScreen.screenGroup();
             } else if (annotation instanceof FragmentParameter fragmentParameter) {
-                FragmentMetadata.Parameter parameter = new FragmentMetadata.Parameter(annotatedElem.getElement(), fragmentParameter.optional());
+                ScreenParameter parameter = new ScreenParameter((VariableElement) annotatedElem.getElement(), fragmentParameter.optional());
                 screenParameters.add(parameter);
             } else if (annotation instanceof FragmentStatePersisted fragmentStatePersisted) {
-                FragmentMetadata.StatePersisted statePersisted = new FragmentMetadata.StatePersisted(annotatedElem.getElement());
+                StatePersisted statePersisted = new StatePersisted((VariableElement)annotatedElem.getElement());
                 persistedValues.add(statePersisted);
             } else if (annotation instanceof BindView bindView) {
-                FragmentMetadata.ViewBinding viewBinding = new FragmentMetadata.ViewBinding(annotatedElem.getElement(), bindView.name());
+                ViewBinding viewBinding = new ViewBinding((VariableElement)annotatedElem.getElement(), bindView.name());
                 viewBindings.add(viewBinding);
             }
         }

@@ -1,14 +1,14 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base;
 
-import javax.lang.model.type.TypeMirror;
+import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 
 public abstract class DeclaredValueHolder {
     protected final String name;
     protected final TypeInformation typeInformation;
 
-    public DeclaredValueHolder(String name, TypeMirror typeMirror) {
+    public DeclaredValueHolder(String name, TypeInformation typeInformation) {
         this.name = name;
-        this.typeInformation = new TypeInformation(typeMirror);
+        this.typeInformation = typeInformation;
     }
 
     public abstract String getValueAccessor();

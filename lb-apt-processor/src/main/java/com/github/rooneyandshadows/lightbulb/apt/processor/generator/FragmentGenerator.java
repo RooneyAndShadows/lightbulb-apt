@@ -2,12 +2,12 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +15,8 @@ import java.util.List;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator.generateReadStatement;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator.generateWriteStatement;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getFragmentsPackage;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getParcelablePackage;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings({"SameParameterValue", "DuplicatedCode"})
@@ -31,8 +33,9 @@ public class FragmentGenerator extends CodeGenerator {
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         fragmentMetadataList.forEach(fragmentMetadata -> {
-            ClassName fragmentSuperClassName = fragmentMetadata.getSuperClassName();
-            ClassName instrumentedClassName = fragmentMetadata.getInstrumentedClassName();
+            ClassName fragmentSuperClassName = getSuperClassName(fragmentMetadata);
+            ClassName instrumentedClassName = getInstrumentedClassName(getFragmentsPackage(),fragmentMetadata);
+
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
 
@@ -64,48 +67,12 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private void generateFields(FragmentMetadata fragmentMetadata, List<FieldSpec> fields, List<MethodSpec> methods) {
-        List<Field> paramFields = fragmentMetadata.getScreenParameters().stream().map(Field::from).toList();
-        List<Field> viewBindingFields = fragmentMetadata.getViewBindings().stream().map(Field::from).toList();
-        List<Field> persistedValueFields = fragmentMetadata.getPersistedValues().stream().map(Field::from).toList();
-        List<Field> targets = new ArrayList<>();
-        targets.addAll(paramFields);
-        targets.addAll(viewBindingFields);
-        targets.addAll(persistedValueFields);
+        List<FieldMetadata> targets = new ArrayList<>();
+        targets.addAll(fragmentMetadata.getScreenParameters());
+        targets.addAll(fragmentMetadata.getViewBindings());
+        targets.addAll(fragmentMetadata.getPersistedValues());
 
-        targets.forEach(field -> {
-            boolean hasSetter = field.hasSetter();
-            boolean hasGetter = field.hasGetter();
-            TypeName fieldTypeName = field.getTypeInformation().getTypeName();
-
-            if (!hasGetter || !hasSetter) {
-                Modifier fieldAccessModifier = field.accessModifierAtLeast(PROTECTED) ? field.getAccessModifier() : PROTECTED;
-                FieldSpec fieldSpec = FieldSpec.builder(fieldTypeName, field.getName(), fieldAccessModifier)
-                        .build();
-                fields.add(fieldSpec);
-            }
-
-            if (hasGetter) {
-                Modifier access = field.getGetterAccessModifier() == PRIVATE ? PROTECTED : field.getGetterAccessModifier();
-
-                MethodSpec getter = MethodSpec.methodBuilder(field.getGetterName())
-                        .returns(fieldTypeName)
-                        .addModifiers(access, ABSTRACT)
-                        .build();
-
-                methods.add(getter);
-            }
-
-            if (hasSetter) {
-                Modifier access = field.getSetterAccessModifier() == PRIVATE ? PROTECTED : field.getSetterAccessModifier();
-
-                MethodSpec setter = MethodSpec.methodBuilder(field.getSetterName())
-                        .addParameter(fieldTypeName, "value")
-                        .addModifiers(access, ABSTRACT)
-                        .build();
-
-                methods.add(setter);
-            }
-        });
+        copyFieldsForSupertypeTransformation(targets, fields, methods);
     }
 
     private void generateOnCreateMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
@@ -175,17 +142,12 @@ public class FragmentGenerator extends CodeGenerator {
 
         fragmentMetadata.getViewBindings().forEach(viewBinding -> {
             Field field = Field.from(viewBinding);
-            String resourceName = viewBinding.name();
+            String resourceName = viewBinding.getResourceName();
+            String setStatement = field.getValueSetStatement("view.findViewById($T.id.$L)");
 
             builder.addStatement("$T view = getView()", ANDROID_VIEW);
-
-            if (field.hasSetter()) {
-                String statement = "$L(view.findViewById($T.id.$L))";
-                builder.addStatement(statement, field.getSetterName(), ANDROID_R, resourceName);
-            } else {
-                String statement = "$L = view.findViewById($T.id.$L)";
-                builder.addStatement(statement, field.getName(), ANDROID_R, resourceName);
-            }
+            builder.addStatement("$T $L = view.findViewById($T.id.$L)", ANDROID_VIEW);
+            builder.addStatement(setStatement, ANDROID_R, resourceName);
         });
 
         destination.add(builder.build());
@@ -224,7 +186,7 @@ public class FragmentGenerator extends CodeGenerator {
 
         fragmentMetadata.getScreenParameters().forEach(parameter -> {
             Field field = Field.from(parameter);
-            CodeBlock readCodeBlock = generateReadStatement(field, "arguments", !parameter.optional(), !field.isNullable());
+            CodeBlock readCodeBlock = generateReadStatement(field, "arguments", !parameter.isOptional(), !parameter.isNullable());
 
             builder.addCode(readCodeBlock);
         });
@@ -240,11 +202,9 @@ public class FragmentGenerator extends CodeGenerator {
             return;
         }
 
-        List<Field> paramFields = fragmentMetadata.getScreenParameters().stream().map(Field::from).toList();
-        List<Field> persistedValueFields = fragmentMetadata.getPersistedValues().stream().map(Field::from).toList();
-        List<Field> fieldsToSave = new ArrayList<>();
-        fieldsToSave.addAll(paramFields);
-        fieldsToSave.addAll(persistedValueFields);
+        List<FieldMetadata> targets = new ArrayList<>();
+        targets.addAll(fragmentMetadata.getScreenParameters());
+        targets.addAll(fragmentMetadata.getPersistedValues());
 
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("saveVariablesState")
@@ -252,7 +212,8 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ANDROID_BUNDLE, "outState")
                 .returns(void.class);
 
-        fieldsToSave.forEach(field -> {
+        targets.forEach(fieldMetadata -> {
+            Field field = Field.from(fieldMetadata);
             CodeBlock writeStatement = generateWriteStatement(field, "outState");
 
             builder.addCode(writeStatement);
@@ -269,11 +230,9 @@ public class FragmentGenerator extends CodeGenerator {
             return;
         }
 
-        List<Field> paramFields = fragmentMetadata.getScreenParameters().stream().map(Field::from).toList();
-        List<Field> persistedValueFields = fragmentMetadata.getPersistedValues().stream().map(Field::from).toList();
-        List<Field> fieldsToRestore = new ArrayList<>();
-        fieldsToRestore.addAll(paramFields);
-        fieldsToRestore.addAll(persistedValueFields);
+        List<FieldMetadata> targets = new ArrayList<>();
+        targets.addAll(fragmentMetadata.getScreenParameters());
+        targets.addAll(fragmentMetadata.getPersistedValues());
 
         MethodSpec.Builder builder = MethodSpec
                 .methodBuilder("restoreVariablesState")
@@ -281,8 +240,10 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ANDROID_BUNDLE, "fragmentSavedInstanceState")
                 .returns(void.class);
 
-        fieldsToRestore.forEach(field -> {
+        targets.forEach(fieldMetadata -> {
+            Field field = Field.from(fieldMetadata);
             CodeBlock readStatement = generateReadStatement(field, "fragmentSavedInstanceState");
+
             builder.addCode(readStatement);
         });
 

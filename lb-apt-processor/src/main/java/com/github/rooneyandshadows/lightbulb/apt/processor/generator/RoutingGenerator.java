@@ -1,21 +1,18 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.Parameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.ScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ROUTING_SCREENS_CLASS_NAME;
 import static java.util.stream.Collectors.groupingBy;
@@ -119,16 +116,16 @@ public class RoutingGenerator extends CodeGenerator {
                 .returns(routeClassName);
 
         String allParamsString = generateCommaSeparatedParamsString(true, fragment, parameter -> {
-            optionalConstructor.addParameter(generateParameterSpec(parameter));
-            allParamsRouteMethod.addParameter(generateParameterSpec(parameter));
+            optionalConstructor.addParameter(generateFragmentScreenParameterSpec(parameter));
+            allParamsRouteMethod.addParameter(generateFragmentScreenParameterSpec(parameter));
         });
         allParamsRouteMethod.addStatement("return new $T($L)", routeClassName, allParamsString);
         optionalConstructor.addStatement("this.screen = new $T($L)", screenClass, allParamsString);
 
         if (notOptionalConstructor != null) {
             String notOptionalParams = generateCommaSeparatedParamsString(false, fragment, parameter -> {
-                notOptionalConstructor.addParameter(generateParameterSpec(parameter));
-                requiredParamsRouteMethod.addParameter(generateParameterSpec(parameter));
+                notOptionalConstructor.addParameter(generateFragmentScreenParameterSpec(parameter));
+                requiredParamsRouteMethod.addParameter(generateFragmentScreenParameterSpec(parameter));
             });
             notOptionalConstructor.addStatement("this.screen = new $T($L)", screenClass, notOptionalParams);
             requiredParamsRouteMethod.addStatement("return new $T($L)", routeClassName, notOptionalParams);
@@ -161,7 +158,8 @@ public class RoutingGenerator extends CodeGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
 
         fragmentMetadataList.forEach(fragmentInfo -> {
-            ClassName fragmentClassName = fragmentInfo.getClassName();
+            ClassName fragmentClassName = ClassNames.getClassName(fragmentInfo);
+
             boolean hasOptionalParameters = fragmentInfo.hasOptionalParameters();
             String screenName = fragmentInfo.getScreenName();
 
@@ -185,13 +183,12 @@ public class RoutingGenerator extends CodeGenerator {
                     .returns(fragmentClassName);
 
             fragmentInfo.getScreenParameters().forEach(parameter -> {
-                Field field = Field.from(parameter);
-                String parameterName = field.getName();
-                TypeName parameterType = field.getTypeInformation().getTypeName();
+                String parameterName = parameter.getName();
+                TypeName parameterType = ClassNames.getTypeName(parameter);
 
                 FieldSpec.Builder fieldSpecBuilder = FieldSpec.builder(parameterType, parameterName, Modifier.PRIVATE);
 
-                if (parameter.optional()) {
+                if (parameter.isOptional()) {
                     fieldSpecBuilder.initializer("null");
                 }
 
@@ -199,10 +196,9 @@ public class RoutingGenerator extends CodeGenerator {
             });
 
             String allParamsString = generateCommaSeparatedParamsString(true, fragmentInfo, parameter -> {
-                Field field = Field.from(parameter);
-                String parameterName = field.getName();
+                String parameterName = parameter.getName();
 
-                optionalScreenConstructor.addParameter(generateParameterSpec(parameter));
+                optionalScreenConstructor.addParameter(generateFragmentScreenParameterSpec(parameter));
                 optionalScreenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
             });
 
@@ -210,11 +206,10 @@ public class RoutingGenerator extends CodeGenerator {
 
             if (notOptionalScreenConstructor != null) {
                 fragmentInfo.getScreenParameters(false).forEach(parameter -> {
-                    Field field = Field.from(parameter);
-                    String parameterName = field.getName();
+                    String parameterName = parameter.getName();
 
-                    if (!parameter.optional()) {
-                        notOptionalScreenConstructor.addParameter(generateParameterSpec(parameter));
+                    if (!parameter.isOptional()) {
+                        notOptionalScreenConstructor.addParameter(generateFragmentScreenParameterSpec(parameter));
                         notOptionalScreenConstructor.addStatement("this.$L = $L", parameterName, parameterName);
                     }
                 });
@@ -264,15 +259,14 @@ public class RoutingGenerator extends CodeGenerator {
                 .build();
     }
 
-    private String generateCommaSeparatedParamsString(boolean includeOptional, FragmentMetadata fragmentMetadata, Consumer<Parameter> consumer) {
+    private String generateCommaSeparatedParamsString(boolean includeOptional, FragmentMetadata fragmentMetadata, Consumer<ScreenParameter> consumer) {
         String paramsString = "";
-        List<Parameter> collection = fragmentMetadata.getScreenParameters(includeOptional);
+        List<ScreenParameter> collection = fragmentMetadata.getScreenParameters(includeOptional);
         for (int index = 0; index < collection.size(); index++) {
-            Parameter param = collection.get(index);
-            Field field = Field.from(param);
+            ScreenParameter param = collection.get(index);
             boolean isLast = index == collection.size() - 1;
             consumer.accept(param);
-            paramsString = paramsString.concat(field.getName());
+            paramsString = paramsString.concat(param.getName());
             if (!isLast) {
                 paramsString = paramsString.concat(", ");
             }

@@ -1,17 +1,25 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.ScreenParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.ClassMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.processing.Filer;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
+import java.util.List;
+
+import static javax.lang.model.element.Modifier.*;
+import static javax.lang.model.element.Modifier.ABSTRACT;
 
 @SuppressWarnings("SameParameterValue")
 public abstract class CodeGenerator {
@@ -35,11 +43,69 @@ public abstract class CodeGenerator {
         }
     }
 
-    protected ParameterSpec generateParameterSpec(FragmentMetadata.Parameter parameter) {
-        Field field = Field.from(parameter);
-        TypeName fieldTypeName = field.getTypeInformation().getTypeName();
-        String parameterName = field.getName();
-        boolean isNullable = field.isNullable() || parameter.optional();
+    @NotNull
+    protected ClassName getClassName(ClassMetadata activityMetadata) {
+        return ClassNames.getClassName(activityMetadata);
+    }
+
+    @Nullable
+    protected ClassName getSuperClassName(ClassMetadata activityMetadata) {
+        return ClassNames.getSuperClassName(activityMetadata);
+    }
+
+    @NotNull
+    protected ClassName getInstrumentedClassName(String packageName, ClassMetadata activityMetadata, boolean prefix) {
+        return ClassNames.generateInstrumentedClassName(packageName, activityMetadata.getClassSimpleName(), prefix);
+    }
+
+    @NotNull
+    protected ClassName getInstrumentedClassName(String packageName, ClassMetadata activityMetadata) {
+        return ClassNames.generateInstrumentedClassName(packageName, activityMetadata.getClassSimpleName(), true);
+    }
+
+    protected void copyFieldsForSupertypeTransformation(List<? extends FieldMetadata> targets, List<FieldSpec> fields, List<MethodSpec> methods) {
+        targets.forEach(fieldMetadata -> {
+            boolean hasSetter = fieldMetadata.hasSetter();
+            boolean hasGetter = fieldMetadata.hasGetter();
+            TypeName fieldTypeName = ClassNames.getTypeName(fieldMetadata);
+
+            if (!hasGetter || !hasSetter) {
+                Modifier fieldAccess = ElementUtils.accessModifierAtLeast(fieldMetadata.getElement(), PROTECTED);
+
+                FieldSpec fieldSpec = FieldSpec.builder(fieldTypeName, fieldMetadata.getName())
+                        .addModifiers(fieldAccess)
+                        .build();
+                fields.add(fieldSpec);
+            }
+
+            if (hasGetter) {
+                Modifier getterAccess = ElementUtils.accessModifierAtLeast(fieldMetadata.getElement(), PROTECTED);
+
+                MethodSpec getter = MethodSpec.methodBuilder(fieldMetadata.getGetterName())
+                        .returns(fieldTypeName)
+                        .addModifiers(getterAccess, ABSTRACT)
+                        .build();
+
+                methods.add(getter);
+            }
+
+            if (hasSetter) {
+                Modifier setterAccess = ElementUtils.accessModifierAtLeast(fieldMetadata.getElement(), PROTECTED);
+
+                MethodSpec setter = MethodSpec.methodBuilder(fieldMetadata.getSetterName())
+                        .addParameter(fieldTypeName, "value")
+                        .addModifiers(setterAccess, ABSTRACT)
+                        .build();
+
+                methods.add(setter);
+            }
+        });
+    }
+
+    protected ParameterSpec generateFragmentScreenParameterSpec(ScreenParameter parameter) {
+        TypeName fieldTypeName = TypeName.get(parameter.getTypeInformation().getTypeMirror());
+        String parameterName = parameter.getName();
+        boolean isNullable = parameter.isNullable() || parameter.isOptional();
 
         return ParameterSpec.builder(fieldTypeName, parameterName)
                 .addAnnotation(isNullable ? Nullable.class : NotNull.class)
@@ -56,15 +122,4 @@ public abstract class CodeGenerator {
         }
     }
 
-    protected void generateFieldSetValueStatement(CodeBlock.Builder codeBlock, Field field, String fromVarName) {
-        String accessorStatement = "this.%s";
-        String varName = field.getName();
-
-        if (field.hasSetter()) {
-            String setterName = field.getSetterName();
-            codeBlock.addStatement("$L($L)", String.format(accessorStatement, setterName), fromVarName);
-        } else {
-            codeBlock.addStatement("$L = $L", String.format(accessorStatement, varName), fromVarName);
-        }
-    }
 }

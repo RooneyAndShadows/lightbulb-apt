@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getActivitiesPackage;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getParcelablePackage;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings("unused")
@@ -31,9 +33,9 @@ public class ActivityGenerator extends CodeGenerator {
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         activityMetadataList.forEach(activityMetadata -> {
-            ClassName activityClassName = activityMetadata.getClassName();
-            ClassName activitySuperClassName = activityMetadata.getSuperClassName();
-            ClassName instrumentedClassName = activityMetadata.getInstrumentedClassName();
+            ClassName activitySuperClassName = getSuperClassName(activityMetadata);
+            ClassName instrumentedClassName = getInstrumentedClassName(getActivitiesPackage(),activityMetadata);
+
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
 

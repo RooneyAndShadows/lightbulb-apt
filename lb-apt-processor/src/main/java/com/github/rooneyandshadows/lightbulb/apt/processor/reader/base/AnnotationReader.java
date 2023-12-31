@@ -28,9 +28,6 @@ public abstract class AnnotationReader {
         this.elements = elements;
         this.environment = environment;
         this.targets = Collections.unmodifiableMap(getAnnotationTargets());
-        TypeElement t = elements.getTypeElement(List.class.getCanonicalName());
-        System.out.println("=========================================");
-        System.out.println(t.asType().toString());
     }
 
     protected abstract void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements);

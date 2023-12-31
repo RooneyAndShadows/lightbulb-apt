@@ -1,29 +1,22 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.squareup.javapoet.ClassName;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.ClassMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getFragmentsPackage;
-
-public final class FragmentMetadata extends BaseMetadata<TypeElement> {
+public final class FragmentMetadata extends ClassMetadata {
     private final String layoutName;
     private final String screenName;
     private final String screenGroupName;
-    private final List<Parameter> screenParameters;
+    private final List<ScreenParameter> screenParameters;
     private final List<StatePersisted> persistedValues;
     private final List<ViewBinding> viewBindings;
-    private final ClassName className;
-    private final ClassName superClassName;
-    private final ClassName instrumentedClassName;
 
-    public FragmentMetadata(TypeElement element, String layoutName, String screenName, String screenGroupName, List<Parameter> screenParameters, List<StatePersisted> persistedValues, List<ViewBinding> viewBindings) {
+    public FragmentMetadata(TypeElement element, String layoutName, String screenName, String screenGroupName, List<ScreenParameter> screenParameters, List<StatePersisted> persistedValues, List<ViewBinding> viewBindings) {
         super(element);
         this.layoutName = layoutName;
         this.screenName = screenName;
@@ -31,9 +24,9 @@ public final class FragmentMetadata extends BaseMetadata<TypeElement> {
         this.screenParameters = screenParameters;
         this.persistedValues = persistedValues;
         this.viewBindings = viewBindings;
-        this.className = ClassNames.getClassName(element);
-        this.superClassName = ClassNames.getSuperClassName(element);
-        this.instrumentedClassName = generateInstrumentedClassName(getFragmentsPackage(), className.simpleName());
+        //this.className = ClassNames.getClassName(element);
+        //this.superClassName = ClassNames.getSuperClassName(element);
+        //this.instrumentedClassName = generateInstrumentedClassName(getFragmentsPackage(), className.simpleName());
     }
 
     public boolean isScreen() {
@@ -48,7 +41,7 @@ public final class FragmentMetadata extends BaseMetadata<TypeElement> {
         return screenName;
     }
 
-    public List<Parameter> getScreenParameters() {
+    public List<ScreenParameter> getScreenParameters() {
         return screenParameters;
     }
 
@@ -58,18 +51,6 @@ public final class FragmentMetadata extends BaseMetadata<TypeElement> {
 
     public List<ViewBinding> getViewBindings() {
         return viewBindings;
-    }
-
-    public ClassName getClassName() {
-        return className;
-    }
-
-    public ClassName getSuperClassName() {
-        return superClassName;
-    }
-
-    public ClassName getInstrumentedClassName() {
-        return instrumentedClassName;
     }
 
     public boolean hasViewBindings() {
@@ -85,12 +66,12 @@ public final class FragmentMetadata extends BaseMetadata<TypeElement> {
     }
 
     public boolean hasOptionalParameters() {
-        return screenParameters.stream().anyMatch(Parameter::optional);
+        return screenParameters.stream().anyMatch(ScreenParameter::isOptional);
     }
 
-    public List<Parameter> getScreenParameters(boolean includeOptional) {
+    public List<ScreenParameter> getScreenParameters(boolean includeOptional) {
         return includeOptional ? screenParameters : screenParameters.stream()
-                .filter(paramInfo -> !paramInfo.optional())
+                .filter(paramInfo -> !paramInfo.isOptional())
                 .collect(Collectors.toList());
     }
 
@@ -101,12 +82,35 @@ public final class FragmentMetadata extends BaseMetadata<TypeElement> {
         return screenGroupName;
     }
 
-    public record Parameter(Element element, boolean optional) {
+    public static final class ScreenParameter extends FieldMetadata {
+        private final boolean optional;
+
+        public ScreenParameter(VariableElement element, boolean optional) {
+            super(element);
+            this.optional = optional;
+        }
+
+        public boolean isOptional() {
+            return optional;
+        }
     }
 
-    public record StatePersisted(Element element) {
+    public static final class StatePersisted extends FieldMetadata {
+        public StatePersisted(VariableElement element) {
+            super(element);
+        }
     }
 
-    public record ViewBinding(Element element, String name) {
+    public static final class ViewBinding  extends FieldMetadata {
+        private final String resourceName;
+
+        public ViewBinding(VariableElement element, String resourceName) {
+            super(element);
+            this.resourceName = resourceName;
+        }
+
+        public String getResourceName() {
+            return resourceName;
+        }
     }
 }

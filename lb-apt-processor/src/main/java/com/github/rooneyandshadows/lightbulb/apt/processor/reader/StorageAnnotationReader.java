@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbStorage;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
@@ -11,6 +12,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -34,7 +36,7 @@ public class StorageAnnotationReader extends AnnotationReader {
         String[] subkeys = null;
         List<TargetField> targetFields = ElementUtils.getFieldElements(target)
                 .stream()
-                .map(TargetField::new)
+                .map(element -> new TargetField((VariableElement) element))
                 .toList();
 
         for (AnnotatedElement element : annotatedElements) {

@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
@@ -102,7 +102,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readOffsetDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String existenceVar = variableName.concat("Exists");
         String tmpVarName = variableName.concat("OffsetDateString");
@@ -132,7 +132,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String existenceVar = variableName.concat("Exists");
         String tmpVarName = variableName.concat("DateString");
@@ -148,7 +148,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void writeInt(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
 
@@ -167,7 +167,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readInt(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         boolean isPrimitive = typeName.isPrimitive();
@@ -199,7 +199,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readString(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String existenceVar = variableName.concat("Exists");
         String setStatement = valueHolder.getValueSetStatement(variableName);
@@ -213,7 +213,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void writeDouble(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
 
@@ -232,7 +232,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readDouble(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         boolean isPrimitive = typeName.isPrimitive();
@@ -252,7 +252,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void writeFloat(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
 
@@ -271,7 +271,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readFloat(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         boolean isPrimitive = typeName.isPrimitive();
@@ -291,7 +291,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void writeLong(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
 
@@ -310,7 +310,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readLong(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         boolean isPrimitive = typeName.isPrimitive();
@@ -330,7 +330,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void writeBoolean(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
 
@@ -349,7 +349,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readBoolean(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         boolean isPrimitive = typeName.isPrimitive();
@@ -383,7 +383,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readUUID(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         String existenceVar = variableName.concat("Exists");
@@ -411,7 +411,7 @@ public class ParcelableCodeGenerator {
     }
 
     private static void readParcelable(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeName typeName = valueHolder.getTypeInformation().getTypeName();
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         String existenceVar = variableName.concat("Exists");
@@ -443,8 +443,8 @@ public class ParcelableCodeGenerator {
     private static void readSparseArray(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeInformation type = valueHolder.getTypeInformation();
         List<TypeInformation> typeArgs = type.getParametrizedTypes();
-        TypeName typeName = type.getTypeName();
-        TypeName valTypeName = typeArgs.get(0).getTypeName();
+        TypeName typeName = TypeName.get(type.getTypeMirror());
+        TypeName valTypeName = TypeName.get(typeArgs.get(0).getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         String existenceVar = variableName.concat("Exists");
@@ -476,8 +476,8 @@ public class ParcelableCodeGenerator {
     private static void readList(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeInformation type = valueHolder.getTypeInformation();
         List<TypeInformation> typeArgs = type.getParametrizedTypes();
-        TypeName typeName = type.getTypeName();
-        TypeName valTypeName = typeArgs.get(0).getTypeName();
+        TypeName typeName = TypeName.get(type.getTypeMirror());
+        TypeName valTypeName = TypeName.get(typeArgs.get(0).getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         String existenceVar = variableName.concat("Exists");
@@ -510,9 +510,9 @@ public class ParcelableCodeGenerator {
     private static void readMap(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeInformation type = valueHolder.getTypeInformation();
         List<TypeInformation> typeArgs = type.getParametrizedTypes();
-        TypeName typeName = type.getTypeName();
-        TypeName keyTypeName = typeArgs.get(0).getTypeName();
-        TypeName valTypeName = typeArgs.get(1).getTypeName();
+        TypeName typeName = TypeName.get(type.getTypeMirror());
+        TypeName keyTypeName = TypeName.get(typeArgs.get(0).getTypeMirror());
+        TypeName valTypeName = TypeName.get(typeArgs.get(1).getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
         String existenceVar = variableName.concat("Exists");

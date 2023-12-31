@@ -2,6 +2,8 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
@@ -13,6 +15,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.regex.Pattern.*;
+import static javax.lang.model.element.ElementKind.*;
+
 public class ElementUtils {
 
     public static TypeName getTypeOfFieldElement(Element element) {
@@ -20,7 +25,7 @@ public class ElementUtils {
     }
 
     public static boolean canBeInstantiated(Element classElement) {
-        return classElement.getKind() == ElementKind.CLASS && !classElement.getModifiers().contains(Modifier.ABSTRACT);
+        return classElement.getKind() == CLASS && !classElement.getModifiers().contains(Modifier.ABSTRACT);
     }
 
     public static TypeMirror getTypeMirror(Elements elements, Class<?> clazz) {
@@ -41,7 +46,7 @@ public class ElementUtils {
     public static String getPackage(Element element) {
         Element enclosing = element;
 
-        while (enclosing.getKind() != ElementKind.PACKAGE) {
+        while (enclosing.getKind() != PACKAGE) {
             enclosing = enclosing.getEnclosingElement();
         }
         PackageElement packageElement = (PackageElement) enclosing;
@@ -76,28 +81,32 @@ public class ElementUtils {
         return classPackage.concat(".").concat(classSimpleName);
     }
 
-    public static boolean scanForSetter(Element classElement, String fieldName) {
+    @Nullable
+    public static String findFieldSetterName(TypeElement classElement, String fieldName) {
         String setterName = MemberUtils.getFieldSetterName(fieldName);
-        return methodExists(classElement, setterName);
+        boolean exists = methodExists(classElement, setterName);
+        return exists ? setterName : null;
     }
 
-    public static boolean scanForGetter(Element classElement, String fieldName) {
+    @Nullable
+    public static String findFieldGetterName(TypeElement classElement, String fieldName) {
         String getterName = MemberUtils.getFieldGetterName(fieldName);
-        return methodExists(classElement, getterName);
+        boolean exists = methodExists(classElement, getterName);
+        return exists ? getterName : null;
     }
 
     private static boolean methodExists(Element classElement, String methodName) {
-        if (classElement.getKind() != ElementKind.CLASS) return false;
-        Pattern pattern = Pattern.compile("^".concat(methodName).concat("(\\$.*)?$"), Pattern.CASE_INSENSITIVE);
+        if (classElement.getKind() != CLASS) return false;
+        Pattern pattern = compile("^".concat(methodName).concat("(\\$.*)?$"), CASE_INSENSITIVE);
         return !classElement.getEnclosedElements().stream()
                 .filter(target -> {
+                    if (target.getKind() != METHOD) {
+                        return false;
+                    }
                     String targetName = target.getSimpleName().toString();
-                    boolean take = target.getKind() == ElementKind.METHOD;
                     Matcher matcher = pattern.matcher(targetName);
-                    take &= matcher.find();
-                    return take;
+                    return matcher.find();
                 })
-                .map(element -> element.getSimpleName().toString())
                 .toList()
                 .isEmpty();
     }
@@ -111,6 +120,17 @@ public class ElementUtils {
                 .orElse(null);
     }
 
+    public static Modifier accessModifierAtLeast(@NotNull Element test, @NotNull Modifier target) {
+
+        Modifier accessModifier = getAccessModifier(test);
+
+        if (accessModifier == null || target.ordinal() <= accessModifier.ordinal()) {
+            return target;
+        }
+
+        return accessModifier;
+    }
+
     public static Modifier getMethodAccessModifier(Element classElement, String methodName) {
         if (methodName == null || methodName.isBlank()) {
             return null;
@@ -120,7 +140,7 @@ public class ElementUtils {
                 .stream()
                 .filter(target -> {
                     String targetName = target.getSimpleName().toString();
-                    return target.getKind() == ElementKind.METHOD && targetName.equals(methodName);
+                    return target.getKind() == METHOD && targetName.equals(methodName);
                 }).findFirst()
                 .orElse(null);
 

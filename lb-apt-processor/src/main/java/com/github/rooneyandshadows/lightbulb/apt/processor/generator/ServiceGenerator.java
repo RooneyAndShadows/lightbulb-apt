@@ -17,6 +17,7 @@ import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_APPLICATION;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_CONTEXT;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.*;
 import static javax.lang.model.element.Modifier.*;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -28,7 +29,7 @@ public class ServiceGenerator extends CodeGenerator {
     private final List<StorageMetadata> storageMetadataList;
 
     public ServiceGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer,elements, annotationResultsRegistry);
+        super(filer, elements, annotationResultsRegistry);
         servicePackage = PackageNames.getServicePackage();
         hasRoutingElements = annotationResultsRegistry.hasRoutingScreens();
         hasStorageElements = annotationResultsRegistry.hasStorageDescriptions();
@@ -112,7 +113,7 @@ public class ServiceGenerator extends CodeGenerator {
 
         if (hasStorageElements) {
             storageMetadataList.forEach(storageMetadata -> {
-                ClassName storageClassName = storageMetadata.getInstrumentedClassName();
+                ClassName storageClassName = getInstrumentedClassName(getStoragePackage(), storageMetadata, false);
                 String storageFieldName = MemberUtils.getFieldNameForClass(storageClassName.simpleName());
 
                 setterMethodBuilder.addStatement("this.$L = new $T($L)", storageFieldName, storageClassName, applicationContextVarName);
@@ -135,7 +136,7 @@ public class ServiceGenerator extends CodeGenerator {
 
     private void generateStorageMembers(List<FieldSpec> fields, List<MethodSpec> methods) {
         storageMetadataList.forEach(storageDescription -> {
-            ClassName generatedStorageClassName = storageDescription.getInstrumentedClassName();
+            ClassName generatedStorageClassName = getInstrumentedClassName(getStoragePackage(), storageDescription, false);
             String generatedStorageSimpleClassName = generatedStorageClassName.simpleName();
             String fieldName = MemberUtils.getFieldNameForClass(generatedStorageSimpleClassName);
             String getterName = MemberUtils.getFieldGetterName(generatedStorageSimpleClassName);

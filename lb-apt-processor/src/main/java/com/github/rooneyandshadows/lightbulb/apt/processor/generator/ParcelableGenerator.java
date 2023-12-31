@@ -2,8 +2,11 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ParcelableCodeGenerator;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
@@ -31,11 +34,11 @@ public class ParcelableGenerator extends CodeGenerator {
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         parcelableDescriptions.forEach(parcelableMetadata -> {
-            ClassName instrumentedClassName = parcelableMetadata.getInstrumentedClassName();
+            ClassName instrumentedClassName = getInstrumentedClassName(getParcelablePackage(), parcelableMetadata);
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
 
-            generateFields(parcelableMetadata, fields);
+            generateFields(parcelableMetadata, fields, methods);
             generateCreatorField(parcelableMetadata, fields);
             generateConstructorMethod(parcelableMetadata, methods);
             generateWriteToParcelMethod(parcelableMetadata, methods);
@@ -43,7 +46,7 @@ public class ParcelableGenerator extends CodeGenerator {
 
             TypeSpec.Builder parcelableClassBuilder = TypeSpec
                     .classBuilder(instrumentedClassName)
-                    .addModifiers(PUBLIC, FINAL)
+                    .addModifiers(PUBLIC, ABSTRACT)
                     .addSuperinterface(ANDROID_PARCELABLE)
                     .addFields(fields)
                     .addMethods(methods);
@@ -57,16 +60,10 @@ public class ParcelableGenerator extends CodeGenerator {
         return annotationResultsRegistry.hasParcelableDescriptions();
     }
 
-    private void generateFields(ParcelableMetadata parcelableMetadata, List<FieldSpec> fields) {
-        parcelableMetadata.getTargetFields().forEach(targetField -> {
-            Field field = Field.from(targetField);
-            TypeName fieldTypeName = field.getTypeInformation().getTypeName();
+    private void generateFields(ParcelableMetadata parcelableMetadata, List<FieldSpec> fields, List<MethodSpec> methods) {
+        List<? extends FieldMetadata> targets = parcelableMetadata.getTargetFields();
 
-            FieldSpec fieldSpec = FieldSpec.builder(fieldTypeName, field.getName(), PRIVATE)
-                    .build();
-            //TODO ADD GETTER SETTER MODIFIERS ETC
-            fields.add(fieldSpec);
-        });
+        copyFieldsForSupertypeTransformation(targets, fields, methods);
     }
 
     private void generateConstructorMethod(ParcelableMetadata parcelableMetadata, List<MethodSpec> methods) {
@@ -119,7 +116,7 @@ public class ParcelableGenerator extends CodeGenerator {
     }
 
     private void generateCreatorField(ParcelableMetadata parcelableMetadata, List<FieldSpec> fields) {
-        ClassName instrumentedClassName = parcelableMetadata.getInstrumentedClassName();
+        ClassName instrumentedClassName = getInstrumentedClassName(getParcelablePackage(),parcelableMetadata);
         ParameterizedTypeName typeName = ParameterizedTypeName.get(ANDROID_PARCELABLE_CREATOR, instrumentedClassName);
 
         TypeSpec.Builder creatorBuilder = TypeSpec.anonymousClassBuilder("")

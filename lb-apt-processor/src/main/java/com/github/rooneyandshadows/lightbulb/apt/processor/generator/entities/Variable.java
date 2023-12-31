@@ -1,13 +1,16 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
+import org.jetbrains.annotations.NotNull;
 
 import javax.lang.model.type.TypeMirror;
 
 public class Variable extends DeclaredValueHolder {
-    public Variable(String name, TypeMirror typeMirror) {
-        super(name, typeMirror);
+    public Variable(String name, TypeInformation typeInformation) {
+        super(name, typeInformation);
     }
 
     @Override
@@ -20,10 +23,11 @@ public class Variable extends DeclaredValueHolder {
         return String.format("%s = %s", name, setVarName);
     }
 
-    public static Variable from(FragmentMetadata.Parameter parameter) {
-        String name = parameter.element().getSimpleName().toString();
-        TypeMirror typeMirror = parameter.element().asType();
-
-        return new Variable(name, typeMirror);
+    @NotNull
+    public static Variable from(FieldMetadata fieldMetadata) {
+        return new Variable(
+                fieldMetadata.getName(),
+                fieldMetadata.getTypeInformation()
+        );
     }
 }

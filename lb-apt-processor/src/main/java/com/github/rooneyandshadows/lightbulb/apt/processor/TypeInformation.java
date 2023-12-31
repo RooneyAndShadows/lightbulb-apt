@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base;
+package com.github.rooneyandshadows.lightbulb.apt.processor;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
@@ -35,13 +35,11 @@ public final class TypeInformation {
     private static final String listType = List.class.getCanonicalName();
     private static final String mapType = Map.class.getCanonicalName();
     private final TypeMirror typeMirror;
-    private final TypeName typeName;
     private final boolean isPrimitive;
 
     public TypeInformation(TypeMirror typeMirror) {
         this.typeMirror = typeMirror;
         this.isPrimitive = !(typeMirror instanceof DeclaredType);
-        this.typeName = ClassName.get(typeMirror);
     }
 
     @Nullable
@@ -84,10 +82,6 @@ public final class TypeInformation {
 
     public TypeMirror getTypeMirror() {
         return typeMirror;
-    }
-
-    public TypeName getTypeName() {
-        return typeName;
     }
 
     public boolean isPrimitive() {

@@ -12,6 +12,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class ParcelableAnnotationReader extends AnnotationReader {
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
         List<TargetField> targetFields = ElementUtils.getFieldElements(target)
                 .stream()
-                .map(TargetField::new)
+                .map(element -> new TargetField((VariableElement) element))
                 .toList();
 
         ParcelableMetadata metadata = new ParcelableMetadata(target, targetFields);

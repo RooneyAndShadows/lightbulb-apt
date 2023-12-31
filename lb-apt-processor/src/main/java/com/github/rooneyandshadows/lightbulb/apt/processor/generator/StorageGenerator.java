@@ -4,6 +4,8 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.S
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getFragmentsPackage;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getStoragePackage;
 import static javax.lang.model.element.Modifier.*;
 
 public class StorageGenerator extends CodeGenerator {
@@ -28,8 +32,9 @@ public class StorageGenerator extends CodeGenerator {
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         storageMetadataList.forEach(storageDescription -> {
-            ClassName instrumentedClassName = storageDescription.getInstrumentedClassName();
-            ParameterizedTypeName superClass = ParameterizedTypeName.get(BASE_STORAGE, storageDescription.getClassName());
+            ClassName className = getClassName(storageDescription);
+            ClassName instrumentedClassName = getInstrumentedClassName(getStoragePackage(), storageDescription, false);
+            ParameterizedTypeName superClass = ParameterizedTypeName.get(BASE_STORAGE, className);
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
 
@@ -84,7 +89,7 @@ public class StorageGenerator extends CodeGenerator {
     }
 
     private void generateGetStorageClassMethod(StorageMetadata storageMetadata, List<MethodSpec> methods) {
-        ClassName storageClassName = storageMetadata.getClassName();
+        ClassName storageClassName = getClassName(storageMetadata);
         ParameterizedTypeName storageClassTypeName = ParameterizedTypeName.get(CLASS, storageClassName);
 
         MethodSpec getStorageClassMethod = MethodSpec.methodBuilder("getStorageClass")
@@ -98,22 +103,23 @@ public class StorageGenerator extends CodeGenerator {
     }
 
     private void generateGetDefaultMethod(StorageMetadata storageMetadata, List<MethodSpec> methods) {
+        ClassName storageClassName = getClassName(storageMetadata);
+
         MethodSpec getDefaultMethod = MethodSpec.methodBuilder("getDefault")
                 .addModifiers(PUBLIC)
                 .addAnnotation(Override.class)
                 .addAnnotation(NotNull.class)
-                .returns(storageMetadata.getClassName())
-                .addStatement("return new $T()", storageMetadata.getClassName())
+                .returns(storageClassName)
+                .addStatement("return new $T()", storageClassName)
                 .build();
         methods.add(getDefaultMethod);
     }
 
     private void generateStorageFieldAccessors(StorageMetadata storageMetadata, List<MethodSpec> methods) {
-        ClassName storageClassName = storageMetadata.getClassName();
+        ClassName storageClassName = getClassName(storageMetadata);
 
         storageMetadata.getTargetFields().forEach(targetField -> {
-            Field field = Field.from(targetField);
-            TypeName fieldTypeName = field.getTypeInformation().getTypeName();
+            TypeName fieldTypeName = ClassNames.getTypeName(targetField);
             String[] subKeys = storageMetadata.getSubKeys();
             List<ParameterSpec> keyParameters = new ArrayList<>();
             String keyParamsCommaSeparated = "";
@@ -151,25 +157,28 @@ public class StorageGenerator extends CodeGenerator {
 
             loadDataCodeBlock.addStatement("$T data = this.load(key)", storageClassName);
 
+            String setterName = MemberUtils.getFieldSetterName(targetField.getName());
 
-            MethodSpec setMethod = MethodSpec.methodBuilder(field.getSetterName())
+            MethodSpec setMethod = MethodSpec.methodBuilder(setterName)
                     .addModifiers(PUBLIC, FINAL)
                     .addAnnotation(NotNull.class)
                     .addParameter(newValueParam)
                     .addParameters(keyParameters)
                     .returns(void.class)
                     .addCode(loadDataCodeBlock.build())
-                    .addStatement("data.$L = $L", field.getName(), "newValue")
+                    .addStatement("data.$L = $L", targetField.getName(), "newValue")
                     .addStatement("save($L,$L)", "data", "key")
                     .build();
 
-            MethodSpec getMethod = MethodSpec.methodBuilder(field.getGetterName())
+            String getterName = MemberUtils.getFieldGetterName(targetField.getName());
+
+            MethodSpec getMethod = MethodSpec.methodBuilder(getterName)
                     .addModifiers(PUBLIC, FINAL)
                     .addAnnotation(NotNull.class)
                     .addParameters(keyParameters)
                     .returns(fieldTypeName)
                     .addCode(loadDataCodeBlock.build())
-                    .addStatement("return data.$L", field.getName())
+                    .addStatement("return data.$L", targetField.getName())
                     .build();
 
             methods.add(setMethod);

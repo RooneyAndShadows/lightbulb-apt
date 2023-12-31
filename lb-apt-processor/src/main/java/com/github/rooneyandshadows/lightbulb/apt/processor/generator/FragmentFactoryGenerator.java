@@ -4,7 +4,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegi
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Variable;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator;
 import com.squareup.javapoet.*;
 
@@ -49,13 +49,11 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     }
 
     private void generateFragmentCreator(List<TypeSpec> classes, FragmentMetadata fragmentMetadata) {
-        ClassName fragmentClassName = fragmentMetadata.getClassName();
-        String initializerClassName = fragmentClassName.simpleName();
         List<MethodSpec> methods = new ArrayList<>();
 
         generateFragmentNewInstanceMethods(fragmentMetadata, methods);
 
-        TypeSpec initializerClass = TypeSpec.classBuilder(initializerClassName)
+        TypeSpec initializerClass = TypeSpec.classBuilder(fragmentMetadata.getClassSimpleName())
                 .addModifiers(FINAL, PUBLIC)
                 .addMethods(methods)
                 .build();
@@ -79,7 +77,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     }
 
     private void generateFragmentNewInstanceMethod(FragmentMetadata fragmentMetadata, boolean includeOptionalParams, List<MethodSpec> destination) {
-        ClassName fragmentClassName = fragmentMetadata.getClassName();
+        ClassName fragmentClassName = getClassName(fragmentMetadata);
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("newInstance")
                 .addModifiers(PUBLIC, STATIC)
@@ -90,7 +88,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
         fragmentMetadata.getScreenParameters(includeOptionalParams).forEach(parameter -> {
             Variable variable = Variable.from(parameter);
             CodeBlock writeIntoBundleCodeBlock = BundleCodeGenerator.generateWriteStatement(variable, "arguments");
-            ParameterSpec parameterSpec = generateParameterSpec(parameter);
+            ParameterSpec parameterSpec = generateFragmentScreenParameterSpec(parameter);
 
             builder.addParameter(parameterSpec);
             builder.addCode(writeIntoBundleCodeBlock);

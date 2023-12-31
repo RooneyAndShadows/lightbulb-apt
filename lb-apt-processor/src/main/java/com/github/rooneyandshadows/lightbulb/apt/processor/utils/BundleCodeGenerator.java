@@ -1,8 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.TypeName;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 
@@ -125,9 +126,10 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
-        cbBuilder.addStatement("$T $L = $L.getString($S,\"\")", typeInformation.getTypeName(), tmpVarName, bundleVariableName, key)
+        cbBuilder.addStatement("$T $L = $L.getString($S,\"\")", typeName, tmpVarName, bundleVariableName, key)
                  .addStatement(setStatement);
     }
 
@@ -143,9 +145,10 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
-        cbBuilder.addStatement("$T $L = $T.fromString($L.getString($S,\"\"))", typeInformation.getTypeName(), tmpVarName, typeInformation.getTypeName(), bundleVariableName, key)
+        cbBuilder.addStatement("$T $L = $T.fromString($L.getString($S,\"\"))", typeName, tmpVarName, typeName, bundleVariableName, key)
                  .addStatement(setStatement);
     }
 
@@ -166,9 +169,10 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
-        cbBuilder.addStatement("$T $L = $L.getInt($S)", typeInformation.getTypeName(), tmpVarName, bundleVariableName, key)
+        cbBuilder.addStatement("$T $L = $L.getInt($S)", typeName, tmpVarName, bundleVariableName, key)
                 .addStatement(setStatement);
     }
 
@@ -189,9 +193,10 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
-        cbBuilder.addStatement("$T $L = $L.getBoolean($S)", typeInformation.getTypeName(), tmpVarName, bundleVariableName, key)
+        cbBuilder.addStatement("$T $L = $L.getBoolean($S)", typeName, tmpVarName, bundleVariableName, key)
                  .addStatement(setStatement);
     }
 
@@ -212,9 +217,10 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
-        cbBuilder.addStatement("$T $L = $L.getFloat($S)", typeInformation.getTypeName(), tmpVarName, bundleVariableName, key)
+        cbBuilder.addStatement("$T $L = $L.getFloat($S)", typeName, tmpVarName, bundleVariableName, key)
                  .addStatement(setStatement);
     }
 
@@ -235,9 +241,10 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
-        cbBuilder.addStatement("$T $L = $L.getLong($S)", typeInformation.getTypeName(), tmpVarName, bundleVariableName, key)
+        cbBuilder.addStatement("$T $L = $L.getLong($S)", typeName, tmpVarName, bundleVariableName, key)
                  .addStatement(setStatement);
     }
 
@@ -258,9 +265,10 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
-        cbBuilder.addStatement("$T $L = $L.getDouble($S)", typeInformation.getTypeName(), tmpVarName, bundleVariableName, key)
+        cbBuilder.addStatement("$T $L = $L.getDouble($S)", typeName, tmpVarName, bundleVariableName, key)
                  .addStatement(setStatement);
     }
 
@@ -281,12 +289,13 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
         String dateStringTmpVarName = key.concat("DateString");
 
         String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
         cbBuilder.addStatement("$T $L = ".concat(getDateStringExpression), STRING, dateStringTmpVarName, key);
-        cbBuilder.addStatement("$T $L = $T.getDateFromString($L)", typeInformation.getTypeName(), tmpVarName, DATE_UTILS, dateStringTmpVarName)
+        cbBuilder.addStatement("$T $L = $T.getDateFromString($L)", typeName, tmpVarName, DATE_UTILS, dateStringTmpVarName)
                  .addStatement(setStatement);
     }
 
@@ -310,12 +319,13 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
         String dateStringTmpVarName = key.concat("OffsetDateString");
 
         String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
         cbBuilder.addStatement("$T $L = ".concat(getDateStringExpression), STRING, dateStringTmpVarName, key);
-        cbBuilder.addStatement("$T $L = $T.getOffsetDateFromString($L)", typeInformation.getTypeName(), tmpVarName, DATE_UTILS, dateStringTmpVarName)
+        cbBuilder.addStatement("$T $L = $T.getOffsetDateFromString($L)", typeName, tmpVarName, DATE_UTILS, dateStringTmpVarName)
                  .addStatement(setStatement);
     }
 
@@ -339,11 +349,12 @@ public class BundleCodeGenerator {
             String tmpVarName
     ) {
         TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
-        cbBuilder.addStatement("$T $L", typeInformation.getTypeName(), tmpVarName)
+        cbBuilder.addStatement("$T $L", typeName, tmpVarName)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L = $L.getParcelable($S,$L)", bundleVariableName, tmpVarName, key, typeInformation.getTypeName().toString().concat(".class"))
+                .addStatement("$L = $L.getParcelable($S,$L)", bundleVariableName, tmpVarName, key, typeName.toString().concat(".class"))
                 .nextControlFlow("else")
                 .addStatement("$L = $L.getParcelable($S)", bundleVariableName, tmpVarName, key)
                 .endControlFlow()

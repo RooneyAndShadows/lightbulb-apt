@@ -14,6 +14,8 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getApplicationPackage;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getParcelablePackage;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -24,7 +26,7 @@ public class ApplicationGenerator extends CodeGenerator {
     private final List<ApplicationMetadata> applicationMetadataList;
 
     public ApplicationGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer,elements, annotationResultsRegistry);
+        super(filer, elements, annotationResultsRegistry);
         hasStorages = annotationResultsRegistry.hasStorageDescriptions();
         hasApplications = annotationResultsRegistry.hasApplicationDescriptions();
         applicationMetadataList = annotationResultsRegistry.getApplicationDescriptions();
@@ -33,8 +35,8 @@ public class ApplicationGenerator extends CodeGenerator {
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         applicationMetadataList.forEach(applicationMetadata -> {
-            ClassName applicationSuperClassName = applicationMetadata.getSuperClassName();
-            ClassName instrumentedClassName = applicationMetadata.getInstrumentedClassName();
+            ClassName applicationSuperClassName = getSuperClassName(applicationMetadata);
+            ClassName instrumentedClassName = getInstrumentedClassName(getApplicationPackage(),applicationMetadata);
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
 

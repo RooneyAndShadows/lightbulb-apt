@@ -2,7 +2,10 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.ClassMetadata;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeName;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.TypeElement;
@@ -62,21 +65,19 @@ public class ClassNames {
     public static final ClassName ARRAY_LIST = ClassName.get(ArrayList.class);
     public static final ClassName ILLEGAL_ARGUMENT_EXCEPTION = ClassName.get(IllegalArgumentException.class);
 
-
+    @NotNull
     public static ClassName androidResources() {
         return ClassName.get(PackageNames.getRootPackage(), "R");
     }
 
-    public static String getClassPackage(TypeElement element) {
-        return ElementUtils.getPackage(element);
+    @NotNull
+    public static ClassName getClassName(ClassMetadata metadata) {
+        return ClassName.get(metadata.getElement());
     }
 
-    public static ClassName getClassName(TypeElement typeElement) {
-        return ClassName.get(typeElement);
-    }
-
-    public static ClassName getSuperClassName(TypeElement typeElement) {
-        TypeElement superTypeElement = ElementUtils.getSuperType(typeElement);
+    @Nullable
+    public static ClassName getSuperClassName(ClassMetadata metadata) {
+        TypeElement superTypeElement = ElementUtils.getSuperType(metadata.getElement());
 
         if (superTypeElement == null) {
             return null;
@@ -85,8 +86,17 @@ public class ClassNames {
         return ClassName.get(superTypeElement);
     }
 
+    @NotNull
+    public static TypeName getTypeName(BaseMetadata<?> metadata) {
+        return TypeName.get(metadata.getTypeMirror());
+    }
+
     public static ClassName generateInstrumentedClassName(String classPackage, String className) {
-        return generateClassNameWithPrefix(classPackage, className, DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX);
+        return generateInstrumentedClassName(classPackage, className, true);
+    }
+
+    public static ClassName generateInstrumentedClassName(String classPackage, String className, boolean prefix) {
+        return generateClassNameWithPrefix(classPackage, className, prefix ? DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX : "");
     }
 
     public static ClassName generateClassNameWithPrefix(String classPackage, String className, String classNamePrefix) {
