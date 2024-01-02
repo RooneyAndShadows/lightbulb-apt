@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation
 
-import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.info
+import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.IClassTransformer
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbApplication
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX

@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base
 
-import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil
+import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
 import javassist.ClassPool
 import javassist.CtClass
 

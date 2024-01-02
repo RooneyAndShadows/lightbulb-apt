@@ -1,16 +1,16 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.common
 
-import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.severe
-import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.warning
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.IClassTransformer
+import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.info
+import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.severe
+import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.warning
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.Loader
 import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
 import java.io.*
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.Files.*
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import kotlin.io.path.Path
@@ -22,9 +22,16 @@ class TransformationExecutor(
     private val globalClassPath: FileCollection,
     private val transformationsClassPathProvider: (() -> FileCollection),
     private val transformations: List<IClassTransformer>,
+    private val classesDumpPath: String
 ) {
     private val transformationsClassPath: FileCollection
         get() = transformationsClassPathProvider.invoke()
+
+    private fun createFile(directory: String, filename: String): File {
+        val dir = File(directory)
+        if (!dir.exists()) dir.mkdirs()
+        return File("$directory/$filename")
+    }
 
     fun execute(jarDestination: JarOutputStream): Boolean {
         var result = false
@@ -60,16 +67,14 @@ class TransformationExecutor(
     private fun sendToDestination(targetClass: CtClass, jarDestination: JarOutputStream) {
         try {
             val className = targetClass.name
-            //info("Adding to jar $className")
-            //jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
-            //jarDestination.write(targetClass.toBytecode())
-            // jarDestination.closeEntry()
-            val path = ""
-            val dir = File(path);
-            if (!dir.exists())
-                Files.createDirectory(Path(path))
-            val file = File("${dir}/${targetClass.simpleName}_Transformed.class");
-            FileOutputStream(file).use { outputStream -> outputStream.write(targetClass.toBytecode()) }
+            info("Adding to jar $className")
+            jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
+            jarDestination.write(targetClass.toBytecode())
+            jarDestination.closeEntry()
+
+
+            val compiled = createFile(classesDumpPath,"${targetClass.simpleName}_Transformed.class")
+            FileOutputStream(compiled).use { outputStream -> outputStream.write(targetClass.toBytecode()) }
 
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)

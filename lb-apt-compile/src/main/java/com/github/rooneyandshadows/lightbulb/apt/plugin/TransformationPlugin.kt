@@ -7,7 +7,7 @@ import com.android.build.api.variant.Variant
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
-import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil
+import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TransformationsTask
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ProcessorOptionNames
@@ -50,7 +50,6 @@ class TransformationPlugin : Plugin<Project> {
 
     private fun configureTransformationTask(project: Project, extension: TransformExtension) {
         val ext = project.androidComponents()
-
         ext.onVariants(VariantSelectorImpl().withName("debug")) { variant ->
             configureAPT(extension, variant)
             val capitalizedVariantName = variant.name.capitalized()

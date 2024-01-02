@@ -2,7 +2,6 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks
 
 import com.android.build.api.variant.Variant
 import com.github.rooneyandshadows.lightbulb.apt.plugin.globalClasspathForVariant
-import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.common.TransformationJobRegistry
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.AddParcelableCreatorTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeActivitySuperclassTransformation
@@ -41,6 +40,10 @@ abstract class TransformationsTask @Inject constructor(private val variant: Vari
     @get:OutputFile
     abstract val output: RegularFileProperty
 
+    private val classesDumpDir: String by lazy {
+        return@lazy output.get().asFile.parent.plus("/lightbulb")
+    }
+
     init {
         transformationRegistry = TransformationJobRegistry(globalClasspath) { getTransformationsClasspath() }
         transformationRegistry.register(ChangeApplicationSuperclassTransformation())
@@ -66,11 +69,6 @@ abstract class TransformationsTask @Inject constructor(private val variant: Vari
     @TaskAction
     fun taskAction() {
         val jars = allJars.get()
-
-        if (jars.size <= 0) {
-            return
-        }
-
         val jarOutput = JarOutputStream(
             BufferedOutputStream(
                 FileOutputStream(
@@ -92,7 +90,7 @@ abstract class TransformationsTask @Inject constructor(private val variant: Vari
                 }
                 jarFile.close()
             }
-            transformationRegistry.execute(jarOutput)
+            transformationRegistry.execute(jarOutput, classesDumpDir)
         }
     }
 

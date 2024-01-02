@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.plugin.logger
+package com.github.rooneyandshadows.lightbulb.apt.plugin.utils
 
 import java.util.logging.*
 import java.util.logging.Level.*
