@@ -84,7 +84,7 @@ public class PackageNames {
         return resolve(getLightbulbPackage(), "application");
     }
 
-    public static String resolve(String first, String... other) {
+    private static String resolve(String first, String... other) {
         String packageString = first;
         for (String packagePart : other) {
             packageString = packageString.concat(".").concat(packagePart);

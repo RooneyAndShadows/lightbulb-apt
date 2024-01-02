@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.ClassMetadata;
 import com.squareup.javapoet.ClassName;
@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -17,6 +16,8 @@ import java.util.*;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.*;
 
 public class ClassNames {
+    public static final String ANDROID_PARCEL_SIMPLE_NAME = "Parcel";
+    public static final String ANDROID_PARCEL_CANONICAL_NAME = resolveCanonical(ANDROID_OS, ANDROID_PARCEL_SIMPLE_NAME);
     /**
      * Result names
      */
@@ -39,7 +40,7 @@ public class ClassNames {
     public static final ClassName ANDROID_FRAGMENT = ClassName.get(ANDROIDX_FRAGMENT_APP, "Fragment");
     public static final ClassName ANDROID_ACTIVITY = ClassName.get(ANDROIDX_APPCOMPAT_APP, "AppCompatActivity");
     public static final ClassName ANDROID_BUNDLE = ClassName.get(ANDROID_OS, "Bundle");
-    public static final ClassName ANDROID_PARCEL = ClassName.get(ANDROID_OS, "Parcel");
+    public static final ClassName ANDROID_PARCEL = ClassName.get(ANDROID_OS, ANDROID_PARCEL_SIMPLE_NAME);
     public static final ClassName ANDROID_PARCELABLE = ClassName.get(ANDROID_OS, "Parcelable");
     public static final ClassName ANDROID_PARCELABLE_CREATOR = ClassName.get(ANDROID_OS, "Parcelable", "Creator");
     public static final ClassName ANDROID_SPARSE_ARRAY = ClassName.get(ANDROID_UTIL, "SparseArray");
@@ -87,6 +88,11 @@ public class ClassNames {
     }
 
     @NotNull
+    public static TypeName getTypeName(TypeInformation typeInformation) {
+        return TypeName.get(typeInformation.getTypeMirror());
+    }
+
+    @NotNull
     public static TypeName getTypeName(BaseMetadata<?> metadata) {
         return TypeName.get(metadata.getTypeMirror());
     }
@@ -121,5 +127,9 @@ public class ClassNames {
 
     public static ClassName getLightbulbServiceClassName() {
         return ClassName.get(PackageNames.getServicePackage(), LIGHTBULB_SERVICE_CLASS_NAME);
+    }
+
+    private static String resolveCanonical(String packageName, String simpleClassName) {
+        return String.format("%s.%s", packageName, simpleClassName);
     }
 }

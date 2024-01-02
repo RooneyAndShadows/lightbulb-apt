@@ -18,6 +18,7 @@ internal class AddParcelableCreatorTransformation : IClassTransformer() {
         val targetCtClass = getTargetClass(classPool, ctClass)
 
         ctClass.superclass = targetCtClass
+
         assureConstructorWithParcel(classPool, ctClass)
         val creatorClass = createCreatorClass(classPool, ctClass);
 
@@ -28,8 +29,6 @@ internal class AddParcelableCreatorTransformation : IClassTransformer() {
         ctClass.addField(field, CtField.Initializer.byExpr("new ${creatorClass.name}();"))
 
         return setOf(creatorClass);
-
-
     }
 
     private fun assureConstructorWithParcel(classPool: ClassPool, ctClass: CtClass) {

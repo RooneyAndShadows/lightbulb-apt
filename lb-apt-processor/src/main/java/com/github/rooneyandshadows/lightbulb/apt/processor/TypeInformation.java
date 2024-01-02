@@ -1,19 +1,23 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeMirror;
 import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 
 
 @SuppressWarnings({"DuplicatedCode", "RedundantIfStatement", "unused"})
@@ -44,6 +48,10 @@ public final class TypeInformation {
 
     @Nullable
     public TypeInformation getSuperClassType() {
+        if (isPrimitive) {
+            return null;
+        }
+
         TypeElement typeElement = (TypeElement) ((DeclaredType) typeMirror).asElement();
         TypeMirror superClassTypeMirror = typeElement.getSuperclass();
 
@@ -52,6 +60,49 @@ public final class TypeInformation {
         }
 
         return new TypeInformation(superClassTypeMirror);
+    }
+
+    public boolean hasConstructorWithParameters(TypeMirror... paramTypes) {
+        return hasConstructorWithParameters(null, paramTypes);
+    }
+
+    public boolean hasConstructorWithParameters(String... paramTypes) {
+        return hasConstructorWithParameters(null, paramTypes);
+    }
+
+    public boolean hasConstructorWithParameters(Predicate<ExecutableElement> predicate, TypeMirror... paramTypes) {
+        String[] paramTypesArray = Arrays.stream(paramTypes)
+                .map(TypeMirror::toString)
+                .toArray(String[]::new);
+        return hasConstructorWithParameters(predicate, paramTypesArray);
+    }
+
+    public boolean hasConstructorWithParameters(Predicate<ExecutableElement> predicate, String... paramTypes) {
+        if (isPrimitive) {
+            return false;
+        }
+        DeclaredType declaredType = ((DeclaredType) typeMirror);
+        TypeElement target = (TypeElement) declaredType.asElement();
+
+        return target.getEnclosedElements()
+                .stream()
+                .anyMatch(element -> {
+                    if (element.getKind() != CONSTRUCTOR) {
+                        return false;
+                    }
+                    ExecutableElement constructor = (ExecutableElement) element;
+                    if (constructor.getParameters().size() != paramTypes.length) {
+                        return false;
+                    }
+                    for (int pos = 0; pos < constructor.getParameters().size(); pos++) {
+                        VariableElement param = constructor.getParameters().get(pos);
+                        String paramType = param.asType().toString();
+                        if (!paramType.equals(paramTypes[pos])) {
+                            return false;
+                        }
+                    }
+                    return predicate == null || predicate.test((constructor));
+                });
     }
 
     public boolean canBeInstantiated() {

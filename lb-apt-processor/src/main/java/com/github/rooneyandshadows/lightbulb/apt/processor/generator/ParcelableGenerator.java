@@ -1,10 +1,12 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,9 +46,17 @@ public class ParcelableGenerator extends CodeGenerator {
             TypeSpec.Builder parcelableClassBuilder = TypeSpec
                     .classBuilder(instrumentedClassName)
                     .addModifiers(PUBLIC, ABSTRACT)
-                    .addSuperinterface(ANDROID_PARCELABLE)
                     .addFields(fields)
                     .addMethods(methods);
+
+            TypeInformation superTypeInformation = parcelableMetadata.getTypeInformation().getSuperClassType();
+            if (superTypeInformation != null) {
+                if (!superTypeInformation.is(ANDROID_PARCELABLE)) {
+                    parcelableClassBuilder.addSuperinterface(ANDROID_PARCELABLE);
+                } else {
+                    parcelableClassBuilder.superclass(TypeName.get(superTypeInformation.getTypeMirror()));
+                }
+            }
 
             writeClassFile(instrumentedClassName.packageName(), parcelableClassBuilder);
         });
@@ -67,6 +77,10 @@ public class ParcelableGenerator extends CodeGenerator {
         MethodSpec.Builder constructorMethodBuilder = MethodSpec.constructorBuilder()
                 .addModifiers(PROTECTED)
                 .addParameter(ANDROID_PARCEL, "in");
+
+        if (parcelableMetadata.hasParcelConstructor()) {
+            constructorMethodBuilder.addStatement("super(in)");
+        }
 
         parcelableMetadata.getTargetFields().forEach(targetField -> {
             Field field = Field.from(targetField);

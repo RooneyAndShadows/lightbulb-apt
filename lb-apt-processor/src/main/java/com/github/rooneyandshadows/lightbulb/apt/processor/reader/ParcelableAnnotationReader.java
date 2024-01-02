@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_PARCELABLE_DESCRIPTION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils.*;
 
 public class ParcelableAnnotationReader extends AnnotationReader {
     private final List<ParcelableMetadata> parcelableMetadataList = new ArrayList<>();
@@ -31,7 +32,7 @@ public class ParcelableAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        List<TargetField> targetFields = ElementUtils.getFieldElements(target)
+        List<TargetField> targetFields = getFieldElements(target)
                 .stream()
                 .map(element -> new TargetField((VariableElement) element))
                 .toList();
