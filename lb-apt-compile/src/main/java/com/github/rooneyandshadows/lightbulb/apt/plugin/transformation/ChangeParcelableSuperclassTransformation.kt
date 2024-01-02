@@ -2,29 +2,40 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation
 
 import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.IClassTransformer
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbActivity
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.BindView
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentStatePersisted
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbFragment
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbParcelable
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
-import javassist.ClassPool
-import javassist.CtClass
+import javassist.*
+import org.gradle.configurationcache.extensions.capitalized
 
-internal class ChangeActivitySuperclassTransformation : IClassTransformer() {
-    private val generatedTargetClassLocation = PackageNames.getActivitiesPackage()
+
+internal class ChangeParcelableSuperclassTransformation : IClassTransformer() {
+    private val generatedTargetClassLocation = PackageNames.getFragmentsPackage()
 
     @Override
-    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass):Set<CtClass> {
+    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Set<CtClass> {
         info("Transforming class:".plus(ctClass.name))
 
         val targetCtClass = getTargetClass(classPool, ctClass)
 
+        //  val creatorField = CtField(,)
+
+        // targetCtClass.addField()
+
         ctClass.superclass = targetCtClass
-        return emptySet();
+
+        return emptySet()
     }
 
     @Override
     override fun shouldTransform(classPool: ClassPool, ctClass: CtClass): Boolean {
-        return ctClass.hasAnnotation(LightbulbActivity::class.java)
+        return ctClass.hasAnnotation(LightbulbParcelable::class.java)
     }
+
 
     private fun getTargetClass(classPool: ClassPool, ctClass: CtClass): CtClass {
         val simpleName = ctClass.simpleName

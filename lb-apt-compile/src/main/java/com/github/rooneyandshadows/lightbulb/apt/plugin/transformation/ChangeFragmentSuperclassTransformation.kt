@@ -16,7 +16,7 @@ internal class ChangeFragmentSuperclassTransformation : IClassTransformer() {
     private val generatedTargetClassLocation = PackageNames.getFragmentsPackage()
 
     @Override
-    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass) {
+    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass):Set<CtClass> {
         info("Transforming class:".plus(ctClass.name))
 
         val targetCtClass = getTargetClass(classPool, ctClass)
@@ -52,6 +52,8 @@ internal class ChangeFragmentSuperclassTransformation : IClassTransformer() {
         }
 
         ctClass.superclass = targetCtClass
+
+        return emptySet()
     }
 
     @Override

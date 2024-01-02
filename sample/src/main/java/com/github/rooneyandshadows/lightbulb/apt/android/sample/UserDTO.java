@@ -1,66 +1,29 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.sample;
 
-import android.util.SparseArray;
+import android.annotation.SuppressLint;
+import android.os.Parcelable;
 import com.github.rooneyandshadows.lightbulb.apt.android.core.parcelable.BlankParcelable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbParcelable;
+import kotlin.Suppress;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.lang.annotation.ElementType;
+import java.util.UUID;
 
 @LightbulbParcelable
-public class UserDTO extends BlankParcelable {
-    public Date date;
-    public OffsetDateTime offsetDateTime;
+
+public class UserDTO implements Parcelable {
     public UUID uuid;
-    public List<String> list;
-    public SparseArray<String> arr;
-    public UserDTO dto;
 
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    public void setOffsetDateTime(OffsetDateTime offsetDateTime) {
-        this.offsetDateTime = offsetDateTime;
-    }
-
-    public void setUuid(UUID uuid) {
+    public UserDTO(UUID uuid) {
+        super();
         this.uuid = uuid;
-    }
-
-    public void setList(List<String> list) {
-        this.list = list;
-    }
-
-    public void setArr(SparseArray<String> arr) {
-        this.arr = arr;
-    }
-
-    public void setDto(UserDTO dto) {
-        this.dto = dto;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public OffsetDateTime getOffsetDateTime() {
-        return offsetDateTime;
     }
 
     public UUID getUuid() {
         return uuid;
     }
 
-    public List<String> getList() {
-        return list;
-    }
-
-    public SparseArray<String> getArr() {
-        return arr;
-    }
-
-    public UserDTO getDto() {
-        return dto;
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
     }
 }

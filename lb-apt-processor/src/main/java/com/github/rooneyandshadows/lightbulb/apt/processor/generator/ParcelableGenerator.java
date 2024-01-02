@@ -36,7 +36,7 @@ public class ParcelableGenerator extends CodeGenerator {
             List<MethodSpec> methods = new ArrayList<>();
 
             generateFields(parcelableMetadata, fields, methods);
-            generateCreatorField(parcelableMetadata, fields);
+            //generateCreatorField(parcelableMetadata, fields);
             generateConstructorMethod(parcelableMetadata, methods);
             generateWriteToParcelMethod(parcelableMetadata, methods);
             generateDescribeContentsMethod(methods);

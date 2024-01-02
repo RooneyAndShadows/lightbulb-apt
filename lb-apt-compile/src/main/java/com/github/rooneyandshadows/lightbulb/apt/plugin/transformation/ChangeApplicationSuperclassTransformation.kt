@@ -12,12 +12,14 @@ internal class ChangeApplicationSuperclassTransformation : IClassTransformer() {
     private val generatedTargetClassLocation = PackageNames.getApplicationPackage()
 
     @Override
-    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass) {
+    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass):Set<CtClass> {
         info("Transforming class:".plus(ctClass.name))
 
         val targetCtClass = getTargetClass(classPool, ctClass)
 
         ctClass.superclass = targetCtClass
+
+        return emptySet();
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.common
 
-import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.info
 import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.severe
 import com.github.rooneyandshadows.lightbulb.apt.plugin.logger.LoggingUtil.Companion.warning
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.IClassTransformer
@@ -10,9 +9,14 @@ import javassist.Loader
 import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
 import java.io.*
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
+import kotlin.io.path.Path
 
+
+//TODO save transformed files to tmp location before sending to destination in order to execute multiple transtormations of one class.
 @Suppress("MemberVisibilityCanBePrivate")
 class TransformationExecutor(
     private val globalClassPath: FileCollection,
@@ -33,9 +37,10 @@ class TransformationExecutor(
         }
 
         loadedClasses.forEach { ctClass ->
+            val newClasses = mutableSetOf<CtClass>()
             transformations.forEach { transformation ->
                 try {
-                    transformation.transform(classPool, ctClass)
+                    newClasses.addAll(transformation.transform(classPool, ctClass))
                     result = true
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -43,7 +48,9 @@ class TransformationExecutor(
                     throw GradleException("Could not execute transformation", e)
                 }
             }
-
+            newClasses.forEach { cls ->
+                sendToDestination(cls, jarDestination)
+            }
             sendToDestination(ctClass, jarDestination)
         }
 
@@ -54,9 +61,16 @@ class TransformationExecutor(
         try {
             val className = targetClass.name
             //info("Adding to jar $className")
-            jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
-            jarDestination.write(targetClass.toBytecode())
-            jarDestination.closeEntry()
+            //jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
+            //jarDestination.write(targetClass.toBytecode())
+            // jarDestination.closeEntry()
+            val path = ""
+            val dir = File(path);
+            if (!dir.exists())
+                Files.createDirectory(Path(path))
+            val file = File("${dir}/${targetClass.simpleName}_Transformed.class");
+            FileOutputStream(file).use { outputStream -> outputStream.write(targetClass.toBytecode()) }
+
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)
         }
