@@ -46,14 +46,16 @@ abstract class TransformationsTask @Inject constructor(
     abstract val output: RegularFileProperty
 
     init {
-        val packageNames = PackageNames(variant.namespace.get())
+        val packageNames = PackageNames(project.androidNamespace())
         val classNames = ClassNames(packageNames)
+
         transformationRegistry = TransformationJobRegistry(globalClasspath) { getTransformationsClasspath() }
         transformationRegistry.register(ChangeApplicationSuperclassTransformation(packageNames,classNames))
         transformationRegistry.register(ChangeActivitySuperclassTransformation(packageNames,classNames))
         transformationRegistry.register(ChangeFragmentSuperclassTransformation(packageNames,classNames))
         transformationRegistry.register(ChangeParcelableSuperclassTransformation(packageNames,classNames))
     }
+
 
     @TaskAction
     fun taskAction() {

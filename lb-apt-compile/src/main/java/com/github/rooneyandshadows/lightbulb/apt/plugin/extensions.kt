@@ -26,6 +26,10 @@ fun Project.androidComponents(): ApplicationAndroidComponentsExtension {
     return project.extensions.getByName("androidComponents") as ApplicationAndroidComponentsExtension
 }
 
+fun Project.androidNamespace(): String {
+    return baseExtension()!!.namespace!!
+}
+
 fun Project.baseExtension(): BaseExtension? {
     return extensions.findByType(BaseExtension::class.java)
 }
@@ -68,17 +72,12 @@ fun String.appendDirectory(vararg dirs: String): String {
         return this
     }
 
-    var result = this
+    var result = this.trimEnd('\\', '/')
 
-    dirs.forEachIndexed { index, directory ->
-        val isFirst = index == 0
-        val trimmed = directory.trim('\\', '/')
+    dirs.forEachIndexed { _, directory ->
+        val trimmed = directory.trimEnd('\\', '/')
 
-        if (!isFirst) {
-            result.plus("/")
-        }
-
-        result = result.plus(trimmed)
+        result = result.plus("/${trimmed}")
 
     }
 

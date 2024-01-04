@@ -37,7 +37,7 @@ class TransformationPlugin : Plugin<Project> {
 
     private fun configureAPT(project: Project, variant: Variant) {
         val rootPackageArg = ProcessorOptionNames.PROJECT_ROOT_PACKAGE
-        val namespace = project.baseExtension()!!.namespace!!
+        val namespace = project.androidNamespace()
 
         variant.addAnnotationProcessorArgument(rootPackageArg, namespace)
     }
