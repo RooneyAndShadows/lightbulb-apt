@@ -55,7 +55,7 @@ class TransformationPlugin : Plugin<Project> {
             val capitalizedVariantName = variant.name.capitalized()
             val taskName = "transform${capitalizedVariantName}"
             val taskType = TransformationsTask::class.java
-            val taskProvider = project.tasks.register<TransformationsTask>(taskName, variant)
+            val taskProvider = project.tasks.register<TransformationsTask>(taskName, variant, extension.debug)
             variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
                 .use(taskProvider)
                 .toTransform(

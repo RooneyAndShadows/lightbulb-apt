@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks
 
 import com.android.build.api.variant.Variant
-import com.github.rooneyandshadows.lightbulb.apt.plugin.globalClasspathForVariant
+import com.github.rooneyandshadows.lightbulb.apt.plugin.*
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.common.TransformationJobRegistry
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.AddParcelableCreatorTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeActivitySuperclassTransformation
@@ -24,7 +24,10 @@ import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import javax.inject.Inject
 
-abstract class TransformationsTask @Inject constructor(private val variant: Variant) : DefaultTask() {
+abstract class TransformationsTask @Inject constructor(
+    private val variant: Variant,
+    private val debug: Boolean
+) : DefaultTask() {
     private val transformationRegistry: TransformationJobRegistry
 
     @get:InputFiles
@@ -40,60 +43,64 @@ abstract class TransformationsTask @Inject constructor(private val variant: Vari
     @get:OutputFile
     abstract val output: RegularFileProperty
 
-    private val classesDumpDir: String by lazy {
-        return@lazy output.get().asFile.parent.plus("/lightbulb")
-    }
-
     init {
         transformationRegistry = TransformationJobRegistry(globalClasspath) { getTransformationsClasspath() }
         transformationRegistry.register(ChangeApplicationSuperclassTransformation())
         transformationRegistry.register(ChangeActivitySuperclassTransformation())
         transformationRegistry.register(ChangeFragmentSuperclassTransformation())
         transformationRegistry.register(AddParcelableCreatorTransformation())
-        /*
-            public static final Creator<UserDTO> CREATOR = new Creator<UserDTO>() {
-        @Override
-        public UserDTO createFromParcel(Parcel in) {
-            return new UserDTO(in);
-        }
-
-        @Override
-        public UserDTO[] newArray(int size) {
-            return new UserDTO[size];
-        }
-    };
-         */
-
     }
 
     @TaskAction
     fun taskAction() {
-        val jars = allJars.get()
-        val jarOutput = JarOutputStream(
-            BufferedOutputStream(
-                FileOutputStream(
-                    output.get().asFile
-                )
-            )
-        )
-        jarOutput.use {
-            jars.forEach { file ->
-                //info("handling " + file.asFile.absolutePath)
-                val jarFile = JarFile(file.asFile)
-                jarFile.entries().iterator().forEach { jarEntry ->
-                    //info("Adding from jar ${jarEntry.name}")
-                    jarOutput.putNextEntry(JarEntry(jarEntry.name))
-                    jarFile.getInputStream(jarEntry).use {
-                        it.copyTo(jarOutput)
-                    }
-                    jarOutput.closeEntry()
-                }
-                jarFile.close()
-            }
-            transformationRegistry.execute(jarOutput, classesDumpDir)
+        withJarOutputStream { jarOutputStream ->
+            copySystemJars(jarOutputStream)
+            executeTransformations(jarOutputStream)
         }
     }
 
+    private fun withJarOutputStream(action: (jarOutputStream: JarOutputStream) -> Unit) {
+        val outputAsFile = output.get().asFile
+        JarOutputStream(BufferedOutputStream(FileOutputStream(outputAsFile))).use(action)
+    }
+
+    private fun copySystemJars(jarOutput: JarOutputStream) {
+        val jars = allJars.get()
+        jars.forEach { file ->
+            //info("handling " + file.asFile.absolutePath)
+            val jarFile = JarFile(file.asFile)
+            jarFile.entries().iterator().forEach { jarEntry ->
+                //info("Adding from jar ${jarEntry.name}")
+                jarOutput.putNextEntry(JarEntry(jarEntry.name))
+                jarFile.getInputStream(jarEntry).use {
+                    it.copyTo(jarOutput)
+                }
+                jarOutput.closeEntry()
+            }
+            jarFile.close()
+        }
+    }
+
+    private fun executeTransformations(jarOutput: JarOutputStream) {
+        val baseDir = output.get().asFile.parent
+        val lightbulbDir = baseDir.appendDirectory("lightbulb")
+        var onClassSaved: ((classDir: String, className: String, byteCode: ByteArray) -> Unit)? = null
+
+        lightbulbDir.deleteDirectory()
+
+        if (debug) {
+            val dumpClassSuffix = "_Transformed"
+            onClassSaved = { classDir, className, byteCode ->
+                val dumpClassName = className.plus("${dumpClassSuffix}.class")
+                val targetDir = lightbulbDir.appendDirectory(classDir)
+                val classFile = targetDir.createFile(dumpClassName)
+
+                classFile.write(byteCode)
+            }
+        }
+
+        transformationRegistry.execute(jarOutput, onClassSaved)
+    }
 
     private fun getTransformationsClasspath(): FileCollection {
         val dirs = allDirectories.get().map {
@@ -101,5 +108,4 @@ abstract class TransformationsTask @Inject constructor(private val variant: Vari
         }
         return project.files(dirs)
     }
-
 }

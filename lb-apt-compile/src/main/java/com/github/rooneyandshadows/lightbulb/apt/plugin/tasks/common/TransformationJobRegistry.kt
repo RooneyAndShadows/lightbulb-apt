@@ -14,13 +14,11 @@ class TransformationJobRegistry(
         transformations.add(transformer)
     }
 
-    fun execute(jarDestination: JarOutputStream, classesDumpDir: String) {
-        val executor = TransformationExecutor(
-            globalClassPath,
-            transformationsClassPath,
-            transformations,
-            classesDumpDir
-        )
-        executor.execute(jarDestination)
+    fun execute(
+        jarDestination: JarOutputStream,
+        onClassSaved: ((classDir: String, className: String, byteCode: ByteArray) -> Unit)? = null
+    ) {
+        val executor = TransformationExecutor(globalClassPath, transformationsClassPath, transformations)
+        executor.execute(jarDestination, onClassSaved)
     }
 }

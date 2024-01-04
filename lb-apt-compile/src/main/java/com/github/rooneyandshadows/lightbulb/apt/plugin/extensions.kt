@@ -4,27 +4,18 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin
 
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.Variant
-import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.TestExtension
-import com.android.build.gradle.api.BaseVariant
-import javassist.CtClass
-import javassist.bytecode.annotation.AnnotationImpl
-import javassist.bytecode.annotation.Annotation
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import java.io.File
-import java.io.IOException
-import java.lang.reflect.Proxy
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import java.io.FileOutputStream
 
 const val PLUGIN_EXTENSION_NAME = "lightbulb"
 const val PLUGIN_TASK_GROUP = "lightbulb"
 const val KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
 const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
-const val LIGHTBULB_APT_PROCESSOR_DEPENDENCY_NOTATION = "com.github.rooneyandshadows.lightbulb-apt:lb-apt-processor:2.0.0"
+const val LIGHTBULB_APT_PROCESSOR_DEPENDENCY_NOTATION =
+    "com.github.rooneyandshadows.lightbulb-apt:lb-apt-processor:2.0.0"
 const val LIGHTBULB_APT_CORE_DEPENDENCY_NOTATION = "com.github.rooneyandshadows.lightbulb-apt:lb-apt-core:2.0.0"
 
 fun Variant.addAnnotationProcessorArgument(name: String, value: String) {
@@ -51,57 +42,45 @@ fun Project.globalClasspathForVariant(variant: Variant): FileCollection {
     return globalClasspath
 }
 
-fun BaseExtension.forEachRootVariant(@Suppress("DEPRECATION") block: (variant: BaseVariant) -> Unit) {
-    when (this) {
-        is AppExtension -> {
-            applicationVariants.forEach(block)
-            testVariants.forEach(block)
-            unitTestVariants.forEach(block)
-        }
-
-        is LibraryExtension -> {
-            testVariants.forEach(block)
-            unitTestVariants.forEach(block)
-        }
-
-        is TestExtension -> {
-            applicationVariants.forEach(block)
-        }
-
-        else -> error("lb-compile plugin does not know how to configure '$this'")
-    }
+fun File.write(byteArray: ByteArray) {
+    FileOutputStream(this).use { outputStream -> outputStream.write(byteArray) }
 }
 
-fun File.copyFolder(dest: File) {
-    if (!isDirectory) return
-    if (dest.exists()) {
-        if (!dest.isDirectory) return
-    } else {
-        dest.mkdir()
-    }
-    val files = listFiles()
-    if (files == null || files.isEmpty()) return
-    for (file in files) {
-        val fileDest = File(dest, file.name)
-        if (file.isDirectory) {
-            file.copyFolder(fileDest)
-        } else {
-            try {
-                Files.copy(file.toPath(), fileDest.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            } catch (e: IOException) {
-                //e.printStackTrace();
-            }
-        }
-    }
-}
-
-fun File.deleteDirectory(): Boolean {
-    val allContents = listFiles()
+fun String.deleteDirectory(): Boolean {
+    val directory = File(this)
+    val allContents = directory.listFiles()
     if (allContents != null) {
         for (file in allContents) {
-            file.deleteDirectory()
+            file.path.deleteDirectory();
         }
     }
-    return this.delete()
+    return directory.delete()
 }
 
+fun String.createFile(filename: String): File {
+    val dir = File(this)
+    if (!dir.exists()) dir.mkdirs()
+    return File("$this/$filename")
+}
+
+fun String.appendDirectory(vararg dirs: String): String {
+    if (dirs.isEmpty()) {
+        return this
+    }
+
+    var result = this
+
+    dirs.forEachIndexed { index, directory ->
+        val isFirst = index == 0
+        val trimmed = directory.trim('\\', '/')
+
+        if (!isFirst) {
+            result.plus("/")
+        }
+
+        result = result.plus(trimmed)
+
+    }
+
+    return result
+}

@@ -22,18 +22,14 @@ class TransformationExecutor(
     private val globalClassPath: FileCollection,
     private val transformationsClassPathProvider: (() -> FileCollection),
     private val transformations: List<IClassTransformer>,
-    private val classesDumpPath: String
 ) {
     private val transformationsClassPath: FileCollection
         get() = transformationsClassPathProvider.invoke()
 
-    private fun createFile(directory: String, filename: String): File {
-        val dir = File(directory)
-        if (!dir.exists()) dir.mkdirs()
-        return File("$directory/$filename")
-    }
-
-    fun execute(jarDestination: JarOutputStream): Boolean {
+    fun execute(
+        jarDestination: JarOutputStream,
+        onClassSaved: ((packageName: String, className: String, byteCode: ByteArray) -> Unit)?
+    ): Boolean {
         var result = false
 
         val classPool = setupClassPool()
@@ -55,26 +51,37 @@ class TransformationExecutor(
                     throw GradleException("Could not execute transformation", e)
                 }
             }
+
             newClasses.forEach { cls ->
-                sendToDestination(cls, jarDestination)
+                sendToDestination(cls, jarDestination, onClassSaved)
             }
-            sendToDestination(ctClass, jarDestination)
+
+            sendToDestination(ctClass, jarDestination, onClassSaved)
         }
 
         return result
     }
 
-    private fun sendToDestination(targetClass: CtClass, jarDestination: JarOutputStream) {
+    private fun sendToDestination(
+        targetClass: CtClass,
+        jarDestination: JarOutputStream,
+        onClassSaved: ((packageName: String, className: String, byteCode: ByteArray) -> Unit)?
+    ) {
         try {
             val className = targetClass.name
+            val classSimpleName = targetClass.simpleName
+            val packageToDirectory = targetClass.packageName.replace(".", "/")
+            val zipEntryName = packageToDirectory.plus("${classSimpleName}.class")
+            val entry = JarEntry(zipEntryName)
+            val byteCode = targetClass.toBytecode();
             info("Adding to jar $className")
-            jarDestination.putNextEntry(JarEntry(className.replace(".", "/").plus(".class")))
-            jarDestination.write(targetClass.toBytecode())
+            jarDestination.putNextEntry(entry)
+            jarDestination.write(byteCode)
             jarDestination.closeEntry()
 
-
-            val compiled = createFile(classesDumpPath,"${targetClass.simpleName}_Transformed.class")
-            FileOutputStream(compiled).use { outputStream -> outputStream.write(targetClass.toBytecode()) }
+            onClassSaved?.invoke(packageToDirectory, classSimpleName, byteCode)
+            //val compiled = createFile(classesDumpPath, "${targetClass.simpleName}_Transformed.class")
+            //FileOutputStream(compiled).use { outputStream -> outputStream.write(targetClass.toBytecode()) }
 
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)
