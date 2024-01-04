@@ -1,7 +1,6 @@
-package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.common
+package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform
 
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.IClassTransformer
-import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.info
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.ClassTransformer
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.severe
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.warning
 import javassist.ClassPool
@@ -10,10 +9,6 @@ import javassist.Loader
 import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
 import java.io.*
-import java.nio.file.Files.*
-import java.util.jar.JarEntry
-import java.util.jar.JarOutputStream
-import kotlin.io.path.Path
 
 
 //TODO save transformed files to tmp location before sending to destination in order to execute multiple transtormations of one class.
@@ -21,15 +16,12 @@ import kotlin.io.path.Path
 class TransformationExecutor(
     private val globalClassPath: FileCollection,
     private val transformationsClassPathProvider: (() -> FileCollection),
-    private val transformations: List<IClassTransformer>,
+    private val transformations: List<ClassTransformer>,
 ) {
     private val transformationsClassPath: FileCollection
         get() = transformationsClassPathProvider.invoke()
 
-    fun execute(
-        jarDestination: JarOutputStream,
-        onClassSaved: ((packageName: String, className: String, byteCode: ByteArray) -> Unit)?
-    ): Boolean {
+    fun execute(action: ((packageName: String, className: String, byteCode: ByteArray) -> Unit)): Boolean {
         var result = false
 
         val classPool = setupClassPool()
@@ -41,6 +33,7 @@ class TransformationExecutor(
 
         loadedClasses.forEach { ctClass ->
             val newClasses = mutableSetOf<CtClass>()
+
             transformations.forEach { transformation ->
                 try {
                     newClasses.addAll(transformation.transform(classPool, ctClass))
@@ -53,35 +46,25 @@ class TransformationExecutor(
             }
 
             newClasses.forEach { cls ->
-                sendToDestination(cls, jarDestination, onClassSaved)
+                onTransformed(cls, action)
             }
 
-            sendToDestination(ctClass, jarDestination, onClassSaved)
+            onTransformed(ctClass, action)
         }
 
         return result
     }
 
-    private fun sendToDestination(
+    private fun onTransformed(
         targetClass: CtClass,
-        jarDestination: JarOutputStream,
-        onClassSaved: ((packageName: String, className: String, byteCode: ByteArray) -> Unit)?
+        onClassSaved: ((packageName: String, className: String, byteCode: ByteArray) -> Unit)
     ) {
         try {
-            val className = targetClass.name
             val classSimpleName = targetClass.simpleName
             val packageToDirectory = targetClass.packageName.replace(".", "/")
-            val zipEntryName = packageToDirectory.plus("${classSimpleName}.class")
-            val entry = JarEntry(zipEntryName)
             val byteCode = targetClass.toBytecode();
-            info("Adding to jar $className")
-            jarDestination.putNextEntry(entry)
-            jarDestination.write(byteCode)
-            jarDestination.closeEntry()
 
-            onClassSaved?.invoke(packageToDirectory, classSimpleName, byteCode)
-            //val compiled = createFile(classesDumpPath, "${targetClass.simpleName}_Transformed.class")
-            //FileOutputStream(compiled).use { outputStream -> outputStream.write(targetClass.toBytecode()) }
+            onClassSaved.invoke(packageToDirectory, classSimpleName, byteCode)
 
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)

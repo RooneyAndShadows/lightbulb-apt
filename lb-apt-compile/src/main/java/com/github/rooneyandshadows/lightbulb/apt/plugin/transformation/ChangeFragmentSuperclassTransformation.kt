@@ -1,22 +1,25 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation
 
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.info
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.IClassTransformer
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.ClassTransformer
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.BindView
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentStatePersisted
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbFragment
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.*
 import org.gradle.configurationcache.extensions.capitalized
 
 
-internal class ChangeFragmentSuperclassTransformation : IClassTransformer() {
-    private val generatedTargetClassLocation = PackageNames.getFragmentsPackage()
+internal class ChangeFragmentSuperclassTransformation(
+    packageNames: PackageNames,
+    classNames: ClassNames
+) : ClassTransformer(packageNames, classNames) {
 
     @Override
-    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass):Set<CtClass> {
+    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Set<CtClass> {
         info("Transforming class:".plus(ctClass.name))
 
         val targetCtClass = getTargetClass(classPool, ctClass)
@@ -67,7 +70,7 @@ internal class ChangeFragmentSuperclassTransformation : IClassTransformer() {
 
     private fun getTargetClass(classPool: ClassPool, ctClass: CtClass): CtClass {
         val simpleName = ctClass.simpleName
-        val className = generatedTargetClassLocation
+        val className = packageNames.fragmentsPackage
             .plus(".")
             .plus(DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX)
             .plus(simpleName)

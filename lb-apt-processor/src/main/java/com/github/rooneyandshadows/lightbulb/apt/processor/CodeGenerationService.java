@@ -15,9 +15,9 @@ public class CodeGenerationService {
     private final List<GenerationStep> steps = new ArrayList<>();
     private final AnnotationResultsRegistry resultsRegistry = new AnnotationResultsRegistry();
 
-    public CodeGenerationService(Filer filer, Messager messager, Elements elements, RoundEnvironment roundEnvironment) {
+    public CodeGenerationService(String rootPackage, Filer filer, Messager messager, Elements elements, RoundEnvironment roundEnvironment) {
         steps.add(new ReadAnnotationsStep(messager, elements, roundEnvironment));
-        steps.add(new GenerateCodeStep(filer, elements));
+        steps.add(new GenerateCodeStep(rootPackage, filer, elements));
     }
 
     public void process() {

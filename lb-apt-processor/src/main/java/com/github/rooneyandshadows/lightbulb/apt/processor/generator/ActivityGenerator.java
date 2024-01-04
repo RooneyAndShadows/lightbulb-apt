@@ -3,6 +3,8 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -14,8 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getActivitiesPackage;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getParcelablePackage;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings("unused")
@@ -24,8 +24,8 @@ public class ActivityGenerator extends CodeGenerator {
     private final boolean hasRouter;
     private final List<ActivityMetadata> activityMetadataList;
 
-    public ActivityGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, elements, annotationResultsRegistry);
+    public ActivityGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         hasRouter = annotationResultsRegistry.hasRoutingScreens();
         activityMetadataList = annotationResultsRegistry.getActivityDescriptions();
     }
@@ -34,7 +34,7 @@ public class ActivityGenerator extends CodeGenerator {
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         activityMetadataList.forEach(activityMetadata -> {
             ClassName activitySuperClassName = getSuperClassName(activityMetadata);
-            ClassName instrumentedClassName = getInstrumentedClassName(getActivitiesPackage(),activityMetadata);
+            ClassName instrumentedClassName = getInstrumentedClassName(packageNames.getActivitiesPackage(), activityMetadata);
 
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
@@ -64,7 +64,7 @@ public class ActivityGenerator extends CodeGenerator {
 
     private void generateFields(List<FieldSpec> destination) {
         if (hasRouter) {
-            ClassName appRouterClassName = getAppRouterClassName();
+            ClassName appRouterClassName = classNames.getAppRouterClassName();
             FieldSpec fieldSpec = FieldSpec.builder(appRouterClassName, ROUTER_FIELD_NAME, PRIVATE).build();
             destination.add(fieldSpec);
         }
@@ -84,9 +84,9 @@ public class ActivityGenerator extends CodeGenerator {
                 .addStatement("super.onCreate(savedInstanceState)");
 
         if (hasRouter) {
-            ClassName routerClassName = getAppRouterClassName();
-            ClassName appNavigatorClassName = getLightbulbServiceClassName();
-            ClassName RClassName = androidResources();
+            ClassName routerClassName = classNames.getAppRouterClassName();
+            ClassName appNavigatorClassName = classNames.getLightbulbServiceClassName();
+            ClassName RClassName = classNames.androidResources();
             String fragmentContainerId = activityMetadata.getFragmentContainerId();
 
             builder.addStatement("$T $L = $T.id.$L", INTEGER, "fragmentContainerId", RClassName, fragmentContainerId);
@@ -133,7 +133,7 @@ public class ActivityGenerator extends CodeGenerator {
                 .addStatement("super.onDestroy()");
 
         if (hasRouter) {
-            ClassName appNavigatorClassName = getLightbulbServiceClassName();
+            ClassName appNavigatorClassName = classNames.getLightbulbServiceClassName();
             builder.addStatement("$L.getInstance().unbindRouter()", appNavigatorClassName);
         }
 

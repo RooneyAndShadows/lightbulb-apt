@@ -4,6 +4,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegi
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ApplicationMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -14,8 +15,6 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getApplicationPackage;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getParcelablePackage;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -25,8 +24,8 @@ public class ApplicationGenerator extends CodeGenerator {
     private final boolean hasApplications;
     private final List<ApplicationMetadata> applicationMetadataList;
 
-    public ApplicationGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, elements, annotationResultsRegistry);
+    public ApplicationGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         hasStorages = annotationResultsRegistry.hasStorageDescriptions();
         hasApplications = annotationResultsRegistry.hasApplicationDescriptions();
         applicationMetadataList = annotationResultsRegistry.getApplicationDescriptions();
@@ -36,7 +35,7 @@ public class ApplicationGenerator extends CodeGenerator {
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         applicationMetadataList.forEach(applicationMetadata -> {
             ClassName applicationSuperClassName = getSuperClassName(applicationMetadata);
-            ClassName instrumentedClassName = getInstrumentedClassName(getApplicationPackage(),applicationMetadata);
+            ClassName instrumentedClassName = getInstrumentedClassName(packageNames.getApplicationPackage(), applicationMetadata);
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
 
@@ -65,7 +64,7 @@ public class ApplicationGenerator extends CodeGenerator {
             return;
         }
 
-        ClassName lbServiceClassName = ClassNames.getLightbulbServiceClassName();
+        ClassName lbServiceClassName = classNames.getLightbulbServiceClassName();
 
         MethodSpec onCreateMethod = MethodSpec.methodBuilder("onCreate")
                 .addModifiers(PUBLIC)

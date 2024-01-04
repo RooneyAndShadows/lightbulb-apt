@@ -28,9 +28,9 @@ public class ServiceGenerator extends CodeGenerator {
     private final boolean hasStorageElements;
     private final List<StorageMetadata> storageMetadataList;
 
-    public ServiceGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, elements, annotationResultsRegistry);
-        servicePackage = PackageNames.getServicePackage();
+    public ServiceGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, elements, packageNames, classNames, annotationResultsRegistry);
+        servicePackage = packageNames.getServicePackage();
         hasRoutingElements = annotationResultsRegistry.hasRoutingScreens();
         hasStorageElements = annotationResultsRegistry.hasStorageDescriptions();
         storageMetadataList = annotationResultsRegistry.getStorageDescriptions();
@@ -47,7 +47,7 @@ public class ServiceGenerator extends CodeGenerator {
     }
 
     private void generateServiceSingleton() {
-        ClassName lightbulbServiceClassName = ClassNames.getLightbulbServiceClassName();
+        ClassName lightbulbServiceClassName = classNames.getLightbulbServiceClassName();
         List<FieldSpec> fields = new ArrayList<>();
         List<MethodSpec> methods = new ArrayList<>();
 
@@ -113,7 +113,7 @@ public class ServiceGenerator extends CodeGenerator {
 
         if (hasStorageElements) {
             storageMetadataList.forEach(storageMetadata -> {
-                ClassName storageClassName = getInstrumentedClassName(getStoragePackage(), storageMetadata, false);
+                ClassName storageClassName = getInstrumentedClassName(packageNames.getStoragePackage(), storageMetadata, false);
                 String storageFieldName = MemberUtils.getFieldNameForClass(storageClassName.simpleName());
 
                 setterMethodBuilder.addStatement("this.$L = new $T($L)", storageFieldName, storageClassName, applicationContextVarName);
@@ -136,7 +136,7 @@ public class ServiceGenerator extends CodeGenerator {
 
     private void generateStorageMembers(List<FieldSpec> fields, List<MethodSpec> methods) {
         storageMetadataList.forEach(storageDescription -> {
-            ClassName generatedStorageClassName = getInstrumentedClassName(getStoragePackage(), storageDescription, false);
+            ClassName generatedStorageClassName = getInstrumentedClassName(packageNames.getStoragePackage(), storageDescription, false);
             String generatedStorageSimpleClassName = generatedStorageClassName.simpleName();
             String fieldName = MemberUtils.getFieldNameForClass(generatedStorageSimpleClassName);
             String getterName = MemberUtils.getFieldGetterName(generatedStorageSimpleClassName);
@@ -157,7 +157,7 @@ public class ServiceGenerator extends CodeGenerator {
     }
 
     private void generateRoutingMember(List<FieldSpec> fields, List<MethodSpec> methods) {
-        ClassName routerClassName = ClassNames.getAppRouterClassName();
+        ClassName routerClassName = classNames.getAppRouterClassName();
         String generatedRouterSimpleClassName = routerClassName.simpleName();
         String fieldName = MemberUtils.getFieldNameForClass(generatedRouterSimpleClassName);
 
@@ -182,7 +182,7 @@ public class ServiceGenerator extends CodeGenerator {
                 .addModifiers(PUBLIC, FINAL)
                 .returns(void.class);
 
-        ClassName routerClassName = ClassNames.getAppRouterClassName();
+        ClassName routerClassName = classNames.getAppRouterClassName();
         String generatedRouterSimpleClassName = routerClassName.simpleName();
         String routerFieldName = MemberUtils.getFieldNameForClass(generatedRouterSimpleClassName);
 
@@ -204,7 +204,7 @@ public class ServiceGenerator extends CodeGenerator {
                 .addModifiers(PUBLIC, FINAL)
                 .returns(void.class);
 
-        ClassName routerClassName = ClassNames.getAppRouterClassName();
+        ClassName routerClassName = classNames.getAppRouterClassName();
         String generatedRouterSimpleClassName = routerClassName.simpleName();
         String routerFieldName = MemberUtils.getFieldNameForClass(generatedRouterSimpleClassName);
 

@@ -8,7 +8,7 @@ import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
-import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TransformationsTask
+import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.TransformationsTask
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ProcessorOptionNames
 import org.gradle.api.Plugin
@@ -24,7 +24,6 @@ class TransformationPlugin : Plugin<Project> {
 
         if (configured) {
             val extension = project.extensions.create(PLUGIN_EXTENSION_NAME, TransformExtension::class.java)
-            setupPackages(project, extension)
             setupLogger(project, extension)
             configureTransformationTask(project, extension)
         }
@@ -32,30 +31,32 @@ class TransformationPlugin : Plugin<Project> {
 
     private fun setupLogger(project: Project, extension: TransformExtension) {
         project.afterEvaluate {
-            LoggingUtil.enabled = extension.debug
+            LoggingUtil.enabled = extension.isDebugEnabled()
         }
     }
 
-    private fun setupPackages(project: Project, extension: TransformExtension) {
-        project.afterEvaluate {
-            PackageNames.init(extension.projectRootPackage)
-        }
-    }
-
-    private fun configureAPT(extension: TransformExtension, variant: Variant) {
+    private fun configureAPT(project: Project, variant: Variant) {
         val rootPackageArg = ProcessorOptionNames.PROJECT_ROOT_PACKAGE
-        val rootPackageValue = extension.projectRootPackage
-        variant.addAnnotationProcessorArgument(rootPackageArg, rootPackageValue)
+        val namespace = project.baseExtension()!!.namespace!!
+
+        variant.addAnnotationProcessorArgument(rootPackageArg, namespace)
     }
 
     private fun configureTransformationTask(project: Project, extension: TransformExtension) {
         val ext = project.androidComponents()
         ext.onVariants(VariantSelectorImpl().withName("debug")) { variant ->
-            configureAPT(extension, variant)
+            configureAPT(project,variant)
             val capitalizedVariantName = variant.name.capitalized()
             val taskName = "transform${capitalizedVariantName}"
             val taskType = TransformationsTask::class.java
-            val taskProvider = project.tasks.register<TransformationsTask>(taskName, variant, extension.debug)
+            val taskProvider = project.tasks.register<TransformationsTask>(taskName, variant, extension)
+
+            if (extension.isDumpEnabled() && !extension.isOutputEnabled()) {
+                taskProvider.get().outputs.upToDateWhen {
+                    false
+                }
+            }
+
             variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
                 .use(taskProvider)
                 .toTransform(

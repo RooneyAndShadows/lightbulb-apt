@@ -6,6 +6,8 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGe
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -13,17 +15,14 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_BUNDLE;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.FRAGMENT_FACTORY_CLASS_NAME;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getFragmentsFactoryPackage;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings("SameParameterValue")
 public class FragmentFactoryGenerator extends CodeGenerator {
     private final List<FragmentMetadata> fragmentMetadataList;
 
-    public FragmentFactoryGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, elements, annotationResultsRegistry);
+    public FragmentFactoryGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         fragmentMetadataList = annotationResultsRegistry.getFragmentDescriptions();
     }
 
@@ -31,7 +30,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         List<TypeSpec> innerClasses = new ArrayList<>();
 
-        TypeSpec.Builder rootClassBuilder = TypeSpec.classBuilder(FRAGMENT_FACTORY_CLASS_NAME)
+        TypeSpec.Builder rootClassBuilder = TypeSpec.classBuilder(ClassNames.FRAGMENT_FACTORY_CLASS_NAME)
                 .addModifiers(PUBLIC, FINAL);
 
         for (FragmentMetadata fragmentBindingData : fragmentMetadataList) {
@@ -40,7 +39,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
 
         rootClassBuilder.addTypes(innerClasses);
 
-        writeClassFile(getFragmentsFactoryPackage(), rootClassBuilder);
+        writeClassFile(packageNames.getFragmentsFactoryPackage(), rootClassBuilder);
     }
 
     @Override
@@ -83,11 +82,11 @@ public class FragmentFactoryGenerator extends CodeGenerator {
                 .addModifiers(PUBLIC, STATIC)
                 .returns(fragmentClassName)
                 .addStatement("$T fragment = new $T()", fragmentClassName, fragmentClassName)
-                .addStatement("$T arguments = new $T()", ANDROID_BUNDLE, ANDROID_BUNDLE);
+                .addStatement("$T arguments = new $T()", ClassNames.ANDROID_BUNDLE, ClassNames.ANDROID_BUNDLE);
 
         fragmentMetadata.getScreenParameters(includeOptionalParams).forEach(parameter -> {
             Variable variable = Variable.from(parameter);
-            CodeBlock writeIntoBundleCodeBlock = BundleCodeGenerator.generateWriteStatement(variable, "arguments");
+            CodeBlock writeIntoBundleCodeBlock = bundleCodeGenerator.generateWriteStatement(variable, "arguments");
             ParameterSpec parameterSpec = generateFragmentScreenParameterSpec(parameter);
 
             builder.addParameter(parameterSpec);

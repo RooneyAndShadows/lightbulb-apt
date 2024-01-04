@@ -3,7 +3,6 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
@@ -16,16 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getFragmentsPackage;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.getStoragePackage;
 import static javax.lang.model.element.Modifier.*;
 
 public class StorageGenerator extends CodeGenerator {
     private final String storageKeyFieldName = "STORAGE_KEY";
     private final List<StorageMetadata> storageMetadataList;
 
-    public StorageGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, elements, annotationResultsRegistry);
+    public StorageGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         storageMetadataList = annotationResultsRegistry.getStorageDescriptions();
     }
 
@@ -33,7 +30,7 @@ public class StorageGenerator extends CodeGenerator {
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         storageMetadataList.forEach(storageDescription -> {
             ClassName className = getClassName(storageDescription);
-            ClassName instrumentedClassName = getInstrumentedClassName(getStoragePackage(), storageDescription, false);
+            ClassName instrumentedClassName = getInstrumentedClassName(packageNames.getStoragePackage(), storageDescription, false);
             ParameterizedTypeName superClass = ParameterizedTypeName.get(BASE_STORAGE, className);
             List<FieldSpec> fields = new ArrayList<>();
             List<MethodSpec> methods = new ArrayList<>();
@@ -51,7 +48,7 @@ public class StorageGenerator extends CodeGenerator {
                     .addFields(fields)
                     .addMethods(methods);
 
-            writeClassFile(PackageNames.getStoragePackage(), rootClassBuilder);
+            writeClassFile(packageNames.getStoragePackage(), rootClassBuilder);
         });
     }
 
@@ -61,7 +58,7 @@ public class StorageGenerator extends CodeGenerator {
     }
 
     private void generateStorageKeyField(StorageMetadata storageMetadata, List<FieldSpec> fields) {
-        String storageKeyFieldInitializer = String.format("%s.%s", PackageNames.getRootPackage(), storageMetadata.getName());
+        String storageKeyFieldInitializer = String.format("%s.%s", packageNames.getRootPackage(), storageMetadata.getName());
 
         for (int index = 0; index < storageMetadata.getSubKeys().length; index++) {
             storageKeyFieldInitializer = storageKeyFieldInitializer.concat("$%s");
@@ -119,7 +116,7 @@ public class StorageGenerator extends CodeGenerator {
         ClassName storageClassName = getClassName(storageMetadata);
 
         storageMetadata.getTargetFields().forEach(targetField -> {
-            TypeName fieldTypeName = ClassNames.getTypeName(targetField);
+            TypeName fieldTypeName = classNames.getTypeName(targetField);
             String[] subKeys = storageMetadata.getSubKeys();
             List<ParameterSpec> keyParameters = new ArrayList<>();
             String keyParamsCommaSeparated = "";

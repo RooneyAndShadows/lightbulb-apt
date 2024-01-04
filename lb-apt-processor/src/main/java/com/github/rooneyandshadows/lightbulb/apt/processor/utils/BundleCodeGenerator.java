@@ -7,9 +7,15 @@ import com.squareup.javapoet.TypeName;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
 
-public class BundleCodeGenerator {
 
-    public static CodeBlock generateWriteStatement(
+public class BundleCodeGenerator {
+    private final ClassNames classNames;
+
+    public BundleCodeGenerator(ClassNames classNames) {
+        this.classNames = classNames;
+    }
+
+    public CodeBlock generateWriteStatement(
             DeclaredValueHolder valueHolder,
             String bundleVariableName
     ) {
@@ -54,7 +60,7 @@ public class BundleCodeGenerator {
         return codeBlockBuilder.build();
     }
 
-    public static CodeBlock generateReadStatement(
+    public CodeBlock generateReadStatement(
             DeclaredValueHolder valueHolder,
             String bundleVariableName,
             boolean requireExistence,
@@ -111,14 +117,14 @@ public class BundleCodeGenerator {
         return codeBlockBuilder.build();
     }
 
-    public static CodeBlock generateReadStatement(
+    public CodeBlock generateReadStatement(
             DeclaredValueHolder valueHolder,
             String bundleVariableName
     ) {
         return generateReadStatement(valueHolder, bundleVariableName, false, false);
     }
 
-    private static void readString(
+    private void readString(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -130,14 +136,14 @@ public class BundleCodeGenerator {
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
         cbBuilder.addStatement("$T $L = $L.getString($S,\"\")", typeName, tmpVarName, bundleVariableName, key)
-                 .addStatement(setStatement);
+                .addStatement(setStatement);
     }
 
-    private static void writeString(CodeBlock.Builder cbBuilder, String bundleVariableName, DeclaredValueHolder valueHolder, String key) {
+    private void writeString(CodeBlock.Builder cbBuilder, String bundleVariableName, DeclaredValueHolder valueHolder, String key) {
         cbBuilder.addStatement("$L.putString($S,$L)", bundleVariableName, key, valueHolder.getValueAccessor());
     }
 
-    private static void readUUID(
+    private void readUUID(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -149,10 +155,10 @@ public class BundleCodeGenerator {
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
         cbBuilder.addStatement("$T $L = $T.fromString($L.getString($S,\"\"))", typeName, tmpVarName, typeName, bundleVariableName, key)
-                 .addStatement(setStatement);
+                .addStatement(setStatement);
     }
 
-    private static void writeUUID(
+    private void writeUUID(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -161,7 +167,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement("$L.putString($S,$L.toString())", bundleVariableName, key, valueHolder.getValueAccessor());
     }
 
-    private static void readInt(
+    private void readInt(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -176,7 +182,7 @@ public class BundleCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeInt(
+    private void writeInt(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -185,7 +191,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement("$L.putInt($S,$L)", bundleVariableName, key, valueHolder.getValueAccessor());
     }
 
-    private static void readBoolean(
+    private void readBoolean(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -197,10 +203,10 @@ public class BundleCodeGenerator {
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
         cbBuilder.addStatement("$T $L = $L.getBoolean($S)", typeName, tmpVarName, bundleVariableName, key)
-                 .addStatement(setStatement);
+                .addStatement(setStatement);
     }
 
-    private static void writeBoolean(
+    private void writeBoolean(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -209,7 +215,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement("$L.putBoolean($S,$L)", bundleVariableName, key, valueHolder.getValueAccessor());
     }
 
-    private static void readFloat(
+    private void readFloat(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -221,10 +227,10 @@ public class BundleCodeGenerator {
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
         cbBuilder.addStatement("$T $L = $L.getFloat($S)", typeName, tmpVarName, bundleVariableName, key)
-                 .addStatement(setStatement);
+                .addStatement(setStatement);
     }
 
-    private static void writeFloat(
+    private void writeFloat(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -233,7 +239,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement("$L.putFloat($S,$L)", bundleVariableName, key, valueHolder.getValueAccessor());
     }
 
-    private static void readLong(
+    private void readLong(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -245,10 +251,10 @@ public class BundleCodeGenerator {
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
         cbBuilder.addStatement("$T $L = $L.getLong($S)", typeName, tmpVarName, bundleVariableName, key)
-                 .addStatement(setStatement);
+                .addStatement(setStatement);
     }
 
-    private static void writeLong(
+    private void writeLong(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -257,7 +263,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement("$L.putLong($S,$L)", bundleVariableName, key, valueHolder.getValueAccessor());
     }
 
-    private static void readDouble(
+    private void readDouble(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -269,10 +275,10 @@ public class BundleCodeGenerator {
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
         cbBuilder.addStatement("$T $L = $L.getDouble($S)", typeName, tmpVarName, bundleVariableName, key)
-                 .addStatement(setStatement);
+                .addStatement(setStatement);
     }
 
-    private static void writeDouble(
+    private void writeDouble(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -281,7 +287,7 @@ public class BundleCodeGenerator {
         cbBuilder.addStatement("$L.putDouble($S,$L)", bundleVariableName, key, valueHolder.getValueAccessor());
     }
 
-    private static void readDate(
+    private void readDate(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -296,10 +302,10 @@ public class BundleCodeGenerator {
         String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
         cbBuilder.addStatement("$T $L = ".concat(getDateStringExpression), STRING, dateStringTmpVarName, key);
         cbBuilder.addStatement("$T $L = $T.getDateFromString($L)", typeName, tmpVarName, DATE_UTILS, dateStringTmpVarName)
-                 .addStatement(setStatement);
+                .addStatement(setStatement);
     }
 
-    private static void writeDate(
+    private void writeDate(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -311,7 +317,7 @@ public class BundleCodeGenerator {
                 .addStatement("$L.putString($S,$L)", bundleVariableName, key, tmpVarName);
     }
 
-    private static void readOffsetDate(
+    private void readOffsetDate(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -326,10 +332,10 @@ public class BundleCodeGenerator {
         String getDateStringExpression = String.format("%s.getString($S)", bundleVariableName);
         cbBuilder.addStatement("$T $L = ".concat(getDateStringExpression), STRING, dateStringTmpVarName, key);
         cbBuilder.addStatement("$T $L = $T.getOffsetDateFromString($L)", typeName, tmpVarName, DATE_UTILS, dateStringTmpVarName)
-                 .addStatement(setStatement);
+                .addStatement(setStatement);
     }
 
-    private static void writeOffsetDate(
+    private void writeOffsetDate(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -341,7 +347,7 @@ public class BundleCodeGenerator {
                 .addStatement("$L.putString($S,$L)", bundleVariableName, key, tmpVarName);
     }
 
-    private static void readParcelable(
+    private void readParcelable(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,
@@ -353,7 +359,7 @@ public class BundleCodeGenerator {
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
         cbBuilder.addStatement("$T $L", typeName, tmpVarName)
-                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
+                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, classNames.generateVersionCodeClassName("TIRAMISU"))
                 .addStatement("$L = $L.getParcelable($S,$L)", bundleVariableName, tmpVarName, key, typeName.toString().concat(".class"))
                 .nextControlFlow("else")
                 .addStatement("$L = $L.getParcelable($S)", bundleVariableName, tmpVarName, key)
@@ -361,7 +367,7 @@ public class BundleCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeParcelable(
+    private void writeParcelable(
             CodeBlock.Builder cbBuilder,
             String bundleVariableName,
             DeclaredValueHolder valueHolder,

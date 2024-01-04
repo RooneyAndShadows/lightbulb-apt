@@ -12,8 +12,13 @@ import static com.squareup.javapoet.TypeName.*;
 
 @SuppressWarnings("DuplicatedCode")
 public class ParcelableCodeGenerator {
+    private final ClassNames classNames;
 
-    public static CodeBlock generateWriteStatement(DeclaredValueHolder valueHolder, String bundleVariableName) {
+    public ParcelableCodeGenerator(ClassNames classNames) {
+        this.classNames = classNames;
+    }
+
+    public CodeBlock generateWriteStatement(DeclaredValueHolder valueHolder, String bundleVariableName) {
         TypeInformation type = valueHolder.getTypeInformation();
 
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
@@ -49,7 +54,7 @@ public class ParcelableCodeGenerator {
         return codeBlockBuilder.build();
     }
 
-    public static CodeBlock generateReadStatement(DeclaredValueHolder valueHolder, String bundleVariableName) {
+    public CodeBlock generateReadStatement(DeclaredValueHolder valueHolder, String bundleVariableName) {
         TypeInformation type = valueHolder.getTypeInformation();
 
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
@@ -87,7 +92,7 @@ public class ParcelableCodeGenerator {
         return codeBlockBuilder.build();
     }
 
-    private static void writeOffsetDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeOffsetDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         String variableName = valueHolder.getName();
         String nullMarkerVariable = variableName.concat("Marker");
         String tmpVarName = variableName.concat("OffsetDateString");
@@ -101,7 +106,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void readOffsetDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readOffsetDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String existenceVar = variableName.concat("Exists");
@@ -117,7 +122,7 @@ public class ParcelableCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         String tmpVarName = "dateString";
         String variableName = valueHolder.getName();
         String nullMarkerVariable = variableName.concat("Marker");
@@ -131,7 +136,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void readDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readDate(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String existenceVar = variableName.concat("Exists");
@@ -147,7 +152,7 @@ public class ParcelableCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeInt(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeInt(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
@@ -166,7 +171,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void readInt(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readInt(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
@@ -186,7 +191,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void writeString(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeString(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         String variableName = valueHolder.getName();
         String nullMarkerVariable = variableName.concat("Marker");
         String valueAccessor = valueHolder.getValueAccessor();
@@ -198,7 +203,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void readString(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readString(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String existenceVar = variableName.concat("Exists");
@@ -212,7 +217,7 @@ public class ParcelableCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeDouble(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeDouble(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
@@ -231,7 +236,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void readDouble(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readDouble(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
@@ -251,7 +256,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void writeFloat(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeFloat(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
@@ -270,7 +275,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void readFloat(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readFloat(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
@@ -290,7 +295,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void writeLong(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeLong(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
@@ -309,7 +314,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void readLong(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readLong(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
@@ -329,7 +334,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void writeBoolean(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeBoolean(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String valueAccessor = valueHolder.getValueAccessor();
         boolean isPrimitive = typeName.isPrimitive();
@@ -348,7 +353,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void readBoolean(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readBoolean(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
@@ -368,7 +373,7 @@ public class ParcelableCodeGenerator {
         }
     }
 
-    private static void writeUUID(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeUUID(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         String variableName = valueHolder.getName();
         String nullMarkerVariable = variableName.concat("Marker");
         String tmpVarName = variableName.concat("uuidString");
@@ -382,7 +387,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void readUUID(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readUUID(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
@@ -398,7 +403,7 @@ public class ParcelableCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeParcelable(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeParcelable(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         String variableName = valueHolder.getName();
         String nullMarkerVariable = variableName.concat("Marker");
         String valueAccessor = valueHolder.getValueAccessor();
@@ -410,7 +415,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void readParcelable(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readParcelable(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
         String variableName = valueHolder.getName();
         String setStatement = valueHolder.getValueSetStatement(variableName);
@@ -419,7 +424,7 @@ public class ParcelableCodeGenerator {
         cbBuilder.addStatement("$T $L = null", typeName, variableName);
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
-                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
+                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, classNames.generateVersionCodeClassName("TIRAMISU"))
                 .addStatement("$L = $L.readParcelable(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, typeName)
                 .nextControlFlow("else")
                 .addStatement("$L = $L.readParcelable(this.getClass().getClassLoader())", variableName, parcelVariableName)
@@ -428,7 +433,7 @@ public class ParcelableCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeSparseArray(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeSparseArray(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         String variableName = valueHolder.getName();
         String nullMarkerVariable = variableName.concat("Marker");
         String valueAccessor = valueHolder.getValueAccessor();
@@ -440,7 +445,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void readSparseArray(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readSparseArray(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeInformation type = valueHolder.getTypeInformation();
         List<TypeInformation> typeArgs = type.getParametrizedTypes();
         TypeName typeName = TypeName.get(type.getTypeMirror());
@@ -452,7 +457,7 @@ public class ParcelableCodeGenerator {
         cbBuilder.addStatement("$T $L = null", typeName, variableName)
                 .addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName)
                 .beginControlFlow("if($L)", existenceVar)
-                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
+                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, classNames.generateVersionCodeClassName("TIRAMISU"))
                 .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader(),$T.class)", variableName, parcelVariableName, valTypeName)
                 .nextControlFlow("else")
                 .addStatement("$L = $L.readSparseArray(this.getClass().getClassLoader())", variableName, parcelVariableName)
@@ -461,7 +466,7 @@ public class ParcelableCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeList(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeList(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         String variableName = valueHolder.getName();
         String nullMarkerVariable = variableName.concat("Marker");
         String valueAccessor = valueHolder.getValueAccessor();
@@ -473,7 +478,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void readList(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readList(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeInformation type = valueHolder.getTypeInformation();
         List<TypeInformation> typeArgs = type.getParametrizedTypes();
         TypeName typeName = TypeName.get(type.getTypeMirror());
@@ -486,7 +491,7 @@ public class ParcelableCodeGenerator {
                 .addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName)
                 .beginControlFlow("if($L)", existenceVar)
                 .addStatement("$L = new $T()", variableName, type.canBeInstantiated() ? typeName : ARRAY_LIST)
-                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
+                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, classNames.generateVersionCodeClassName("TIRAMISU"))
                 .addStatement("$L.readList($L,this.getClass().getClassLoader(),$T.class)", parcelVariableName, variableName, valTypeName)
                 .nextControlFlow("else")
                 .addStatement("$L.readList($L,this.getClass().getClassLoader())", parcelVariableName, variableName)
@@ -495,7 +500,7 @@ public class ParcelableCodeGenerator {
                 .addStatement(setStatement);
     }
 
-    private static void writeMap(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void writeMap(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         String variableName = valueHolder.getName();
         String nullMarkerVariable = variableName.concat("Marker");
         String valueAccessor = valueHolder.getValueAccessor();
@@ -507,7 +512,7 @@ public class ParcelableCodeGenerator {
                 .endControlFlow();
     }
 
-    private static void readMap(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+    private void readMap(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
         TypeInformation type = valueHolder.getTypeInformation();
         List<TypeInformation> typeArgs = type.getParametrizedTypes();
         TypeName typeName = TypeName.get(type.getTypeMirror());
@@ -521,7 +526,7 @@ public class ParcelableCodeGenerator {
         cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
         cbBuilder.beginControlFlow("if($L)", existenceVar)
                 .addStatement("$L = new $T()", variableName, type.canBeInstantiated() ? typeName : HASH_MAP)
-                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, generateVersionCodeClassName("TIRAMISU"))
+                .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, classNames.generateVersionCodeClassName("TIRAMISU"))
                 .addStatement("$L.readMap($L, this.getClass().getClassLoader(),$T.class,$T.class)", parcelVariableName, variableName, keyTypeName, valTypeName)
                 .nextControlFlow("else")
                 .addStatement("$L.readMap($L, this.getClass().getClassLoader())", parcelVariableName, variableName)

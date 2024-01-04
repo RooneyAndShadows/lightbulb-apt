@@ -2,7 +2,6 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class PackageNames {
-    private static String rootPackage = null;
     /**
      * Lightbulb
      */
@@ -28,59 +27,57 @@ public class PackageNames {
     public static final String ANDROIDX_APPCOMPAT_APP = resolve(ANDROIDX, "appcompat", "app");
     public static final String ANDROID_BUILD_VERSION = resolve(ANDROID_OS, "Build", "VERSION");
     public static final String ANDROID_BUILD_VERSION_CODES = resolve(ANDROID_OS, "Build", "VERSION_CODES");
+    private final String rootPackage;
 
-    public static void init(String projectRoot) {
-        PackageNames.rootPackage = projectRoot;
+    public PackageNames(String rootPackage) {
+        this.rootPackage = rootPackage;
     }
 
-    public static String getRootPackage() {
-        if (PackageNames.rootPackage == null) {
-            throw new IllegalStateException("root package cannot be null");
-        }
-        return PackageNames.rootPackage;
+    public String getRootPackage() {
+        return rootPackage;
     }
 
-    public static String getLightbulbPackage() {
-        return resolve(getRootPackage(), "lightbulb");
+    public String getLightbulbPackage() {
+        return resolve(rootPackage, "lightbulb");
     }
 
-    public static String getComponentsPackage() {
+    public String getComponentsPackage() {
         return resolve(getLightbulbPackage(), "components");
     }
 
-    public static String getRoutingPackage() {
+    public String getRoutingPackage() {
         return resolve(getLightbulbPackage(), "routing");
     }
 
-    public static String getRoutingScreensPackage() {
+    public String getRoutingScreensPackage() {
         return resolve(getRoutingPackage(), "screens");
     }
 
-    public static String getStoragePackage() {
+    public String getStoragePackage() {
         return resolve(getLightbulbPackage(), "storage");
     }
 
-    public static String getParcelablePackage() {
+    public String getParcelablePackage() {
         return resolve(getLightbulbPackage(), "parcelable");
     }
 
-    public static String getServicePackage() {
+    public String getServicePackage() {
         return resolve(getLightbulbPackage(), "service");
     }
 
-    public static String getFragmentsPackage() {
+    public String getFragmentsPackage() {
         return resolve(getLightbulbPackage(), "fragments");
     }
 
-    public static String getFragmentsFactoryPackage() {
+    public String getFragmentsFactoryPackage() {
         return resolve(getFragmentsPackage(), "factory");
     }
 
-    public static String getActivitiesPackage() {
+    public String getActivitiesPackage() {
         return resolve(getLightbulbPackage(), "activities");
     }
 
-    public static String getApplicationPackage() {
+    public String getApplicationPackage() {
         return resolve(getLightbulbPackage(), "application");
     }
 

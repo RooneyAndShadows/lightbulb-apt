@@ -4,9 +4,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.F
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.ClassMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.*;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,12 +23,20 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 public abstract class CodeGenerator {
     protected final Filer filer;
     protected final Elements elements;
+    protected final PackageNames packageNames;
+    protected final ClassNames classNames;
+    protected final ParcelableCodeGenerator parcelableCodeGenerator;
+    protected final BundleCodeGenerator bundleCodeGenerator;
     private final AnnotationResultsRegistry annotationResultsRegistry;
 
-    public CodeGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
+    public CodeGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         this.filer = filer;
         this.elements = elements;
+        this.packageNames = packageNames;
+        this.classNames = classNames;
         this.annotationResultsRegistry = annotationResultsRegistry;
+        this.parcelableCodeGenerator = new ParcelableCodeGenerator(classNames);
+        this.bundleCodeGenerator = new BundleCodeGenerator(classNames);
     }
 
     protected abstract void generateCode(AnnotationResultsRegistry annotationResultsRegistry);
@@ -45,29 +51,29 @@ public abstract class CodeGenerator {
 
     @NotNull
     protected ClassName getClassName(ClassMetadata activityMetadata) {
-        return ClassNames.getClassName(activityMetadata);
+        return classNames.getClassName(activityMetadata);
     }
 
     @Nullable
-    protected ClassName getSuperClassName(ClassMetadata activityMetadata) {
-        return ClassNames.getSuperClassName(activityMetadata);
+    protected ClassName getSuperClassName(ClassMetadata metadata) {
+        return classNames.getSuperClassName(metadata);
     }
 
     @NotNull
-    protected ClassName getInstrumentedClassName(String packageName, ClassMetadata activityMetadata, boolean prefix) {
-        return ClassNames.generateInstrumentedClassName(packageName, activityMetadata.getClassSimpleName(), prefix);
+    protected ClassName getInstrumentedClassName(String packageName, ClassMetadata metadata, boolean prefix) {
+        return classNames.generateInstrumentedClassName(packageName, metadata.getClassSimpleName(), prefix);
     }
 
     @NotNull
-    protected ClassName getInstrumentedClassName(String packageName, ClassMetadata activityMetadata) {
-        return ClassNames.generateInstrumentedClassName(packageName, activityMetadata.getClassSimpleName(), true);
+    protected ClassName getInstrumentedClassName(String packageName, ClassMetadata metadata) {
+        return classNames.generateInstrumentedClassName(packageName, metadata.getClassSimpleName(), true);
     }
 
     protected void copyFieldsForSupertypeTransformation(List<? extends FieldMetadata> targets, List<FieldSpec> fields, List<MethodSpec> methods) {
         targets.forEach(fieldMetadata -> {
             boolean hasSetter = fieldMetadata.hasSetter();
             boolean hasGetter = fieldMetadata.hasGetter();
-            TypeName fieldTypeName = ClassNames.getTypeName(fieldMetadata);
+            TypeName fieldTypeName = classNames.getTypeName(fieldMetadata);
 
             if (!hasGetter || !hasSetter) {
                 Modifier fieldAccess = ElementUtils.accessModifierAtLeast(fieldMetadata.getElement(), PROTECTED);

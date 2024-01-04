@@ -5,6 +5,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.F
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -22,9 +23,9 @@ public class RoutingGenerator extends CodeGenerator {
     private final ClassName screensClassName;
     private final List<FragmentMetadata> fragmentMetadataList;
 
-    public RoutingGenerator(Filer filer, Elements elements, AnnotationResultsRegistry annotationResultsRegistry) {
-        super(filer, elements, annotationResultsRegistry);
-        screensClassName = ClassNames.getRoutingScreensClassName();
+    public RoutingGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+        super(filer, elements, packageNames, classNames, annotationResultsRegistry);
+        screensClassName = classNames.getRoutingScreensClassName();
         fragmentMetadataList = annotationResultsRegistry.getFragmentDescriptions();
     }
 
@@ -40,7 +41,7 @@ public class RoutingGenerator extends CodeGenerator {
     }
 
     private void generateAppRouter() {
-        ClassName routerClassName = ClassNames.getAppRouterClassName();
+        ClassName routerClassName = classNames.getAppRouterClassName();
         List<TypeSpec> innerClasses = new ArrayList<>();
         List<MethodSpec> methods = new ArrayList<>();
 
@@ -158,7 +159,7 @@ public class RoutingGenerator extends CodeGenerator {
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
 
         fragmentMetadataList.forEach(fragmentInfo -> {
-            ClassName fragmentClassName = ClassNames.getClassName(fragmentInfo);
+            ClassName fragmentClassName = classNames.getClassName(fragmentInfo);
 
             boolean hasOptionalParameters = fragmentInfo.hasOptionalParameters();
             String screenName = fragmentInfo.getScreenName();
@@ -184,7 +185,7 @@ public class RoutingGenerator extends CodeGenerator {
 
             fragmentInfo.getScreenParameters().forEach(parameter -> {
                 String parameterName = parameter.getName();
-                TypeName parameterType = ClassNames.getTypeName(parameter);
+                TypeName parameterType = classNames.getTypeName(parameter);
 
                 FieldSpec.Builder fieldSpecBuilder = FieldSpec.builder(parameterType, parameterName, Modifier.PRIVATE);
 
@@ -217,7 +218,7 @@ public class RoutingGenerator extends CodeGenerator {
                 screenClass.addMethod(notOptionalScreenConstructor.build());
             }
 
-            getFragmentMethod.addStatement("return $T.$L.newInstance(" + allParamsString + ")", ClassNames.getFragmentFactoryClassName(), fragmentClassName.simpleName());
+            getFragmentMethod.addStatement("return $T.$L.newInstance(" + allParamsString + ")", classNames.getFragmentFactoryClassName(), fragmentClassName.simpleName());
 
             screenClass.addMethod(getFragmentMethod.build());
 

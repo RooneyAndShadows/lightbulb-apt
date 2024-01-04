@@ -65,19 +65,24 @@ public class ClassNames {
     public static final ClassName HASH_MAP = ClassName.get(HashMap.class);
     public static final ClassName ARRAY_LIST = ClassName.get(ArrayList.class);
     public static final ClassName ILLEGAL_ARGUMENT_EXCEPTION = ClassName.get(IllegalArgumentException.class);
+    private final PackageNames packageNames;
 
-    @NotNull
-    public static ClassName androidResources() {
-        return ClassName.get(PackageNames.getRootPackage(), "R");
+    public ClassNames(PackageNames packageNames) {
+        this.packageNames = packageNames;
     }
 
     @NotNull
-    public static ClassName getClassName(ClassMetadata metadata) {
+    public ClassName androidResources() {
+        return ClassName.get(packageNames.getRootPackage(), "R");
+    }
+
+    @NotNull
+    public ClassName getClassName(ClassMetadata metadata) {
         return ClassName.get(metadata.getElement());
     }
 
     @Nullable
-    public static ClassName getSuperClassName(ClassMetadata metadata) {
+    public ClassName getSuperClassName(ClassMetadata metadata) {
         TypeElement superTypeElement = ElementUtils.getSuperType(metadata.getElement());
 
         if (superTypeElement == null) {
@@ -88,45 +93,45 @@ public class ClassNames {
     }
 
     @NotNull
-    public static TypeName getTypeName(TypeInformation typeInformation) {
+    public TypeName getTypeName(TypeInformation typeInformation) {
         return TypeName.get(typeInformation.getTypeMirror());
     }
 
     @NotNull
-    public static TypeName getTypeName(BaseMetadata<?> metadata) {
+    public TypeName getTypeName(BaseMetadata<?> metadata) {
         return TypeName.get(metadata.getTypeMirror());
     }
 
-    public static ClassName generateInstrumentedClassName(String classPackage, String className) {
+    public ClassName generateInstrumentedClassName(String classPackage, String className) {
         return generateInstrumentedClassName(classPackage, className, true);
     }
 
-    public static ClassName generateInstrumentedClassName(String classPackage, String className, boolean prefix) {
+    public ClassName generateInstrumentedClassName(String classPackage, String className, boolean prefix) {
         return generateClassNameWithPrefix(classPackage, className, prefix ? DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX : "");
     }
 
-    public static ClassName generateClassNameWithPrefix(String classPackage, String className, String classNamePrefix) {
+    public ClassName generateClassNameWithPrefix(String classPackage, String className, String classNamePrefix) {
         return ClassName.get(classPackage, classNamePrefix.concat(className));
     }
 
-    public static ClassName generateVersionCodeClassName(String versionCode) {
+    public ClassName generateVersionCodeClassName(String versionCode) {
         return ClassName.get(ANDROID_BUILD_VERSION_CODES, versionCode);
     }
 
-    public static ClassName getFragmentFactoryClassName() {
-        return ClassName.get(PackageNames.getFragmentsFactoryPackage(), FRAGMENT_FACTORY_CLASS_NAME);
+    public ClassName getFragmentFactoryClassName() {
+        return ClassName.get(packageNames.getFragmentsFactoryPackage(), FRAGMENT_FACTORY_CLASS_NAME);
     }
 
-    public static ClassName getRoutingScreensClassName() {
-        return ClassName.get(PackageNames.getRoutingScreensPackage(), ROUTING_SCREENS_CLASS_NAME);
+    public ClassName getRoutingScreensClassName() {
+        return ClassName.get(packageNames.getRoutingScreensPackage(), ROUTING_SCREENS_CLASS_NAME);
     }
 
-    public static ClassName getAppRouterClassName() {
-        return ClassName.get(PackageNames.getRoutingPackage(), ROUTING_APP_ROUTER_CLASS_NAME);
+    public ClassName getAppRouterClassName() {
+        return ClassName.get(packageNames.getRoutingPackage(), ROUTING_APP_ROUTER_CLASS_NAME);
     }
 
-    public static ClassName getLightbulbServiceClassName() {
-        return ClassName.get(PackageNames.getServicePackage(), LIGHTBULB_SERVICE_CLASS_NAME);
+    public ClassName getLightbulbServiceClassName() {
+        return ClassName.get(packageNames.getServicePackage(), LIGHTBULB_SERVICE_CLASS_NAME);
     }
 
     private static String resolveCanonical(String packageName, String simpleClassName) {
