@@ -26,30 +26,11 @@ buildscript {
                 "version"               : "2.0.0"
         ]
     }
-    repositories {
-        //noinspection JcenterRepositoryObsolete
-        jcenter()
-        google()
-        mavenCentral()
-        mavenLocal()
-        maven { url 'https://jitpack.io' }
-    }
-    dependencies {
-        classpath "com.android.tools.build:gradle:$versions.android.gradle_plugin"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
-    }
 }
 
-allprojects {
-    repositories {
-        //noinspection JcenterRepositoryObsolete
-        jcenter()
-        google()
-        mavenLocal()
-        maven {
-            url "https://jitpack.io"
-        }
-    }
+plugins {
+    id 'com.android.application' version '8.1.4' apply false
+    id 'org.jetbrains.kotlin.android' version '1.8.10' apply false
+    id 'lb-compile' version '2.0.0' apply false
 }
+
