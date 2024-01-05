@@ -1,13 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.sample;
 
 
-import android.content.Intent;
 import android.os.Bundle;
-
 import androidx.appcompat.app.AppCompatActivity;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbActivity;
-
-import java.util.UUID;
 
 
 @LightbulbActivity()
