@@ -8,6 +8,15 @@ plugins {
 group "$environment.group_id"
 version = "$environment.version"
 
+repositories {
+    //noinspection JcenterRepositoryObsolete
+    jcenter()
+    google()
+    mavenCentral()
+    mavenLocal()
+    maven { url 'https://jitpack.io' }
+}
+
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation "com.android.application:com.android.application.gradle.plugin:$versions.android.gradle_plugin"
