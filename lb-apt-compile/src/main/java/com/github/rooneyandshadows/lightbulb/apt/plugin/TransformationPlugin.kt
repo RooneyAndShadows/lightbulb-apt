@@ -9,6 +9,7 @@ import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.TransformationsTask
+import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.TransformationsTaskDump
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ProcessorOptionNames
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -47,7 +48,9 @@ class TransformationPlugin : Plugin<Project> {
             configureAPT(project,variant)
             val capitalizedVariantName = variant.name.capitalized()
             val taskName = "transform${capitalizedVariantName}"
+            val dumpTaskName = "transform${capitalizedVariantName}Dump"
             val taskType = TransformationsTask::class.java
+            project.tasks.register<TransformationsTaskDump>(taskName, variant, extension)
             val taskProvider = project.tasks.register<TransformationsTask>(taskName, variant, extension)
 
             if (extension.isDumpEnabled() && !extension.isOutputEnabled()) {

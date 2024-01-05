@@ -42,7 +42,7 @@ android {
 }
 
 lightbulb {
-    flags = debugAndDumpOnly
+    flags = debugFlag
 }
 
 dependencies {
