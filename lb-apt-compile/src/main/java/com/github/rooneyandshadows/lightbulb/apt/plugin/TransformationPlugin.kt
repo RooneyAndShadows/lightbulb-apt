@@ -31,7 +31,7 @@ class TransformationPlugin : Plugin<Project> {
 
     private fun setupLogger(project: Project, extension: TransformExtension) {
         project.afterEvaluate {
-            LoggingUtil.enabled = extension.isDebugEnabled()
+            LoggingUtil.enabled = extension.debug
         }
     }
 
@@ -50,14 +50,8 @@ class TransformationPlugin : Plugin<Project> {
             val taskName = "transform${capitalizedVariantName}"
             val dumpTaskName = "transform${capitalizedVariantName}Dump"
             val taskType = TransformationsTask::class.java
-            project.tasks.register<TransformationsTaskDump>(taskName, variant, extension)
+            project.tasks.register<TransformationsTaskDump>(dumpTaskName, variant, extension)
             val taskProvider = project.tasks.register<TransformationsTask>(taskName, variant, extension)
-
-            if (extension.isDumpEnabled() && !extension.isOutputEnabled()) {
-                taskProvider.get().outputs.upToDateWhen {
-                    false
-                }
-            }
 
             variant.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
                 .use(taskProvider)

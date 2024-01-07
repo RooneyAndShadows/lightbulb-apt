@@ -2,6 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform
 
 import com.android.build.api.variant.Variant
 import com.github.rooneyandshadows.lightbulb.apt.plugin.*
+import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.common.TransformationJobRegistry
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeActivitySuperclassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeApplicationSuperclassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeFragmentSuperclassTransformation
@@ -48,7 +49,7 @@ abstract class TransformationsTaskDump @Inject constructor(
     @TaskAction
     fun taskAction() {
         val baseDir = project.buildDir.path
-        val lightbulbDir = baseDir.appendDirectory("lightbulb")
+        val lightbulbDir = baseDir.appendDirectory("intermediates", "lightbulb")
         transformationRegistry.execute { classDir, className, byteCode ->
             val dumpClassSuffix = "_Transformed"
             val dumpClassName = className.plus("${dumpClassSuffix}.class")

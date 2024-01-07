@@ -2,6 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform
 
 import com.android.build.api.variant.Variant
 import com.github.rooneyandshadows.lightbulb.apt.plugin.*
+import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.common.TransformationJobRegistry
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeParcelableSuperclassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeActivitySuperclassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeApplicationSuperclassTransformation
@@ -50,30 +51,19 @@ abstract class TransformationsTask @Inject constructor(
         val classNames = ClassNames(packageNames)
 
         transformationRegistry = TransformationJobRegistry(globalClasspath) { getTransformationsClasspath() }
-        transformationRegistry.register(ChangeApplicationSuperclassTransformation(packageNames,classNames))
-        transformationRegistry.register(ChangeActivitySuperclassTransformation(packageNames,classNames))
-        transformationRegistry.register(ChangeFragmentSuperclassTransformation(packageNames,classNames))
-        transformationRegistry.register(ChangeParcelableSuperclassTransformation(packageNames,classNames))
+        transformationRegistry.register(ChangeApplicationSuperclassTransformation(packageNames, classNames))
+        transformationRegistry.register(ChangeActivitySuperclassTransformation(packageNames, classNames))
+        transformationRegistry.register(ChangeFragmentSuperclassTransformation(packageNames, classNames))
+        transformationRegistry.register(ChangeParcelableSuperclassTransformation(packageNames, classNames))
     }
 
 
     @TaskAction
     fun taskAction() {
-        val baseDir = output.get().asFile.parent
-        val lightbulbDir = baseDir.appendDirectory("lightbulb")
-
-        lightbulbDir.deleteDirectory()
         withJarOutputStream { jarOutputStream ->
-            if (extension.isOutputEnabled()) {
-                copySystemJars(jarOutputStream)
-            }
+            copySystemJars(jarOutputStream)
             transformationRegistry.execute { classDir, className, byteCode ->
-                if (extension.isOutputEnabled()) {
-                    writeClassToJar(classDir, className, byteCode, jarOutputStream)
-                }
-                if (extension.isDumpEnabled()) {
-                    dumpClassFile(lightbulbDir, classDir, className, byteCode)
-                }
+                writeClassToJar(classDir, className, byteCode, jarOutputStream)
             }
         }
     }
@@ -109,18 +99,10 @@ abstract class TransformationsTask @Inject constructor(
         jarOutput.closeEntry()
     }
 
-    private fun dumpClassFile(lightbulbDir: String, classDir: String, className: String, byteCode: ByteArray) {
-        val dumpClassSuffix = "_Transformed"
-        val dumpClassName = className.plus("${dumpClassSuffix}.class")
-        val targetDir = lightbulbDir.appendDirectory(classDir)
-        targetDir.createFile(dumpClassName).write(byteCode)
-    }
-
     private fun getTransformationsClasspath(): FileCollection {
         val dirs = allDirectories.get().map {
             return@map it.asFile.path
         }
         return project.files(dirs)
     }
-
 }

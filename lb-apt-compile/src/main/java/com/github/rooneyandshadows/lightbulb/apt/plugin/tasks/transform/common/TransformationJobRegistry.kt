@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform
+package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.common
 
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.ClassTransformer
 import org.gradle.api.file.FileCollection
