@@ -1,12 +1,12 @@
-package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform
+package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks
 
 import com.android.build.api.variant.Variant
 import com.github.rooneyandshadows.lightbulb.apt.plugin.*
-import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.common.TransformationJobRegistry
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeParcelableSuperclassTransformation
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeActivitySuperclassTransformation
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeApplicationSuperclassTransformation
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.ChangeFragmentSuperclassTransformation
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.job.TransformationJobRegistry
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.ChangeParcelableSuperclassTransformation
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.ChangeActivitySuperclassTransformation
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.ChangeApplicationSuperclassTransformation
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.ChangeFragmentSuperclassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
@@ -57,13 +57,22 @@ abstract class TransformationsTask @Inject constructor(
         transformationRegistry.register(ChangeParcelableSuperclassTransformation(packageNames, classNames))
     }
 
+    @Override
+    override fun getGroup(): String {
+        return PLUGIN_TASK_GROUP
+    }
 
     @TaskAction
     fun taskAction() {
         withJarOutputStream { jarOutputStream ->
             copySystemJars(jarOutputStream)
-            transformationRegistry.execute { classDir, className, byteCode ->
-                writeClassToJar(classDir, className, byteCode, jarOutputStream)
+            transformationRegistry.execute { classDir, className, modified, byteCode ->
+                LoggingUtil.info("Adding to jar $className")
+                val zipEntryName = classDir.plus("${className}.class")
+                val entry = JarEntry(zipEntryName)
+                jarOutputStream.putNextEntry(entry)
+                jarOutputStream.write(byteCode)
+                jarOutputStream.closeEntry()
             }
         }
     }
@@ -88,15 +97,6 @@ abstract class TransformationsTask @Inject constructor(
             }
             jarFile.close()
         }
-    }
-
-    private fun writeClassToJar(classDir: String, className: String, byteCode: ByteArray, jarOutput: JarOutputStream) {
-        LoggingUtil.info("Adding to jar $className")
-        val zipEntryName = classDir.plus("${className}.class")
-        val entry = JarEntry(zipEntryName)
-        jarOutput.putNextEntry(entry)
-        jarOutput.write(byteCode)
-        jarOutput.closeEntry()
     }
 
     private fun getTransformationsClasspath(): FileCollection {

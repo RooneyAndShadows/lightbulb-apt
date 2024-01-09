@@ -54,19 +54,19 @@ abstract class ModifyClassesTask: DefaultTask() {
                 if (file.isFile) {
                     if (file.name.endsWith("SomeSource.class")) {
                         println("Found $file.name")
-                        val interfaceClass = pool.makeInterface("com.android.api.tests.SomeInterface");
+                        val interfaceClass = pool.makeInterface("com.android.api.tests.SomeInterface")
                         println("Adding $interfaceClass")
                         jarOutput.putNextEntry(JarEntry("com/android/api/tests/SomeInterface.class"))
                         jarOutput.write(interfaceClass.toBytecode())
                         jarOutput.closeEntry()
                         val ctClass = file.inputStream().use {
-                            pool.makeClass(it);
+                            pool.makeClass(it)
                         }
                         ctClass.addInterface(interfaceClass)
 
-                        val m = ctClass.getDeclaredMethod("toString");
+                        val m = ctClass.getDeclaredMethod("toString")
                         if (m != null) {
-                            m.insertBefore("{ System.out.println(\"Some Extensive Tracing\"); }");
+                            m.insertBefore("{ System.out.println(\"Some Extensive Tracing\"); }")
 
                             val relativePath = directory.asFile.toURI().relativize(file.toURI()).getPath()
                             jarOutput.putNextEntry(JarEntry(relativePath.replace(File.separatorChar, '/')))

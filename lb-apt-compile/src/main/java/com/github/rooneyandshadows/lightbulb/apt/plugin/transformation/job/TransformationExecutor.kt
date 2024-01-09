@@ -1,6 +1,6 @@
-package com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.common
+package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.job
 
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.ClassTransformer
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.severe
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.warning
 import javassist.ClassPool
@@ -10,18 +10,16 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.FileCollection
 import java.io.*
 
-
-//TODO save transformed files to tmp location before sending to destination in order to execute multiple transtormations of one class.
 @Suppress("MemberVisibilityCanBePrivate")
 class TransformationExecutor(
     private val globalClassPath: FileCollection,
     private val transformationsClassPathProvider: (() -> FileCollection),
-    private val transformations: List<ClassTransformer>,
+    private val transformations: List<ClassTransformation>,
 ) {
     private val transformationsClassPath: FileCollection
         get() = transformationsClassPathProvider.invoke()
 
-    fun execute(action: ((packageName: String, className: String, byteCode: ByteArray) -> Unit)): Boolean {
+    fun execute(action: ((packageName: String, className: String, modified: Boolean, byteCode: ByteArray) -> Unit)): Boolean {
         var result = false
 
         val classPool = setupClassPool()
@@ -32,11 +30,16 @@ class TransformationExecutor(
         }
 
         loadedClasses.forEach { ctClass ->
-            val newClasses = mutableSetOf<CtClass>()
+            var isModified = false
+            val classesToAdd:MutableSet<CtClass> = mutableSetOf()
 
             transformations.forEach { transformation ->
                 try {
-                    newClasses.addAll(transformation.transform(classPool, ctClass))
+                    transformation.transform(classPool, ctClass).apply {
+                        isModified = isModified || this.modified
+                        classesToAdd.addAll(newClasses)
+                    }
+
                     result = true
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -45,11 +48,11 @@ class TransformationExecutor(
                 }
             }
 
-            newClasses.forEach { cls ->
-                onTransformed(cls, action)
+            classesToAdd.forEach { cls ->
+                onTransformed(cls, true, action)
             }
 
-            onTransformed(ctClass, action)
+            onTransformed(ctClass, isModified, action)
         }
 
         return result
@@ -57,14 +60,15 @@ class TransformationExecutor(
 
     private fun onTransformed(
         targetClass: CtClass,
-        onClassSaved: ((packageName: String, className: String, byteCode: ByteArray) -> Unit)
+        isNewOrModified: Boolean,
+        action: ((packageName: String, className: String, modified: Boolean, byteCode: ByteArray) -> Unit)
     ) {
         try {
             val classSimpleName = targetClass.simpleName
             val packageToDirectory = targetClass.packageName.replace(".", "/")
-            val byteCode = targetClass.toBytecode();
+            val byteCode = targetClass.toBytecode()
 
-            onClassSaved.invoke(packageToDirectory, classSimpleName, byteCode)
+            action.invoke(packageToDirectory, classSimpleName, isNewOrModified, byteCode)
 
         } catch (e: Exception) {
             throw GradleException("An error occurred while trying to process class file ", e)

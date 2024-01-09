@@ -26,7 +26,7 @@ class DateUtils {
         @JvmStatic
         fun getOffsetDateString(date: OffsetDateTime?): String? {
             if (date == null) {
-                return null;
+                return null
             }
             val locale = Locale.getDefault()
             val formatter = DateTimeFormatter.ofPattern(defaultFormat, locale)
@@ -35,7 +35,7 @@ class DateUtils {
         @JvmStatic
         fun getDateString(date: Date?): String? {
             if (date == null) {
-                return null;
+                return null
             }
             val locale = Locale.getDefault()
             return SimpleDateFormat(defaultFormat, locale).format(date)

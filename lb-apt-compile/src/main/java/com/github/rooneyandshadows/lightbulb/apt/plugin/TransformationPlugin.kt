@@ -8,8 +8,8 @@ import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
-import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.TransformationsTask
-import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.transform.TransformationsTaskDump
+import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TransformationsTask
+import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TransformationsTaskDump
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ProcessorOptionNames
 import org.gradle.api.Plugin
 import org.gradle.api.Project

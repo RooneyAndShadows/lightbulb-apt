@@ -1,7 +1,6 @@
-package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation
+package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations
 
-import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil.Companion.info
-import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.base.ClassTransformer
+import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.BindView
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentStatePersisted
@@ -12,16 +11,13 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.*
 import org.gradle.configurationcache.extensions.capitalized
 
-
 internal class ChangeFragmentSuperclassTransformation(
     packageNames: PackageNames,
     classNames: ClassNames
-) : ClassTransformer(packageNames, classNames) {
+) : ClassTransformation(packageNames, classNames) {
 
     @Override
-    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Set<CtClass> {
-        info("Transforming class:".plus(ctClass.name))
-
+    override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Result {
         val targetCtClass = getTargetClass(classPool, ctClass)
 
         ctClass.declaredFields.forEach { field ->
@@ -42,9 +38,8 @@ internal class ChangeFragmentSuperclassTransformation(
                 val currentMethodName = method.name
                 if (currentMethodName == setterName || currentMethodName == getterName) {
                     removeField = true
-                    if (isMethodPrivate(method)) {
-                        val modifiers = Modifier.setProtected(method.modifiers)
-                        method.modifiers = modifiers
+                    if (isPrivate(method)) {
+                        setProtected(method)
                     }
                 }
             }
@@ -56,16 +51,12 @@ internal class ChangeFragmentSuperclassTransformation(
 
         ctClass.superclass = targetCtClass
 
-        return emptySet()
+        return Result(ctClass, true)
     }
 
     @Override
     override fun shouldTransform(classPool: ClassPool, ctClass: CtClass): Boolean {
         return ctClass.hasAnnotation(LightbulbFragment::class.java)
-    }
-
-    private fun isMethodPrivate(ctMethod: CtMethod): Boolean {
-        return Modifier.isPrivate(ctMethod.modifiers)
     }
 
     private fun getTargetClass(classPool: ClassPool, ctClass: CtClass): CtClass {

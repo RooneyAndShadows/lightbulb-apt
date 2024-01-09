@@ -55,7 +55,7 @@ fun String.deleteDirectory(): Boolean {
     val allContents = directory.listFiles()
     if (allContents != null) {
         for (file in allContents) {
-            file.path.deleteDirectory();
+            file.path.deleteDirectory()
         }
     }
     return directory.delete()
