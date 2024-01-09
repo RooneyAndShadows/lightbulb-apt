@@ -21,6 +21,6 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = 'lightbulb-apt'
-include 'lb-apt-processor'
-include 'lb-apt-compile'
+include ':lb-apt-processor'
+include ':lb-apt-compile'
 include ':lb-apt-core'
