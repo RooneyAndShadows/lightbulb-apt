@@ -21,11 +21,7 @@ buildscript {
         ]
         environment = [
                 "root_namespace"       : "com.github.rooneyandshadows.lightbulb.apt",
-                "processor_namespace"  : "com.github.rooneyandshadows.lightbulb.apt.processor",
                 "core_namespace"       : 'com.github.rooneyandshadows.lightbulb.apt.core',
-                "plugin_namespace"     : 'com.github.rooneyandshadows.lightbulb.apt.plugin',
-                "commons_namespace"    : 'com.github.rooneyandshadows.lightbulb.apt.commons',
-                "annotations_namespace": 'com.github.rooneyandshadows.lightbulb.apt.annotations',
                 "version"              : "2.0.0"
         ]
     }

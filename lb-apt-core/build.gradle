@@ -54,8 +54,6 @@ tasks.register('androidSourcesJar', Jar) {
 }
 
 afterEvaluate {
-    println(project.name)
-    println(project.group)
     publishing {
         repositories {
             mavenLocal()
