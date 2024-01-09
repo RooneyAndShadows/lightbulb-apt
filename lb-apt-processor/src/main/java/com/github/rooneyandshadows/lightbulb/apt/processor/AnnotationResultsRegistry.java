@@ -1,7 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.*;
 
 import java.util.HashMap;
 import java.util.List;

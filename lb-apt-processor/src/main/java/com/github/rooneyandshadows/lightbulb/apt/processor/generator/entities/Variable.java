@@ -1,12 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
 import org.jetbrains.annotations.NotNull;
-
-import javax.lang.model.type.TypeMirror;
 
 public class Variable extends DeclaredValueHolder {
     public Variable(String name, TypeInformation typeInformation) {

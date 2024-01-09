@@ -1,12 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.BindView;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbActivity;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbFragment;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentStatePersisted;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.BindView;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbActivity;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbFragment;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentStatePersisted;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.*;
@@ -18,7 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ProcessorOptionNames.PROJECT_ROOT_PACKAGE;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.ProcessorOptionNames.PROJECT_ROOT_PACKAGE;
 
 @SuppressWarnings("FieldCanBeLocal")
 @AutoService(Processor.class)

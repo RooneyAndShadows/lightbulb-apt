@@ -17,13 +17,16 @@ buildscript {
                         java_commons: "[1.0.7,1.1.0[",
                         javassist   : "3.29.2-GA",
                         javapoet    : "1.13.0",
-                        lb_processor: "2.0.0",
                 ]
         ]
         environment = [
-                "group_id"              : "com.github.rooneyandshadows.lightbulb-apt",
-                "android_core_namespace": 'com.github.rooneyandshadows.lightbulb.apt.core',
-                "version"               : "2.0.0"
+                "root_namespace"       : "com.github.rooneyandshadows.lightbulb.apt",
+                "processor_namespace"  : "com.github.rooneyandshadows.lightbulb.apt.processor",
+                "core_namespace"       : 'com.github.rooneyandshadows.lightbulb.apt.core',
+                "plugin_namespace"     : 'com.github.rooneyandshadows.lightbulb.apt.plugin',
+                "commons_namespace"    : 'com.github.rooneyandshadows.lightbulb.apt.commons',
+                "annotations_namespace": 'com.github.rooneyandshadows.lightbulb.apt.annotations',
+                "version"              : "2.0.0"
         ]
     }
 }
@@ -31,6 +34,6 @@ buildscript {
 plugins {
     id 'com.android.application' version '8.1.4' apply false
     id 'org.jetbrains.kotlin.android' version '1.8.10' apply false
-    id 'lb-compile' version '2.0.0' apply false
+    //id 'lb-compile' version '2.0.0' apply false
 }
 

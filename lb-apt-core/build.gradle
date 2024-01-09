@@ -5,8 +5,10 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+group "$environment.root_namespace"
+
 android {
-    namespace "$environment.android_core_namespace"
+    namespace "$environment.core_namespace"
     compileSdk 33
 
     defaultConfig {
@@ -52,6 +54,8 @@ tasks.register('androidSourcesJar', Jar) {
 }
 
 afterEvaluate {
+    println(project.name)
+    println(project.group)
     publishing {
         repositories {
             mavenLocal()
@@ -59,7 +63,7 @@ afterEvaluate {
         publications {
             release(MavenPublication) {
                 from components.release
-                groupId "$environment.group_id"
+                groupId group
                 version android.defaultConfig.versionName
                 artifactId project.name
                 artifact androidSourcesJar

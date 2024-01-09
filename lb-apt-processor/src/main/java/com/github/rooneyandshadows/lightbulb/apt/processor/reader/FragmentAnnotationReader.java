@@ -1,11 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.ScreenParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.StatePersisted;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.ViewBinding;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ScreenParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.StatePersisted;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ViewBinding;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 

@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group "$environment.root_namespace"
+version = "$environment.version"
+
+tasks.register('sourceJar', Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+afterEvaluate {
+    publishing {
+        repositories {
+            mavenLocal()
+        }
+        publications {
+            createProcessor(MavenPublication) {
+                groupId project.group
+                artifactId project.name
+                version project.version
+                from components.java
+                artifact sourceJar
+            }
+        }
+    }
+}

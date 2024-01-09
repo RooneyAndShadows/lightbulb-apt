@@ -1,32 +1,25 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.BaseMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.ClassMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.BaseMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.TypeElement;
-
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames.*;
+
 
 public class ClassNames {
     public static final String ANDROID_PARCEL_SIMPLE_NAME = "Parcel";
     public static final String ANDROID_PARCEL_CANONICAL_NAME = resolveCanonical(ANDROID_OS, ANDROID_PARCEL_SIMPLE_NAME);
-    /**
-     * Result names
-     */
-    public static final String DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX = "Lightbulb_";
-    public static final String STORAGE_CLASS_NAME_PREFIX = "App";
-    public static final String FRAGMENT_FACTORY_CLASS_NAME = "Fragments";
-    public static final String ROUTING_SCREENS_CLASS_NAME = "Screens";
-    public static final String ROUTING_APP_ROUTER_CLASS_NAME = "AppRouter";
-    public static final String LIGHTBULB_SERVICE_CLASS_NAME = "LightbulbService";
     /**
      * Lightbulb
      */

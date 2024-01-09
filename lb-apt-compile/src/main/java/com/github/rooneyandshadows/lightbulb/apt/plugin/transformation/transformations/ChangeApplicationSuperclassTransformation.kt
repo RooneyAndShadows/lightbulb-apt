@@ -1,17 +1,14 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations
 
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbApplication
+import com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbApplication
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.ClassPool
 import javassist.CtClass
 
 internal class ChangeApplicationSuperclassTransformation(
-    packageNames: PackageNames,
-    classNames: ClassNames
-) : ClassTransformation(packageNames, classNames) {
+    packageNames: com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames,
+) : ClassTransformation(packageNames) {
 
     @Override
     override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Result {

@@ -1,12 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbParcelable;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata.TargetField;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbParcelable;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata.TargetField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;

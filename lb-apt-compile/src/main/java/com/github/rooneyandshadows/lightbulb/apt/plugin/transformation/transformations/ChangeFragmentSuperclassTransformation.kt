@@ -1,20 +1,18 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations
 
+import com.github.rooneyandshadows.lightbulb.apt.annotations.BindView
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentParameter
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentStatePersisted
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbFragment
+import com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.BindView
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentStatePersisted
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbFragment
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.*
 import org.gradle.configurationcache.extensions.capitalized
 
 internal class ChangeFragmentSuperclassTransformation(
     packageNames: PackageNames,
-    classNames: ClassNames
-) : ClassTransformation(packageNames, classNames) {
+) : ClassTransformation(packageNames) {
 
     @Override
     override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Result {

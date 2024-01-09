@@ -10,13 +10,16 @@ import org.gradle.api.file.FileCollection
 import java.io.File
 import java.io.FileOutputStream
 
+private const val rootProject = "com.github.rooneyandshadows.lightbulb.apt"
+private const val version = "2.0.0"
+
 const val PLUGIN_EXTENSION_NAME = "lightbulb"
 const val PLUGIN_TASK_GROUP = "lightbulb"
 const val KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
 const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
-const val LIGHTBULB_APT_PROCESSOR_DEPENDENCY_NOTATION =
-    "com.github.rooneyandshadows.lightbulb-apt:lb-apt-processor:2.0.0"
-const val LIGHTBULB_APT_CORE_DEPENDENCY_NOTATION = "com.github.rooneyandshadows.lightbulb-apt:lb-apt-core:2.0.0"
+const val LIGHTBULB_APT_PROCESSOR_DEPENDENCY_NOTATION = "${rootProject}:lb-apt-processor:${version}"
+const val LIGHTBULB_APT_CORE_DEPENDENCY_NOTATION = "${rootProject}:lb-apt-core:${version}"
+const val LIGHTBULB_APT_ANNOTATIONS_DEPENDENCY_NOTATION = "${rootProject}:lb-apt-annotations:${version}"
 
 fun Variant.addAnnotationProcessorArgument(name: String, value: String) {
     javaCompilation.annotationProcessor.arguments.put(name, value)

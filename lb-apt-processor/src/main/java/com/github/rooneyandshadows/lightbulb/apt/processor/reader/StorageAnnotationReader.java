@@ -1,8 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbStorage;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ParcelableMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbStorage;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
@@ -20,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.StorageMetadata.*;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_STORAGE_DESCRIPTION;
 
 public class StorageAnnotationReader extends AnnotationReader {

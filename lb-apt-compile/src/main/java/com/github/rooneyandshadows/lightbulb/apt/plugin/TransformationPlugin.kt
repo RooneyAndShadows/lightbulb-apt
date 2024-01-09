@@ -7,10 +7,10 @@ import com.android.build.api.variant.Variant
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.api.AndroidBasePlugin
+import com.github.rooneyandshadows.lightbulb.apt.commons.ProcessorOptionNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TransformationsTask
 import com.github.rooneyandshadows.lightbulb.apt.plugin.tasks.TransformationsTaskDump
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ProcessorOptionNames
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.configurationcache.extensions.capitalized
@@ -86,7 +86,7 @@ class TransformationPlugin : Plugin<Project> {
             project.dependencies.add("annotationProcessor", LIGHTBULB_APT_PROCESSOR_DEPENDENCY_NOTATION)
         }
 
-        project.dependencies.add("implementation", LIGHTBULB_APT_PROCESSOR_DEPENDENCY_NOTATION)
+        project.dependencies.add("implementation", LIGHTBULB_APT_ANNOTATIONS_DEPENDENCY_NOTATION)
         project.dependencies.add("implementation", LIGHTBULB_APT_CORE_DEPENDENCY_NOTATION)
         configured = true
     }

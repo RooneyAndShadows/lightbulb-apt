@@ -8,8 +8,7 @@ import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transform
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.ChangeApplicationSuperclassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.ChangeFragmentSuperclassTransformation
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
@@ -48,13 +47,12 @@ abstract class TransformationsTask @Inject constructor(
 
     init {
         val packageNames = PackageNames(project.androidNamespace())
-        val classNames = ClassNames(packageNames)
 
         transformationRegistry = TransformationJobRegistry(globalClasspath) { getTransformationsClasspath() }
-        transformationRegistry.register(ChangeApplicationSuperclassTransformation(packageNames, classNames))
-        transformationRegistry.register(ChangeActivitySuperclassTransformation(packageNames, classNames))
-        transformationRegistry.register(ChangeFragmentSuperclassTransformation(packageNames, classNames))
-        transformationRegistry.register(ChangeParcelableSuperclassTransformation(packageNames, classNames))
+        transformationRegistry.register(ChangeApplicationSuperclassTransformation(packageNames))
+        transformationRegistry.register(ChangeActivitySuperclassTransformation(packageNames))
+        transformationRegistry.register(ChangeFragmentSuperclassTransformation(packageNames))
+        transformationRegistry.register(ChangeParcelableSuperclassTransformation(packageNames))
     }
 
     @Override

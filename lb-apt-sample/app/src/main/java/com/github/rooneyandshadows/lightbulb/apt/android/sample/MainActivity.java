@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbActivity;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbActivity;
 
 import java.util.UUID;
 

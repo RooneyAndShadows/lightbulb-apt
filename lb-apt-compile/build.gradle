@@ -5,7 +5,7 @@ plugins {
     id 'maven-publish'
 }
 
-group "$environment.group_id"
+group "$environment.root_namespace"
 version = "$environment.version"
 
 dependencies {
@@ -14,7 +14,8 @@ dependencies {
     implementation "com.android.tools.build:gradle:$versions.android.gradle_build"
     implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
     implementation "org.javassist:javassist:$versions.misc.javassist"
-    implementation project(path: ':lb-apt-processor')
+    implementation project(':lb-apt-annotations')
+    implementation project(':lb-apt-commons')
 }
 
 gradlePlugin {

@@ -1,11 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.StorageMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
+import com.github.rooneyandshadows.lightbulb.apt.commons.MemberUtils;
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +17,6 @@ import java.util.List;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_APPLICATION;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_CONTEXT;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames.*;
 import static javax.lang.model.element.Modifier.*;
 import static javax.lang.model.element.Modifier.PUBLIC;
 

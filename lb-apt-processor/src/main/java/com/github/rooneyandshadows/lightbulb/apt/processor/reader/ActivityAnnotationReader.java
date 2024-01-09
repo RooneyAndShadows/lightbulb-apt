@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbActivity;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.ActivityMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbActivity;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ActivityMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;

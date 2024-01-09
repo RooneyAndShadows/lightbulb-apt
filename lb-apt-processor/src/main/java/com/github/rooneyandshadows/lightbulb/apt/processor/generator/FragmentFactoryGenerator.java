@@ -1,13 +1,12 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.BundleCodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -15,6 +14,7 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.*;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings("SameParameterValue")
@@ -30,7 +30,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         List<TypeSpec> innerClasses = new ArrayList<>();
 
-        TypeSpec.Builder rootClassBuilder = TypeSpec.classBuilder(ClassNames.FRAGMENT_FACTORY_CLASS_NAME)
+        TypeSpec.Builder rootClassBuilder = TypeSpec.classBuilder(FRAGMENT_FACTORY_CLASS_NAME)
                 .addModifiers(PUBLIC, FINAL);
 
         for (FragmentMetadata fragmentBindingData : fragmentMetadataList) {

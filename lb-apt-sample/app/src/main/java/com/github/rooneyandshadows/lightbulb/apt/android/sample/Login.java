@@ -5,16 +5,16 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbFragment;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentParameter;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentScreen;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbFragment;
 
 
 @LightbulbFragment(layoutName = "frag_main")
 @FragmentScreen(screenName = "Login", screenGroup = "User")
 public class Login extends Fragment {
     @FragmentParameter
-     private int v;
+    private int v;
 
     public void setV(int v) {
         this.v = v;

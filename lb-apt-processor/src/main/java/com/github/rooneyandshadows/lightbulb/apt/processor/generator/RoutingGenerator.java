@@ -1,11 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.FragmentMetadata.ScreenParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames;
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ROUTING_SCREENS_CLASS_NAME;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.*;
 import static java.util.stream.Collectors.groupingBy;
 
 @SuppressWarnings("DuplicatedCode")

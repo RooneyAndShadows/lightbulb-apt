@@ -1,5 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
+import com.github.rooneyandshadows.lightbulb.apt.commons.MemberUtils;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +11,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

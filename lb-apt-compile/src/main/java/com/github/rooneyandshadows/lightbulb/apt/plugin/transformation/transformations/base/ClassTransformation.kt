@@ -1,11 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base
 
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.utils.LoggingUtil
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.*
 
-abstract class ClassTransformation(protected val packageNames: PackageNames, protected val classNames: ClassNames) {
+abstract class ClassTransformation(protected val packageNames: PackageNames) {
 
     fun transform(classPool: ClassPool, ctClass: CtClass): Result {
         if (!shouldTransform(classPool, ctClass)) {

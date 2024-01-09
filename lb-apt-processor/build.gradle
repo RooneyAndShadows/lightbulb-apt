@@ -4,7 +4,7 @@ plugins {
     id 'maven-publish'
 }
 
-group "$environment.group_id"
+group "$environment.root_namespace"
 version = "$environment.version"
 
 dependencies {
@@ -12,6 +12,8 @@ dependencies {
     implementation "com.google.auto.service:auto-service:$versions.google.auto_service"
     implementation "com.squareup:javapoet:$versions.misc.javapoet"
     api "com.github.rooneyandshadows:java-commons:$versions.misc.java_commons"
+    implementation project(':lb-apt-annotations')
+    implementation project(':lb-apt-commons')
 }
 
 tasks.register('sourceJar', Jar) {

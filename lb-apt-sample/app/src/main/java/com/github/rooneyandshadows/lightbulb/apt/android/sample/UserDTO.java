@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.sample;
 
 import com.github.rooneyandshadows.lightbulb.apt.android.core.parcelable.BlankParcelable;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbParcelable;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbParcelable;
 
 import java.util.UUID;
 

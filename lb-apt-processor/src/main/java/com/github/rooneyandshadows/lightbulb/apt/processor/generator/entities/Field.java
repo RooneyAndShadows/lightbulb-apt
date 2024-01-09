@@ -1,9 +1,8 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.metadata.base.FieldMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
 import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,18 +1,15 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations
 
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbParcelable
+import com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation.LightbulbParcelable
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.MemberUtils
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.PackageNames
 import javassist.*
 import org.gradle.configurationcache.extensions.capitalized
 
 internal class ChangeParcelableSuperclassTransformation(
-    packageNames: PackageNames,
-    classNames: ClassNames
-) : ClassTransformation(packageNames, classNames) {
+    packageNames: PackageNames
+) : ClassTransformation(packageNames) {
 
     @Override
     override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Result {
@@ -101,7 +98,7 @@ internal class ChangeParcelableSuperclassTransformation(
         val simpleName = ctClass.simpleName
         val className = packageNames.parcelablePackage
             .plus(".")
-            .plus(DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX)
+            .plus(GeneratedClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX)
             .plus(simpleName)
 
         return classPool.getCtClass(className)
