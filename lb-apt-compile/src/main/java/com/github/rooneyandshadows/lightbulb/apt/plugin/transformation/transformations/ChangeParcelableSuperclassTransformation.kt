@@ -1,5 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations
 
+import com.github.rooneyandshadows.lightbulb.apt.annotations.IgnoreParcel
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbParcelable
 import com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
@@ -25,7 +26,9 @@ internal class ChangeParcelableSuperclassTransformation(
 
         ctClass.addField(field, CtField.Initializer.byExpr("new ${creatorClass.name}();"))
 
-        removeFieldsWithSetterOrGetter(ctClass)
+        removeFieldsWithSetterOrGetter(ctClass)filter@{
+            return@filter !it.hasAnnotation(IgnoreParcel::class.java)
+        }
 
         val transformationResult = Result(ctClass, true)
         transformationResult.addNewClass(creatorClass)
@@ -35,17 +38,17 @@ internal class ChangeParcelableSuperclassTransformation(
 
     private fun assureConstructorWithParcel(classPool: ClassPool, ctClass: CtClass) {
         val parcelClass = classPool.getCtClass("android.os.Parcel")
+
         try {
             val constructor = ctClass.getDeclaredConstructor(arrayOf(parcelClass))
-            if (!constructor.callsSuper()) {
-                constructor.insertBeforeBody("super($1);")
-            }
+            ctClass.removeConstructor(constructor)
         } catch (e: NotFoundException) {
-            val body = "super($1);"
-            val constructor = CtNewConstructor.make(arrayOf(parcelClass), emptyArray(), body, ctClass)
-            ctClass.addConstructor(constructor)
-            //createConstructor
+            //ignore
         }
+
+        val body = "super($1);"
+        val constructor = CtNewConstructor.make(arrayOf(parcelClass), emptyArray(), body, ctClass)
+        ctClass.addConstructor(constructor)
     }
 
     private fun createCreatorClass(classPool: ClassPool, ctClass: CtClass): CtClass {

@@ -62,20 +62,20 @@ public final class TypeInformation {
         return new TypeInformation(superClassTypeMirror);
     }
 
-    public boolean hasConstructorWithParameters(TypeMirror... paramTypes) {
+    /*public boolean hasConstructorWithParameters(TypeMirror... paramTypes) {
         return hasConstructorWithParameters(null, paramTypes);
-    }
+    }*/
 
     public boolean hasConstructorWithParameters(String... paramTypes) {
         return hasConstructorWithParameters(null, paramTypes);
     }
 
-    public boolean hasConstructorWithParameters(Predicate<ExecutableElement> predicate, TypeMirror... paramTypes) {
+    /*public boolean hasConstructorWithParameters(Predicate<ExecutableElement> predicate, TypeMirror... paramTypes) {
         String[] paramTypesArray = Arrays.stream(paramTypes)
                 .map(TypeMirror::toString)
                 .toArray(String[]::new);
         return hasConstructorWithParameters(predicate, paramTypesArray);
-    }
+    }*/
 
     public boolean hasConstructorWithParameters(Predicate<ExecutableElement> predicate, String... paramTypes) {
         if (isPrimitive) {

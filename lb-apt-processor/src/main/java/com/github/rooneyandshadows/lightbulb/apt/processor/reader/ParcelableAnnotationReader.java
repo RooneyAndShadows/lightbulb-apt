@@ -6,6 +6,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegi
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata.TargetField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_PARCELABLE_DESCRIPTION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata.*;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils.*;
 
 public class ParcelableAnnotationReader extends AnnotationReader {
@@ -32,12 +34,19 @@ public class ParcelableAnnotationReader extends AnnotationReader {
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
         List<TargetField> targetFields = new ArrayList<>();
+        List<IgnoredField> ignoredFields = new ArrayList<>();
 
         getFieldElements(target).forEach(element -> {
-            targetFields.add(new TargetField((VariableElement) element));
+            boolean isIgnored = ElementUtils.hasAnnotation(element, IgnoreParcel.class);
+            VariableElement variableElement = (VariableElement) element;
+            if (isIgnored) {
+                ignoredFields.add(new IgnoredField(variableElement));
+            } else {
+                targetFields.add(new TargetField(variableElement));
+            }
         });
 
-        ParcelableMetadata metadata = new ParcelableMetadata(target, targetFields);
+        ParcelableMetadata metadata = new ParcelableMetadata(target, targetFields, ignoredFields);
 
         parcelableMetadataList.add(metadata);
     }

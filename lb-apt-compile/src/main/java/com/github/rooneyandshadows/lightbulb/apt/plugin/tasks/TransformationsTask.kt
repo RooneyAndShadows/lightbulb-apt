@@ -62,17 +62,47 @@ abstract class TransformationsTask @Inject constructor(
 
     @TaskAction
     fun taskAction() {
+        val baseDir = project.buildDir.path
+        val lightbulbDir = baseDir.appendDirectory("intermediates", "lightbulb")
+
+        LoggingUtil.info("Classes dump directory: $lightbulbDir")
+
         withJarOutputStream { jarOutputStream ->
             copySystemJars(jarOutputStream)
             transformationRegistry.execute { classDir, className, modified, byteCode ->
-                LoggingUtil.info("Adding to jar $className")
-                val zipEntryName = classDir.plus("${className}.class")
-                val entry = JarEntry(zipEntryName)
-                jarOutputStream.putNextEntry(entry)
-                jarOutputStream.write(byteCode)
-                jarOutputStream.closeEntry()
+                writeIntoJar(jarOutputStream, classDir, className, byteCode)
+                if (modified) {
+                    dumpClass(lightbulbDir, classDir, className, byteCode)
+                }
             }
         }
+    }
+
+    private fun dumpClass(
+        dumpDir: String,
+        classDir: String,
+        className: String,
+        content: ByteArray
+    ) {
+        val dumpClassName = className.plus(".class")
+        val targetDir = dumpDir.appendDirectory(classDir)
+        val targetFile = targetDir.createFile(dumpClassName)
+
+        targetFile.write(content)
+    }
+
+    private fun writeIntoJar(
+        jarOutputStream: JarOutputStream,
+        classDir: String,
+        className: String,
+        content: ByteArray
+    ) {
+        LoggingUtil.info("Adding to jar $className")
+        val zipEntryName = classDir.plus("${className}.class")
+        val entry = JarEntry(zipEntryName)
+        jarOutputStream.putNextEntry(entry)
+        jarOutputStream.write(content)
+        jarOutputStream.closeEntry()
     }
 
     private fun withJarOutputStream(action: (jarOutputStream: JarOutputStream) -> Unit) {

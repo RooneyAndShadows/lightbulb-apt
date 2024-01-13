@@ -44,17 +44,27 @@ abstract class TransformationsTaskDump @Inject constructor(
         lightbulbDir.deleteDirectory()
 
         LoggingUtil.info("Classes dump directory: $lightbulbDir")
+
         transformationRegistry.execute { classDir, className, modified, byteCode ->
             if (modified) {
-                val dumpClassSuffix = "_Transformed"
-                val dumpClassName = className.plus(".class")
-                val targetDir = lightbulbDir.appendDirectory(classDir)
-                val targetFile = targetDir.createFile(dumpClassName)
-
-                LoggingUtil.info("Dumping class \"${className}\" into: ${targetFile.path}")
-                targetFile.write(byteCode)
+                dumpClass(lightbulbDir, classDir, className, byteCode)
             }
         }
+    }
+
+    private fun dumpClass(
+        dumpDir: String,
+        classDir: String,
+        className: String,
+        content: ByteArray
+    ) {
+        val dumpClassName = className.plus(".class")
+        val targetDir = dumpDir.appendDirectory(classDir)
+        val targetFile = targetDir.createFile(dumpClassName)
+
+        LoggingUtil.info("Dumping class \"${className}\" into: ${targetFile.path}")
+
+        targetFile.write(content)
     }
 
     private fun getTransformationsClasspath(): FileCollection {

@@ -13,18 +13,24 @@ import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassNames.ANDRO
 
 public final class ParcelableMetadata extends ClassMetadata {
     private final List<TargetField> targetFields;
+    private final List<IgnoredField> ignoredFields;
     private final boolean hasParcelConstructor;
     private final boolean superClassHasParcelConstructor;
 
-    public ParcelableMetadata(TypeElement element, List<TargetField> targetFields) {
+    public ParcelableMetadata(TypeElement element, List<TargetField> targetFields, List<IgnoredField> ignoredFields) {
         super(element);
         this.targetFields = targetFields;
+        this.ignoredFields = ignoredFields;
         this.hasParcelConstructor = checkForParcelConstructor();
         this.superClassHasParcelConstructor = checkSuperClassForParcelConstructor();
     }
 
     public List<TargetField> getTargetFields() {
         return targetFields;
+    }
+
+    public List<IgnoredField> getIgnoredFields() {
+        return ignoredFields;
     }
 
     public boolean hasParcelConstructor() {
@@ -47,6 +53,12 @@ public final class ParcelableMetadata extends ClassMetadata {
 
     public static final class TargetField extends FieldMetadata {
         public TargetField(VariableElement element) {
+            super(element);
+        }
+    }
+
+    public static final class IgnoredField extends FieldMetadata {
+        public IgnoredField(VariableElement element) {
             super(element);
         }
     }
