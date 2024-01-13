@@ -11,6 +11,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -172,5 +173,9 @@ public class ElementUtils {
         return element.getModifiers()
                 .stream()
                 .anyMatch(modifier -> modifier == Modifier.FINAL);
+    }
+
+    public static boolean hasAnnotation(Element element, Class<? extends Annotation> annotationTarget) {
+        return element.getAnnotation(annotationTarget) != null;
     }
 }

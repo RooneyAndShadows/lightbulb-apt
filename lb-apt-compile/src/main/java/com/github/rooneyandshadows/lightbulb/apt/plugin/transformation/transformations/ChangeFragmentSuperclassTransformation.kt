@@ -18,33 +18,12 @@ internal class ChangeFragmentSuperclassTransformation(
     override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Result {
         val targetCtClass = getTargetClass(classPool, ctClass)
 
-        ctClass.declaredFields.forEach { field ->
+        removeFieldsWithSetterOrGetter(ctClass)filter@{ field ->
             val isFragmentParameter = field.hasAnnotation(FragmentParameter::class.java)
             val isFragmentPersistedVar = field.hasAnnotation(FragmentStatePersisted::class.java)
             val isViewBinding = field.hasAnnotation(BindView::class.java)
 
-            if (!isFragmentParameter && !isFragmentPersistedVar && !isViewBinding) {
-                return@forEach
-            }
-
-            val capitalizedName = field.name.capitalized()
-            val setterName = "set${capitalizedName}"
-            val getterName = "get${capitalizedName}"
-            var removeField = false
-
-            ctClass.declaredMethods.forEach { method ->
-                val currentMethodName = method.name
-                if (currentMethodName == setterName || currentMethodName == getterName) {
-                    removeField = true
-                    if (isPrivate(method)) {
-                        setProtected(method)
-                    }
-                }
-            }
-
-            if (removeField) {
-                ctClass.removeField(field)
-            }
+            return@filter isFragmentParameter || isFragmentPersistedVar || isViewBinding
         }
 
         ctClass.superclass = targetCtClass

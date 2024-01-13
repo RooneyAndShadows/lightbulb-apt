@@ -9,16 +9,18 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_PARCEL_CANONICAL_NAME;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassNames.ANDROID_PARCEL_CANONICAL_NAME;
 
 public final class ParcelableMetadata extends ClassMetadata {
     private final List<TargetField> targetFields;
     private final boolean hasParcelConstructor;
+    private final boolean superClassHasParcelConstructor;
 
     public ParcelableMetadata(TypeElement element, List<TargetField> targetFields) {
         super(element);
         this.targetFields = targetFields;
         this.hasParcelConstructor = checkForParcelConstructor();
+        this.superClassHasParcelConstructor = checkSuperClassForParcelConstructor();
     }
 
     public List<TargetField> getTargetFields() {
@@ -29,9 +31,18 @@ public final class ParcelableMetadata extends ClassMetadata {
         return hasParcelConstructor;
     }
 
-    private boolean checkForParcelConstructor() {
+    public boolean superClassHasParcelConstructor() {
+        return superClassHasParcelConstructor;
+    }
+
+    private boolean checkSuperClassForParcelConstructor() {
         TypeInformation superClassTypeInfo = getTypeInformation().getSuperClassType();
         return superClassTypeInfo != null && superClassTypeInfo.hasConstructorWithParameters(ElementUtils::isAccessModifierAtLeastProtected, ANDROID_PARCEL_CANONICAL_NAME);
+    }
+
+    private boolean checkForParcelConstructor() {
+        TypeInformation typeInfo = getTypeInformation();
+        return typeInfo != null && typeInfo.hasConstructorWithParameters(ANDROID_PARCEL_CANONICAL_NAME);
     }
 
     public static final class TargetField extends FieldMetadata {

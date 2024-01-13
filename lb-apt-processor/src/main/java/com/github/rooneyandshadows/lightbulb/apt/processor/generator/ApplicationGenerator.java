@@ -4,7 +4,7 @@ import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ApplicationMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
@@ -24,7 +24,7 @@ public class ApplicationGenerator extends CodeGenerator {
     private final boolean hasApplications;
     private final List<ApplicationMetadata> applicationMetadataList;
 
-    public ApplicationGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+    public ApplicationGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         hasStorages = annotationResultsRegistry.hasStorageDescriptions();
         hasApplications = annotationResultsRegistry.hasApplicationDescriptions();

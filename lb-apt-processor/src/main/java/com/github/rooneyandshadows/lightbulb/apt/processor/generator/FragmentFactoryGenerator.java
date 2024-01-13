@@ -5,7 +5,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.F
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
 
@@ -21,7 +21,7 @@ import static javax.lang.model.element.Modifier.*;
 public class FragmentFactoryGenerator extends CodeGenerator {
     private final List<FragmentMetadata> fragmentMetadataList;
 
-    public FragmentFactoryGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+    public FragmentFactoryGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         fragmentMetadataList = annotationResultsRegistry.getFragmentDescriptions();
     }
@@ -82,7 +82,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
                 .addModifiers(PUBLIC, STATIC)
                 .returns(fragmentClassName)
                 .addStatement("$T fragment = new $T()", fragmentClassName, fragmentClassName)
-                .addStatement("$T arguments = new $T()", ClassNames.ANDROID_BUNDLE, ClassNames.ANDROID_BUNDLE);
+                .addStatement("$T arguments = new $T()", ClassNameUtils.ANDROID_BUNDLE, ClassNameUtils.ANDROID_BUNDLE);
 
         fragmentMetadata.getScreenParameters(includeOptionalParams).forEach(parameter -> {
             Variable variable = Variable.from(parameter);

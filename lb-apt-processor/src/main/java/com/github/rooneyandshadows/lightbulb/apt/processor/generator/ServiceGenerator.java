@@ -3,7 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.MemberUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_APPLICATION;
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.ANDROID_CONTEXT;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.ANDROID_APPLICATION;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.ANDROID_CONTEXT;
 import static javax.lang.model.element.Modifier.*;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -27,7 +27,7 @@ public class ServiceGenerator extends CodeGenerator {
     private final boolean hasStorageElements;
     private final List<StorageMetadata> storageMetadataList;
 
-    public ServiceGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+    public ServiceGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         servicePackage = packageNames.getServicePackage();
         hasRoutingElements = annotationResultsRegistry.hasRoutingScreens();

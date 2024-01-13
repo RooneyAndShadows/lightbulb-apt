@@ -5,7 +5,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.F
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
 
@@ -14,7 +14,7 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.*;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings({"SameParameterValue", "DuplicatedCode"})
@@ -22,7 +22,7 @@ public class FragmentGenerator extends CodeGenerator {
     private final ClassName ANDROID_R;
     private final List<FragmentMetadata> fragmentMetadataList;
 
-    public FragmentGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+    public FragmentGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         this.ANDROID_R = classNames.androidResources();
         fragmentMetadataList = annotationResultsRegistry.getFragmentDescriptions();

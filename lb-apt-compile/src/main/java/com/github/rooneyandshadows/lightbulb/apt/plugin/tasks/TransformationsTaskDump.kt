@@ -47,7 +47,7 @@ abstract class TransformationsTaskDump @Inject constructor(
         transformationRegistry.execute { classDir, className, modified, byteCode ->
             if (modified) {
                 val dumpClassSuffix = "_Transformed"
-                val dumpClassName = className.plus("${dumpClassSuffix}.class")
+                val dumpClassName = className.plus(".class")
                 val targetDir = lightbulbDir.appendDirectory(classDir)
                 val targetFile = targetDir.createFile(dumpClassName)
 

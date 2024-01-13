@@ -13,37 +13,35 @@ import javax.lang.model.element.TypeElement;
 import java.time.OffsetDateTime;
 import java.util.*;
 
+import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassNames.*;
 import static com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.*;
-import static com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames.ANDROID_BUILD_VERSION_CODES;
 
 
-public class ClassNames {
-    public static final String ANDROID_PARCEL_SIMPLE_NAME = "Parcel";
-    public static final String ANDROID_PARCEL_CANONICAL_NAME = resolveCanonical(ANDROID_OS, ANDROID_PARCEL_SIMPLE_NAME);
+public class ClassNameUtils {
     /**
      * Lightbulb
      */
-    public static final ClassName BASE_ROUTER = ClassName.get(LB_APT_CORE_ROUTING, "BaseActivityRouter");
-    public static final ClassName BASE_STORAGE = ClassName.get(LB_APT_CORE_STORAGE, "BaseStorage");
-    public static final ClassName DATE_UTILS = ClassName.get(LB_APT_CORE_UTILS, "DateUtils");
-    public static final ClassName LB_TRANSFORMATION_ANNOTATION = ClassName.get(LB_APT_ANNOTATIONS, "LightbulbTransformation");
+    public static final ClassName BASE_ROUTER = from(LIGHTBULB_BASE_ROUTER_CANONICAL_NAME);
+    public static final ClassName BASE_STORAGE = from(LIGHTBULB_BASE_STORAGE_CANONICAL_NAME);
+    public static final ClassName DATE_UTILS =from(LIGHTBULB_DATE_UTILS_CANONICAL_NAME);
     /**
      * Android
      */
-    public static final ClassName ANDROID_FRAGMENT = ClassName.get(ANDROIDX_FRAGMENT_APP, "Fragment");
-    public static final ClassName ANDROID_ACTIVITY = ClassName.get(ANDROIDX_APPCOMPAT_APP, "AppCompatActivity");
-    public static final ClassName ANDROID_BUNDLE = ClassName.get(ANDROID_OS, "Bundle");
-    public static final ClassName ANDROID_PARCEL = ClassName.get(ANDROID_OS, ANDROID_PARCEL_SIMPLE_NAME);
-    public static final ClassName ANDROID_PARCELABLE = ClassName.get(ANDROID_OS, "Parcelable");
-    public static final ClassName ANDROID_PARCELABLE_CREATOR = ClassName.get(ANDROID_OS, "Parcelable", "Creator");
-    public static final ClassName ANDROID_SPARSE_ARRAY = ClassName.get(ANDROID_UTIL, "SparseArray");
-    public static final ClassName ANDROID_CONTEXT = ClassName.get(ANDROID_CONTENT, "Context");
-    public static final ClassName ANDROID_APPLICATION = ClassName.get(ANDROID_APP, "Application");
-    public static final ClassName ANDROID_RESOURCES = ClassName.get(ANDROID_CONTENT_RES, "Resources");
-    public static final ClassName ANDROID_VIEW = ClassName.get(PackageNames.ANDROID_VIEW, "View");
-    public static final ClassName ANDROID_LAYOUT_INFLATER = ClassName.get(PackageNames.ANDROID_VIEW, "LayoutInflater");
-    public static final ClassName ANDROID_VIEW_GROUP = ClassName.get(PackageNames.ANDROID_VIEW, "ViewGroup");
-    public static final ClassName ANDROID_SDK_INT = ClassName.get(ANDROID_BUILD_VERSION, "SDK_INT");
+    public static final ClassName ANDROID_FRAGMENT =from(ANDROID_FRAGMENT_CANONICAL_NAME);
+    public static final ClassName ANDROID_ACTIVITY = from(ANDROID_ACTIVITY_CANONICAL_NAME);
+    public static final ClassName ANDROID_BUNDLE = from(ANDROID_BUNDLE_CANONICAL_NAME);
+    public static final ClassName ANDROID_PARCEL = from(ANDROID_PARCEL_CANONICAL_NAME);
+    public static final ClassName ANDROID_PARCELABLE = from(ANDROID_PARCELABLE_CANONICAL_NAME);
+    public static final ClassName ANDROID_PARCELABLE_CREATOR = from(ANDROID_PARCELABLE_CREATOR_CANONICAL_NAME);
+    public static final ClassName ANDROID_SPARSE_ARRAY = from(ANDROID_SPARSE_ARRAY_CANONICAL_NAME);
+    public static final ClassName ANDROID_CONTEXT = from(ANDROID_CONTEXT_CANONICAL_NAME);
+    public static final ClassName ANDROID_APPLICATION = from(ANDROID_APPLICATION_CANONICAL_NAME);
+    public static final ClassName ANDROID_RESOURCES = from(ANDROID_RESOURCES_CANONICAL_NAME);
+    public static final ClassName ANDROID_VIEW = from(ANDROID_VIEW_CANONICAL_NAME);
+    public static final ClassName ANDROID_LAYOUT_INFLATER = from(ANDROID_LAYOUT_INFLATER_CANONICAL_NAME);
+    public static final ClassName ANDROID_VIEW_GROUP = from(ANDROID_VIEW_GROUP_CANONICAL_NAME);
+    public static final ClassName ANDROID_SDK_INT = from(ANDROID_SDK_INT_CANONICAL_NAME);
     /**
      * Internal
      */
@@ -60,7 +58,7 @@ public class ClassNames {
     public static final ClassName ILLEGAL_ARGUMENT_EXCEPTION = ClassName.get(IllegalArgumentException.class);
     private final PackageNames packageNames;
 
-    public ClassNames(PackageNames packageNames) {
+    public ClassNameUtils(PackageNames packageNames) {
         this.packageNames = packageNames;
     }
 
@@ -127,7 +125,9 @@ public class ClassNames {
         return ClassName.get(packageNames.getServicePackage(), LIGHTBULB_SERVICE_CLASS_NAME);
     }
 
-    private static String resolveCanonical(String packageName, String simpleClassName) {
-        return String.format("%s.%s", packageName, simpleClassName);
+    private static ClassName from(String canonicalName) {
+        String packageName = canonicalName.substring(0,canonicalName.lastIndexOf("."));
+        String name = canonicalName.substring(canonicalName.lastIndexOf('.') + 1);
+        return ClassName.get(packageName,name);
     }
 }

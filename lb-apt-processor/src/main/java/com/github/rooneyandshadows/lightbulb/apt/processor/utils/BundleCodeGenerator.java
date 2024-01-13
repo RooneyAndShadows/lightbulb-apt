@@ -5,13 +5,13 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.*;
 
 
 public class BundleCodeGenerator {
-    private final ClassNames classNames;
+    private final ClassNameUtils classNames;
 
-    public BundleCodeGenerator(ClassNames classNames) {
+    public BundleCodeGenerator(ClassNameUtils classNames) {
         this.classNames = classNames;
     }
 

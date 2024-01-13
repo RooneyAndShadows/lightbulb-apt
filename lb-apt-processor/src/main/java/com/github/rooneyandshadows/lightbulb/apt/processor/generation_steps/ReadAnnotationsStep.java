@@ -24,13 +24,20 @@ public class ReadAnnotationsStep implements GenerationStep {
     }
 
     @Override
-    public void process(AnnotationResultsRegistry resultsRegistry) {
+    public boolean process(AnnotationResultsRegistry resultsRegistry) {
+        boolean result = true;
         List<AnnotationReader> readers = new ArrayList<>();
+
         readers.add(new ApplicationAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
         readers.add(new ActivityAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
         readers.add(new FragmentAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
         readers.add(new StorageAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
         readers.add(new ParcelableAnnotationReader(resultsRegistry, messager, elements, roundEnvironment));
-        readers.forEach(AnnotationReader::readAnnotations);
+
+        for (AnnotationReader annotationReader : readers) {
+             result &= annotationReader.readAnnotations();
+        }
+
+        return result;
     }
 }

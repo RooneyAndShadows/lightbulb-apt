@@ -6,7 +6,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.P
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
@@ -16,14 +16,14 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.*;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings({"SameParameterValue", "DuplicatedCode"})
 public class ParcelableGenerator extends CodeGenerator {
     private final List<ParcelableMetadata> parcelableDescriptions;
 
-    public ParcelableGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+    public ParcelableGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         parcelableDescriptions = annotationResultsRegistry.getParcelableDescriptions();
     }
@@ -67,7 +67,6 @@ public class ParcelableGenerator extends CodeGenerator {
 
     private void generateFields(ParcelableMetadata parcelableMetadata, List<FieldSpec> fields, List<MethodSpec> methods) {
         List<? extends FieldMetadata> targets = parcelableMetadata.getTargetFields();
-
         copyFieldsForSupertypeTransformation(targets, fields, methods);
     }
 
@@ -76,7 +75,7 @@ public class ParcelableGenerator extends CodeGenerator {
                 .addModifiers(PROTECTED)
                 .addParameter(ANDROID_PARCEL, "in");
 
-        if (parcelableMetadata.hasParcelConstructor()) {
+        if (parcelableMetadata.superClassHasParcelConstructor()) {
             constructorMethodBuilder.addStatement("super(in)");
         }
 

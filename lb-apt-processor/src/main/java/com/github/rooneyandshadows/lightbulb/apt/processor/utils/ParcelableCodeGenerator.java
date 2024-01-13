@@ -7,14 +7,14 @@ import com.squareup.javapoet.TypeName;
 
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.*;
 import static com.squareup.javapoet.TypeName.*;
 
 @SuppressWarnings("DuplicatedCode")
 public class ParcelableCodeGenerator {
-    private final ClassNames classNames;
+    private final ClassNameUtils classNames;
 
-    public ParcelableCodeGenerator(ClassNames classNames) {
+    public ParcelableCodeGenerator(ClassNameUtils classNames) {
         this.classNames = classNames;
     }
 
@@ -49,6 +49,8 @@ public class ParcelableCodeGenerator {
             writeList(codeBlockBuilder, valueHolder, bundleVariableName);
         } else if (type.isMap()) {
             writeMap(codeBlockBuilder, valueHolder, bundleVariableName);
+        } else {
+            writeValue(codeBlockBuilder, valueHolder, bundleVariableName);
         }
 
         return codeBlockBuilder.build();
@@ -86,7 +88,7 @@ public class ParcelableCodeGenerator {
         } else if (type.isMap()) {
             readMap(codeBlockBuilder, valueHolder, bundleVariableName);
         } else {
-            //NOT SUPPORTED TYPE
+            readValue(codeBlockBuilder, valueHolder, bundleVariableName);
         }
 
         return codeBlockBuilder.build();
@@ -533,5 +535,44 @@ public class ParcelableCodeGenerator {
                 .endControlFlow()
                 .endControlFlow()
                 .addStatement(setStatement);
+    }
+
+    private void writeValue(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
+        String valueAccessor = valueHolder.getValueAccessor();
+        boolean isPrimitive = typeName.isPrimitive();
+
+        if (isPrimitive) {
+            cbBuilder.addStatement("$L.writeValue($L)", parcelVariableName, valueAccessor);
+        } else {
+            String variableName = valueHolder.getName();
+            String nullMarkerVariable = variableName.concat("Marker");
+
+            cbBuilder.addStatement("$T $L = ($T)($L == null ? 0 : 1)", BYTE, nullMarkerVariable, BYTE, valueAccessor);
+            cbBuilder.addStatement("$L.writeByte($L)", parcelVariableName, nullMarkerVariable);
+            cbBuilder.beginControlFlow("if($L != null)", valueAccessor)
+                    .addStatement("$L.writeValue($L)", parcelVariableName, valueAccessor)
+                    .endControlFlow();
+        }
+    }
+
+    private void readValue(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
+        TypeName typeName = TypeName.get(valueHolder.getTypeInformation().getTypeMirror());
+        String variableName = valueHolder.getName();
+        String setStatement = valueHolder.getValueSetStatement(variableName);
+        boolean isPrimitive = typeName.isPrimitive();
+
+        if (isPrimitive) {
+            cbBuilder.addStatement("$T $L = $L.readValue(this.getClass().getClassLoader())", typeName, variableName, parcelVariableName)
+                    .addStatement(setStatement);
+        } else {
+            String existenceVar = variableName.concat("Exists");
+            cbBuilder.addStatement("$T $L = null", typeName, variableName);
+            cbBuilder.addStatement("$T $L = (($T)$L.readByte()) == 1", BOOLEAN, existenceVar, INT, parcelVariableName);
+            cbBuilder.beginControlFlow("if($L)", existenceVar)
+                    .addStatement("$L = $L.readValue(this.getClass().getClassLoader())", variableName, parcelVariableName)
+                    .endControlFlow()
+                    .addStatement(setStatement);
+        }
     }
 }

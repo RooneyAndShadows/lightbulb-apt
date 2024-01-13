@@ -4,7 +4,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.F
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ScreenParameter;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
 
@@ -23,7 +23,7 @@ public class RoutingGenerator extends CodeGenerator {
     private final ClassName screensClassName;
     private final List<FragmentMetadata> fragmentMetadataList;
 
-    public RoutingGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+    public RoutingGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         screensClassName = classNames.getRoutingScreensClassName();
         fragmentMetadataList = annotationResultsRegistry.getFragmentDescriptions();
@@ -47,11 +47,11 @@ public class RoutingGenerator extends CodeGenerator {
 
         TypeSpec.Builder routerClassBuilder = TypeSpec
                 .classBuilder(routerClassName)
-                .superclass(ClassNames.BASE_ROUTER)
+                .superclass(ClassNameUtils.BASE_ROUTER)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addMethod(MethodSpec.constructorBuilder()
                         .addModifiers(Modifier.PUBLIC)
-                        .addParameter(ClassNames.ANDROID_ACTIVITY, "contextActivity")
+                        .addParameter(ClassNameUtils.ANDROID_ACTIVITY, "contextActivity")
                         .addParameter(TypeName.INT, "fragmentContainerId")
                         .addStatement("super(contextActivity,fragmentContainerId)")
                         .build()
@@ -152,7 +152,7 @@ public class RoutingGenerator extends CodeGenerator {
     }
 
     private TypeSpec generateScreenGroupClass(String screenGroupName, List<FragmentMetadata> fragmentMetadataList) {
-        ClassName fragmentScreenClass = ClassNames.BASE_ROUTER.nestedClass("FragmentScreen");
+        ClassName fragmentScreenClass = ClassNameUtils.BASE_ROUTER.nestedClass("FragmentScreen");
 
         TypeSpec.Builder groupClass = TypeSpec
                 .classBuilder(screenGroupName)

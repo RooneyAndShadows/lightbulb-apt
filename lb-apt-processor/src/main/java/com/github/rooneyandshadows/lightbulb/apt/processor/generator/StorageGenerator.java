@@ -3,7 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.StorageMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames;
+import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.MemberUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
@@ -14,14 +14,14 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.*;
 import static javax.lang.model.element.Modifier.*;
 
 public class StorageGenerator extends CodeGenerator {
     private final String storageKeyFieldName = "STORAGE_KEY";
     private final List<StorageMetadata> storageMetadataList;
 
-    public StorageGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+    public StorageGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, packageNames, classNames, annotationResultsRegistry);
         storageMetadataList = annotationResultsRegistry.getStorageDescriptions();
     }

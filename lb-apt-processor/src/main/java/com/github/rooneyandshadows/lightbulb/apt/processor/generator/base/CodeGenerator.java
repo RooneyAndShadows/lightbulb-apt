@@ -25,12 +25,12 @@ public abstract class CodeGenerator {
     protected final Filer filer;
     protected final Elements elements;
     protected final PackageNames packageNames;
-    protected final ClassNames classNames;
+    protected final ClassNameUtils classNames;
     protected final ParcelableCodeGenerator parcelableCodeGenerator;
     protected final BundleCodeGenerator bundleCodeGenerator;
     private final AnnotationResultsRegistry annotationResultsRegistry;
 
-    public CodeGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNames classNames, AnnotationResultsRegistry annotationResultsRegistry) {
+    public CodeGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         this.filer = filer;
         this.elements = elements;
         this.packageNames = packageNames;

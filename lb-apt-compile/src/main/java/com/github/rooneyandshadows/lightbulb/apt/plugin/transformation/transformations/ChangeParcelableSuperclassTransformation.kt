@@ -5,7 +5,6 @@ import com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
 import javassist.*
-import org.gradle.configurationcache.extensions.capitalized
 
 internal class ChangeParcelableSuperclassTransformation(
     packageNames: PackageNames
@@ -26,33 +25,12 @@ internal class ChangeParcelableSuperclassTransformation(
 
         ctClass.addField(field, CtField.Initializer.byExpr("new ${creatorClass.name}();"))
 
+        removeFieldsWithSetterOrGetter(ctClass)
+
         val transformationResult = Result(ctClass, true)
         transformationResult.addNewClass(creatorClass)
 
         return transformationResult
-    }
-
-    private fun removeFieldsFromTarget(classPool: ClassPool, ctClass: CtClass) {
-        ctClass.declaredFields.forEach { field ->
-            val capitalizedName = field.name.capitalized()
-            val setterName = "set${capitalizedName}"
-            val getterName = "get${capitalizedName}"
-            var removeField = false
-
-            ctClass.declaredMethods.forEach { method ->
-                val currentMethodName = method.name
-                if (currentMethodName == setterName || currentMethodName == getterName) {
-                    removeField = true
-                    if (isPrivate(method)) {
-                        setProtected(method)
-                    }
-                }
-            }
-
-            if (removeField) {
-                ctClass.removeField(field)
-            }
-        }
     }
 
     private fun assureConstructorWithParcel(classPool: ClassPool, ctClass: CtClass) {

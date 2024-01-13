@@ -1,9 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 
-import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbParcelable;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata.TargetField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata.TargetField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
@@ -31,10 +31,11 @@ public class ParcelableAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        List<TargetField> targetFields = getFieldElements(target)
-                .stream()
-                .map(element -> new TargetField((VariableElement) element))
-                .toList();
+        List<TargetField> targetFields = new ArrayList<>();
+
+        getFieldElements(target).forEach(element -> {
+            targetFields.add(new TargetField((VariableElement) element));
+        });
 
         ParcelableMetadata metadata = new ParcelableMetadata(target, targetFields);
 

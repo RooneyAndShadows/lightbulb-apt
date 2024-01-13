@@ -2,6 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.GenerateCodeStep;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.ReadAnnotationsStep;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.ValidateAnnotationsStep;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.base.GenerationStep;
 
 import javax.annotation.processing.Filer;
@@ -17,10 +18,15 @@ public class CodeGenerationService {
 
     public CodeGenerationService(String rootPackage, Filer filer, Messager messager, Elements elements, RoundEnvironment roundEnvironment) {
         steps.add(new ReadAnnotationsStep(messager, elements, roundEnvironment));
+        steps.add(new ValidateAnnotationsStep(messager, elements, roundEnvironment));
         steps.add(new GenerateCodeStep(rootPackage, filer, elements));
     }
 
     public void process() {
-        steps.forEach(generationStep -> generationStep.process(resultsRegistry));
+        for (GenerationStep generationStep : steps) {
+            if (!generationStep.process(resultsRegistry)) {
+                break;
+            }
+        }
     }
 }
