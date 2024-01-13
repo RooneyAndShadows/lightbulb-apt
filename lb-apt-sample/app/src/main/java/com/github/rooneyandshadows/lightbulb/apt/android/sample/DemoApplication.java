@@ -4,5 +4,5 @@ import android.app.Application;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbApplication;
 
 @LightbulbApplication
-public class App extends Application {
+public class DemoApplication extends Application {
 }

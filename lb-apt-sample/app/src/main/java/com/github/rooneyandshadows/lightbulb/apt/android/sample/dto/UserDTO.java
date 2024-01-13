@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.android.sample;
+package com.github.rooneyandshadows.lightbulb.apt.android.sample.dto;
 
 import android.os.Parcel;
 import com.github.rooneyandshadows.lightbulb.apt.android.core.parcelable.BlankParcelable;
