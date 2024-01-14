@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.android.sample.storage;
+package com.github.rooneyandshadows.lightbulb.apt.android.sample;
 
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbStorage;
 
