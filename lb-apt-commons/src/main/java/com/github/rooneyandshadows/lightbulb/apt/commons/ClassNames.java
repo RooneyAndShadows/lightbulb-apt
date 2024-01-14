@@ -44,6 +44,12 @@ public class ClassNames {
     public static final String ANDROID_VIEW_GROUP_CANONICAL_NAME = resolveCanonical(PackageNames.ANDROID_VIEW, ANDROID_VIEW_GROUP_SIMPLE_NAME);
     public static final String ANDROID_SDK_INT_SIMPLE_NAME = "SDK_INT";
     public static final String ANDROID_SDK_INT_CANONICAL_NAME = resolveCanonical(ANDROID_BUILD_VERSION, ANDROID_SDK_INT_SIMPLE_NAME);
+    public static final String ANDROID_DATA_BINDING_UTIL_SIMPLE_NAME = "DataBindingUtil";
+    public static final String ANDROID_DATA_BINDING_UTIL_CANONICAL_NAME = resolveCanonical(ANDROIDX_DATA_BINDING, ANDROID_DATA_BINDING_UTIL_SIMPLE_NAME);
+    public static final String ANDROID_VIEW_DATA_BINDING_SIMPLE_NAME = "ViewDataBinding";
+    public static final String ANDROID_VIEW_DATA_BINDING_CANONICAL_NAME = resolveCanonical(ANDROIDX_DATA_BINDING, ANDROID_VIEW_DATA_BINDING_SIMPLE_NAME);
+    public static final String ANDROID_VIEW_MODEL_PROVIDER_SIMPLE_NAME = "ViewModelProvider";
+    public static final String ANDROID_VIEW_MODEL_PROVIDER_CANONICAL_NAME = resolveCanonical(ANDROIDX_LIFECYCLE, ANDROID_VIEW_MODEL_PROVIDER_SIMPLE_NAME);
 
     private static String resolveCanonical(String packageName, String simpleClassName) {
         return String.format("%s.%s", packageName, simpleClassName);

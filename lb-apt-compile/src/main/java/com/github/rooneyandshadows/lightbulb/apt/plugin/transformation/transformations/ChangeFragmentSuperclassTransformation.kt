@@ -3,12 +3,13 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transfor
 import com.github.rooneyandshadows.lightbulb.apt.annotations.BindView
 import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentParameter
 import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentStatePersisted
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentViewBinding
+import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentViewModel
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbFragment
 import com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.DEFAULT_INSTRUMENTED_CLASS_NAME_PREFIX
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
 import javassist.*
-import org.gradle.configurationcache.extensions.capitalized
 
 internal class ChangeFragmentSuperclassTransformation(
     packageNames: PackageNames,
@@ -18,12 +19,14 @@ internal class ChangeFragmentSuperclassTransformation(
     override fun applyTransformations(classPool: ClassPool, ctClass: CtClass): Result {
         val targetCtClass = getTargetClass(classPool, ctClass)
 
-        removeFieldsWithSetterOrGetter(ctClass)filter@{ field ->
+        removeFieldsWithSetterOrGetter(ctClass) filter@{ field ->
             val isFragmentParameter = field.hasAnnotation(FragmentParameter::class.java)
             val isFragmentPersistedVar = field.hasAnnotation(FragmentStatePersisted::class.java)
-            val isViewBinding = field.hasAnnotation(BindView::class.java)
+            val isBindView = field.hasAnnotation(BindView::class.java)
+            val isViewBinding = field.hasAnnotation(FragmentViewBinding::class.java)
+            val isViewModel = field.hasAnnotation(FragmentViewModel::class.java)
 
-            return@filter isFragmentParameter || isFragmentPersistedVar || isViewBinding
+            return@filter isFragmentParameter || isFragmentPersistedVar || isBindView || isViewBinding || isViewModel
         }
 
         ctClass.superclass = targetCtClass

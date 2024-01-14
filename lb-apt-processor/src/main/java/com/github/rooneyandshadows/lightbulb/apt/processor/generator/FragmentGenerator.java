@@ -67,8 +67,10 @@ public class FragmentGenerator extends CodeGenerator {
     private void generateFields(FragmentMetadata fragmentMetadata, List<FieldSpec> fields, List<MethodSpec> methods) {
         List<FieldMetadata> targets = new ArrayList<>();
         targets.addAll(fragmentMetadata.getScreenParameters());
-        targets.addAll(fragmentMetadata.getViewBindings());
+        targets.addAll(fragmentMetadata.getBindViews());
         targets.addAll(fragmentMetadata.getPersistedValues());
+        targets.addAll(fragmentMetadata.getViewBindings());
+        targets.addAll(fragmentMetadata.getViewModels());
 
         copyFieldsForSupertypeTransformation(targets, fields, methods);
     }
@@ -76,6 +78,7 @@ public class FragmentGenerator extends CodeGenerator {
     private void generateOnCreateMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
         boolean hasParameters = fragmentMetadata.hasParameters();
         boolean hasPersistedVars = fragmentMetadata.hasPersistedValues();
+        boolean hasViewModels = fragmentMetadata.hasViewModels();
 
         if (!hasParameters && !hasPersistedVars) {
             return;
@@ -87,6 +90,14 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .returns(void.class)
                 .addStatement("super.onCreate(savedInstanceState)");
+
+        if (hasViewModels) {
+            FragmentMetadata.ViewModel viewModel = fragmentMetadata.getViewModels().get(0);
+            String viewModelFieldName = viewModel.getName();
+            TypeName viewModelTypeName = classNames.getTypeName(viewModel);
+
+            builder.addStatement("this.$L = new $T(this).get($T.class)", viewModelFieldName, ANDROID_VIEW_MODEL_PROVIDER, viewModelTypeName);
+        }
 
         if (!hasParameters) {
             builder.beginControlFlow("if(savedInstanceState != null)")
@@ -118,15 +129,26 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ANDROID_VIEW_GROUP, "container")
                 .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .returns(ANDROID_VIEW)
-                .addStatement("super.onCreateView(inflater,container,savedInstanceState)")
-                .addStatement("$T layout = inflater.inflate($T.layout.$L, null)", ANDROID_VIEW, ANDROID_R, layoutName)
-                .addStatement("return layout");
+                .addStatement("super.onCreateView(inflater,container,savedInstanceState)");
+
+        if (fragmentMetadata.hasViewBindings()) {
+            FragmentMetadata.ViewBinding viewBinding = fragmentMetadata.getViewBindings().get(0);
+            String viewBindingFieldName = viewBinding.getName();
+
+            builder.addStatement("this.$L = $T.inflate(inflater,$T.layout.$L,container,false)", viewBindingFieldName, ANDROID_DATA_BINDING_UTIL, ANDROID_R, layoutName)
+                    .addStatement("this.$L.setLifecycleOwner(getViewLifecycleOwner())", viewBindingFieldName)
+                    .addStatement("return this.$L.getRoot()", viewBindingFieldName);
+        } else {
+            builder.addStatement("$T layout = inflater.inflate($T.layout.$L, null)", ANDROID_VIEW, ANDROID_R, layoutName)
+                    .addStatement("return layout");
+        }
+
 
         destination.add(builder.build());
     }
 
     private void generateOnViewCreatedMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
-        if (!fragmentMetadata.hasViewBindings()) {
+        if (!fragmentMetadata.hasBindViews()) {
             return;
         }
 
@@ -138,7 +160,7 @@ public class FragmentGenerator extends CodeGenerator {
                 .addStatement("super.onViewCreated(fragmentView,savedInstanceState)")
                 .returns(void.class);
 
-        fragmentMetadata.getViewBindings().forEach(viewBinding -> {
+        fragmentMetadata.getBindViews().forEach(viewBinding -> {
             Field field = Field.from(viewBinding);
             String resourceName = viewBinding.getResourceName();
             String setStatement = field.getValueSetStatement("view.findViewById($T.id.$L)");

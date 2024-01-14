@@ -14,19 +14,30 @@ public final class FragmentMetadata extends ClassMetadata {
     private final String screenGroupName;
     private final List<ScreenParameter> screenParameters;
     private final List<StatePersisted> persistedValues;
+    private final List<BindView> bindViews;
+    private final List<ViewModel> viewModels;
     private final List<ViewBinding> viewBindings;
 
-    public FragmentMetadata(TypeElement element, String layoutName, String screenName, String screenGroupName, List<ScreenParameter> screenParameters, List<StatePersisted> persistedValues, List<ViewBinding> viewBindings) {
+    public FragmentMetadata(
+            TypeElement element,
+            String layoutName,
+            String screenName,
+            String screenGroupName,
+            List<ScreenParameter> screenParameters,
+            List<StatePersisted> persistedValues,
+            List<BindView> bindViews,
+            List<ViewModel> viewModels,
+            List<ViewBinding> viewBindings
+    ) {
         super(element);
         this.layoutName = layoutName;
         this.screenName = screenName;
         this.screenGroupName = screenGroupName;
         this.screenParameters = screenParameters;
         this.persistedValues = persistedValues;
+        this.bindViews = bindViews;
+        this.viewModels = viewModels;
         this.viewBindings = viewBindings;
-        //this.className = ClassNames.getClassName(element);
-        //this.superClassName = ClassNames.getSuperClassName(element);
-        //this.instrumentedClassName = generateInstrumentedClassName(getFragmentsPackage(), className.simpleName());
     }
 
     public boolean isScreen() {
@@ -49,12 +60,20 @@ public final class FragmentMetadata extends ClassMetadata {
         return persistedValues;
     }
 
+    public List<BindView> getBindViews() {
+        return bindViews;
+    }
+
+    public List<ViewModel> getViewModels() {
+        return viewModels;
+    }
+
     public List<ViewBinding> getViewBindings() {
         return viewBindings;
     }
 
-    public boolean hasViewBindings() {
-        return !viewBindings.isEmpty();
+    public boolean hasBindViews() {
+        return !bindViews.isEmpty();
     }
 
     public boolean hasPersistedValues() {
@@ -67,6 +86,14 @@ public final class FragmentMetadata extends ClassMetadata {
 
     public boolean hasOptionalParameters() {
         return screenParameters.stream().anyMatch(ScreenParameter::isOptional);
+    }
+
+    public boolean hasViewBindings() {
+        return !viewBindings.isEmpty();
+    }
+
+    public boolean hasViewModels() {
+        return !viewBindings.isEmpty();
     }
 
     public List<ScreenParameter> getScreenParameters(boolean includeOptional) {
@@ -101,10 +128,10 @@ public final class FragmentMetadata extends ClassMetadata {
         }
     }
 
-    public static final class ViewBinding  extends FieldMetadata {
+    public static final class BindView extends FieldMetadata {
         private final String resourceName;
 
-        public ViewBinding(VariableElement element, String resourceName) {
+        public BindView(VariableElement element, String resourceName) {
             super(element);
             this.resourceName = resourceName;
         }
@@ -113,4 +140,18 @@ public final class FragmentMetadata extends ClassMetadata {
             return resourceName;
         }
     }
+
+    public static final class ViewBinding extends FieldMetadata {
+        public ViewBinding(VariableElement element) {
+            super(element);
+        }
+    }
+
+    public static final class ViewModel extends FieldMetadata {
+        public ViewModel(VariableElement element) {
+            super(element);
+        }
+    }
+
+
 }

@@ -1,14 +1,10 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.sample;
 
-
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+import com.github.rooneyandshadows.lightbulb.apt.android.sample.lightbulb.service.LightbulbService;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbActivity;
-
-import java.util.UUID;
-
 
 @LightbulbActivity()
 public class MainActivity extends AppCompatActivity {
@@ -18,16 +14,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
-           // AppNavigator.route().toUserLogin("asfas", "safa", new Date()).newRootScreen();
-          //  AppNavigator.route().printBackStack();
+            LightbulbService.route().toCommonRoot(42).newRootScreen();
         }
-    }
-
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        System.out.println("rrrrrrrrrrrrr");
     }
 }

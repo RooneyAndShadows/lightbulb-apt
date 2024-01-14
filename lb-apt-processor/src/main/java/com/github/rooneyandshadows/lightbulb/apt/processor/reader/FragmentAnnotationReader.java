@@ -3,9 +3,8 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ScreenParameter;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.StatePersisted;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ViewBinding;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.BindView;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
@@ -39,7 +38,9 @@ public class FragmentAnnotationReader extends AnnotationReader {
         String screenGroupName = null;
         List<ScreenParameter> screenParameters = new ArrayList<>();
         List<StatePersisted> persistedValues = new ArrayList<>();
+        List<BindView> bindViews = new ArrayList<>();
         List<ViewBinding> viewBindings = new ArrayList<>();
+        List<ViewModel> viewModels = new ArrayList<>();
 
         for (AnnotatedElement annotatedElem : annotatedElements) {
             Annotation annotation = annotatedElem.getAnnotation();
@@ -52,15 +53,32 @@ public class FragmentAnnotationReader extends AnnotationReader {
                 ScreenParameter parameter = new ScreenParameter((VariableElement) annotatedElem.getElement(), fragmentParameter.optional());
                 screenParameters.add(parameter);
             } else if (annotation instanceof FragmentStatePersisted fragmentStatePersisted) {
-                StatePersisted statePersisted = new StatePersisted((VariableElement)annotatedElem.getElement());
+                StatePersisted statePersisted = new StatePersisted((VariableElement) annotatedElem.getElement());
                 persistedValues.add(statePersisted);
-            } else if (annotation instanceof BindView bindView) {
-                ViewBinding viewBinding = new ViewBinding((VariableElement)annotatedElem.getElement(), bindView.name());
-                viewBindings.add(viewBinding);
+            } else if (annotation instanceof com.github.rooneyandshadows.lightbulb.apt.annotations.BindView bindView) {
+                BindView bView = new BindView((VariableElement) annotatedElem.getElement(), bindView.name());
+                bindViews.add(bView);
+            } else if (annotation instanceof FragmentViewModel viewModel) {
+                ViewModel vModel = new ViewModel((VariableElement) annotatedElem.getElement());
+                viewModels.add(vModel);
+            } else if (annotation instanceof FragmentViewBinding viewBinding) {
+                ViewBinding vBinding = new ViewBinding((VariableElement) annotatedElem.getElement());
+                viewBindings.add(vBinding);
             }
         }
 
-        FragmentMetadata metadata = new FragmentMetadata(target, layoutName, screenName, screenGroupName, screenParameters, persistedValues, viewBindings);
+        FragmentMetadata metadata = new FragmentMetadata(
+                target,
+                layoutName,
+                screenName,
+                screenGroupName,
+                screenParameters,
+                persistedValues,
+                bindViews,
+                viewModels,
+                viewBindings
+        );
+
 
         fragmentsMetadata.add(metadata);
     }
@@ -77,7 +95,9 @@ public class FragmentAnnotationReader extends AnnotationReader {
         targets.put(FragmentScreen.class, CLASS);
         targets.put(FragmentParameter.class, FIELD);
         targets.put(FragmentStatePersisted.class, FIELD);
-        targets.put(BindView.class, FIELD);
+        targets.put(FragmentViewBinding.class, FIELD);
+        targets.put(FragmentViewModel.class, FIELD);
+        targets.put(com.github.rooneyandshadows.lightbulb.apt.annotations.BindView.class, FIELD);
         return targets;
     }
 }

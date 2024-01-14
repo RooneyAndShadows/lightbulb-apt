@@ -25,6 +25,8 @@ public class PackageNames {
     public static final String ANDROID_CONTENT_RES = resolve(ANDROID_CONTENT, "res");
     public static final String ANDROIDX_FRAGMENT_APP = resolve(ANDROIDX, "fragment", "app");
     public static final String ANDROIDX_APPCOMPAT_APP = resolve(ANDROIDX, "appcompat", "app");
+    public static final String ANDROIDX_DATA_BINDING = resolve(ANDROIDX, "databinding");
+    public static final String ANDROIDX_LIFECYCLE = resolve(ANDROIDX, "lifecycle");
     public static final String ANDROID_BUILD_VERSION = resolve(ANDROID_OS, "Build", "VERSION");
     public static final String ANDROID_BUILD_VERSION_CODES = resolve(ANDROID_OS, "Build", "VERSION_CODES");
     private final String rootPackage;

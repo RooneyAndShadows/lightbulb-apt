@@ -42,6 +42,8 @@ public class ClassNameUtils {
     public static final ClassName ANDROID_LAYOUT_INFLATER = from(ANDROID_LAYOUT_INFLATER_CANONICAL_NAME);
     public static final ClassName ANDROID_VIEW_GROUP = from(ANDROID_VIEW_GROUP_CANONICAL_NAME);
     public static final ClassName ANDROID_SDK_INT = from(ANDROID_SDK_INT_CANONICAL_NAME);
+    public static final ClassName ANDROID_DATA_BINDING_UTIL = from(ANDROID_DATA_BINDING_UTIL_CANONICAL_NAME);
+    public static final ClassName ANDROID_VIEW_MODEL_PROVIDER = from(ANDROID_VIEW_MODEL_PROVIDER_CANONICAL_NAME);
     /**
      * Internal
      */
