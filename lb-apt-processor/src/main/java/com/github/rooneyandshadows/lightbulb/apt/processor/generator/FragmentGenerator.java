@@ -80,7 +80,7 @@ public class FragmentGenerator extends CodeGenerator {
         boolean hasPersistedVars = fragmentMetadata.hasPersistedValues();
         boolean hasViewModels = fragmentMetadata.hasViewModels();
 
-        if (!hasParameters && !hasPersistedVars) {
+        if (!hasParameters && !hasPersistedVars && !hasViewModels) {
             return;
         }
 
@@ -93,21 +93,23 @@ public class FragmentGenerator extends CodeGenerator {
 
         if (hasViewModels) {
             FragmentMetadata.ViewModel viewModel = fragmentMetadata.getViewModels().get(0);
-            String viewModelFieldName = viewModel.getName();
+            Field field = Field.from(viewModel);
             TypeName viewModelTypeName = classNames.getTypeName(viewModel);
 
-            builder.addStatement("this.$L = new $T(this).get($T.class)", viewModelFieldName, ANDROID_VIEW_MODEL_PROVIDER, viewModelTypeName);
+            builder.addStatement(field.getValueSetStatement("new $T(this).get($T.class)"), ANDROID_VIEW_MODEL_PROVIDER, viewModelTypeName);
         }
 
-        if (!hasParameters) {
-            builder.beginControlFlow("if(savedInstanceState != null)")
-                    .addStatement("restoreVariablesState(savedInstanceState)")
-                    .endControlFlow();
-        } else {
+        if (!hasParameters && !hasPersistedVars) {
+            //ignore
+        } else if (hasParameters) {
             builder.beginControlFlow("if(savedInstanceState == null)")
                     .addStatement("$T arguments = getArguments()", ANDROID_BUNDLE)
                     .addStatement("generateParameters(arguments)")
                     .nextControlFlow("else")
+                    .addStatement("restoreVariablesState(savedInstanceState)")
+                    .endControlFlow();
+        } else {
+            builder.beginControlFlow("if(savedInstanceState != null)")
                     .addStatement("restoreVariablesState(savedInstanceState)")
                     .endControlFlow();
         }
@@ -118,7 +120,7 @@ public class FragmentGenerator extends CodeGenerator {
     private void generateOnCreateViewMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
         String layoutName = fragmentMetadata.getLayoutName();
 
-        if (layoutName == null || layoutName.isBlank()) {
+        if ((layoutName == null || layoutName.isBlank()) && !fragmentMetadata.hasViewBindings()) {
             return;
         }
 
@@ -133,11 +135,11 @@ public class FragmentGenerator extends CodeGenerator {
 
         if (fragmentMetadata.hasViewBindings()) {
             FragmentMetadata.ViewBinding viewBinding = fragmentMetadata.getViewBindings().get(0);
-            String viewBindingFieldName = viewBinding.getName();
+            Field field = Field.from(viewBinding);
 
-            builder.addStatement("this.$L = $T.inflate(inflater,$T.layout.$L,container,false)", viewBindingFieldName, ANDROID_DATA_BINDING_UTIL, ANDROID_R, layoutName)
-                    .addStatement("this.$L.setLifecycleOwner(getViewLifecycleOwner())", viewBindingFieldName)
-                    .addStatement("return this.$L.getRoot()", viewBindingFieldName);
+            builder.addStatement(field.getValueSetStatement("$T.inflate(inflater,$T.layout.$L,container,false)"), ANDROID_DATA_BINDING_UTIL, ANDROID_R, layoutName)
+                    .addStatement("$L.setLifecycleOwner(getViewLifecycleOwner())", field.getValueAccessor())
+                    .addStatement("return $L.getRoot()", field.getValueAccessor());
         } else {
             builder.addStatement("$T layout = inflater.inflate($T.layout.$L, null)", ANDROID_VIEW, ANDROID_R, layoutName)
                     .addStatement("return layout");

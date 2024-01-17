@@ -93,7 +93,7 @@ public final class FragmentMetadata extends ClassMetadata {
     }
 
     public boolean hasViewModels() {
-        return !viewBindings.isEmpty();
+        return !viewModels.isEmpty();
     }
 
     public List<ScreenParameter> getScreenParameters(boolean includeOptional) {
