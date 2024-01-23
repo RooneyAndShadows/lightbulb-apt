@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.github.RooneyAndShadows.lightbulb-apt.lb-apt-compile' version('2.0.0-RC1')
+    id 'lb-compile' version('2.0.0')
 }
 
 android {
