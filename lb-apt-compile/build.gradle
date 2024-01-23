@@ -21,7 +21,7 @@ dependencies {
 gradlePlugin {
     plugins {
         create("lightbulb-compile-plugin") {
-            id = "lb-compile"
+            id = "com.github.rooneyandshadows.lightbulb-apt.lb-apt-compile"
             implementationClass = "com.github.rooneyandshadows.lightbulb.apt.plugin.TransformationPlugin"
         }
     }
