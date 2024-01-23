@@ -10,7 +10,7 @@ import org.gradle.api.file.FileCollection
 import java.io.File
 import java.io.FileOutputStream
 
-private const val rootProject = "com.github.rooneyandshadows.lightbulb.apt"
+private const val rootProject = "com.github.rooneyandshadows.lightbulb-apt"
 private const val version = "2.0.0"
 
 const val PLUGIN_EXTENSION_NAME = "lightbulb"
