@@ -6,6 +6,7 @@ import com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
 import javassist.*
+import javassist.Modifier.*
 
 internal class ChangeParcelableSuperclassTransformation(
     packageNames: PackageNames
@@ -20,15 +21,16 @@ internal class ChangeParcelableSuperclassTransformation(
         assureConstructorWithParcel(classPool, ctClass)
 
         val creatorClass = createCreatorClass(classPool, ctClass)
-        val field = CtField(creatorClass, "CREATOR", ctClass)
-
-        field.modifiers = field.modifiers or Modifier.STATIC or Modifier.PUBLIC or Modifier.FINAL
-
-        ctClass.addField(field, CtField.Initializer.byExpr("new ${creatorClass.name}();"))
 
         removeFieldsWithSetterOrGetter(ctClass)filter@{
             return@filter !it.hasAnnotation(IgnoreParcel::class.java)
         }
+
+        val field = CtField(creatorClass, "CREATOR", ctClass)
+
+        field.modifiers = field.modifiers or STATIC or PUBLIC or FINAL
+
+        ctClass.addField(field, CtField.Initializer.byExpr("new ${creatorClass.name}();"))
 
         val transformationResult = Result(ctClass, true)
         transformationResult.addNewClass(creatorClass)
