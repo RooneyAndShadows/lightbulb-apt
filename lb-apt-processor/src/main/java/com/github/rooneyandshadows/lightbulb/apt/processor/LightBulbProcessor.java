@@ -21,7 +21,7 @@ import static com.github.rooneyandshadows.lightbulb.apt.commons.ProcessorOptionN
 
 @SuppressWarnings("FieldCanBeLocal")
 @AutoService(Processor.class)
-//TODO ADD GENERATION FOR PARCELABLE OBJECTS (auto created parcelling part)
+@SupportedAnnotationTypes({"com.github.rooneyandshadows.lightbulb.apt.annotations.*"})
 public class LightBulbProcessor extends AbstractProcessor {
     private Filer filer;
     private Messager messager;
@@ -43,20 +43,6 @@ public class LightBulbProcessor extends AbstractProcessor {
         CodeGenerationService generationService = new CodeGenerationService(rootPackage, filer, messager, elements, roundEnvironment);
         generationService.process();
         return false;
-    }
-
-    @Override
-    public Set<String> getSupportedAnnotationTypes() {
-        return new HashSet<String>() {
-            {
-                add(LightbulbActivity.class.getCanonicalName());
-                add(BindView.class.getCanonicalName());
-                add(LightbulbFragment.class.getCanonicalName());
-                add(FragmentStatePersisted.class.getCanonicalName());
-                add(FragmentParameter.class.getCanonicalName());
-                add(FragmentScreen.class.getCanonicalName());
-            }
-        };
     }
 
     @Override

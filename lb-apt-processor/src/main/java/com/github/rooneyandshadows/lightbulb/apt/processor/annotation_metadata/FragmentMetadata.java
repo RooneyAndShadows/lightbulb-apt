@@ -142,8 +142,15 @@ public final class FragmentMetadata extends ClassMetadata {
     }
 
     public static final class ViewBinding extends FieldMetadata {
-        public ViewBinding(VariableElement element) {
+        private final String layoutName;
+
+        public ViewBinding(VariableElement element, String layoutName) {
             super(element);
+            this.layoutName = layoutName;
+        }
+
+        public String getLayoutName() {
+            return layoutName;
         }
     }
 
@@ -152,6 +159,4 @@ public final class FragmentMetadata extends ClassMetadata {
             super(element);
         }
     }
-
-
 }

@@ -2,24 +2,32 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps;
 
 import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.*;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ViewBinding;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata.IgnoredField;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.BaseMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generation_steps.base.GenerationStep;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.validator.ApplicationValidator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.validator.FragmentValidator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.validator.StorageValidator;
+import com.github.rooneyandshadows.lightbulb.apt.processor.validator.base.AnnotationResultValidator;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassNames.*;
+import static java.lang.String.*;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class ValidateAnnotationsStep implements GenerationStep {
     private final Messager messager;
     private final Elements elements;
@@ -33,60 +41,126 @@ public class ValidateAnnotationsStep implements GenerationStep {
 
     @Override
     public boolean process(AnnotationResultsRegistry resultsRegistry) {
-        boolean isValid = validateStorage(resultsRegistry);
-
-        isValid &= requireSuperclass(LightbulbApplication.class, ANDROID_APPLICATION_CANONICAL_NAME, resultsRegistry.getApplicationDescriptions());
-        isValid &= requireSuperclass(LightbulbActivity.class, ANDROID_ACTIVITY_CANONICAL_NAME, resultsRegistry.getActivityDescriptions());
-        isValid &= validateParcelable(resultsRegistry);
-        isValid &= validateFragments(resultsRegistry);
-
-        return isValid;
-    }
-
-    private boolean validateStorage(AnnotationResultsRegistry resultsRegistry) {
-        if (resultsRegistry.hasStorageDescriptions() && !resultsRegistry.hasApplicationDescriptions()) {
-            messager.printMessage(ERROR, "In order to use @LightbulbStorage you must have application class annotated with @LightbulbApplication and declared in the manifest file.");
-            return false;
-        }
-        return true;
-    }
-
-    private boolean validateFragments(AnnotationResultsRegistry resultsRegistry) {
-        if (!resultsRegistry.hasParcelableDescriptions()) {
-            return true;
-        }
-
-        boolean isValid = validateStorage(resultsRegistry);
-
-        isValid &= requireSuperclass(LightbulbFragment.class, ANDROID_FRAGMENT_CANONICAL_NAME, resultsRegistry.getFragmentDescriptions());
-        isValid &= requireSuperclass(FragmentScreen.class, ANDROID_FRAGMENT_CANONICAL_NAME, resultsRegistry.getFragmentDescriptions());
-
-        return isValid;
-    }
-
-    private boolean validateParcelable(AnnotationResultsRegistry resultsRegistry) {
-        if (!resultsRegistry.hasParcelableDescriptions()) {
-            return true;
-        }
+        List<AnnotationResultValidator> validators = new ArrayList<>();
+        validators.add(new FragmentValidator(messager, resultsRegistry));
+        validators.add(new StorageValidator(messager, resultsRegistry));
+        validators.add(new ApplicationValidator(messager, resultsRegistry));
 
         boolean result = true;
 
-        result &= requireSuperclass(LightbulbParcelable.class, ANDROID_PARCELABLE_CANONICAL_NAME, resultsRegistry.getParcelableDescriptions());
-        result &= requireParcelIgnoredFieldNotFinal(resultsRegistry.getParcelableDescriptions());
+        for (AnnotationResultValidator validator : validators) {
+            result &= validator.validate();
+        }
+
+        return result;
+    }
+
+    private boolean validateActivity(List<ActivityMetadata> targets) {
+        if (targets.isEmpty()) {
+            return true;
+        }
+
+        return requireSuperclassForClassMetadata(ANDROID_ACTIVITY_CANONICAL_NAME, targets, LightbulbActivity.class);
+    }
+
+    private boolean validateFragments(List<FragmentMetadata> targets) {
+        if (targets.isEmpty()) {
+            return true;
+        }
+        Locale locale = Locale.getDefault();
+
+        for (FragmentMetadata fragmentMetadata : targets) {
+            String errorString = format("Problems found in class %s", fragmentMetadata.getTypeInformation().getTypeMirror());
+            int errorsCount = 0;
+
+            //Superclass validation
+            if (!fragmentMetadata.getTypeInformation().is(ANDROID_FRAGMENT_CANONICAL_NAME)) {
+                errorsCount++;
+                String errorLine = format(Locale.getDefault(), "\n%d. Class must be subclass of %s.", errorsCount, ANDROID_FRAGMENT_CANONICAL_NAME);
+                errorString = errorString.concat(errorLine);
+            }
+
+            //@FragmentScreen validation
+            if (fragmentMetadata.hasParameters() && !fragmentMetadata.isScreen()) {
+                errorsCount++;
+                String errorTemplate = "\n%d. Class has fields annotaded with %s but it's not annotated with %s.";
+                String errorLine = format(locale, errorTemplate, errorsCount, FragmentParameter.class.getSimpleName(), FragmentScreen.class.getSimpleName());
+                errorString = errorString.concat(errorLine);
+            }
+
+            //@ViewBinding validation
+            ViewBinding fieldMetadata = fragmentMetadata.getViewBindings().get(0);
+
+            if (!fieldMetadata.getTypeInformation().is(ANDROID_VIEW_DATA_BINDING_CANONICAL_NAME)) {
+                errorsCount++;
+
+                String errorLineTemplate = "\n%d. Field \"%s\" is annotated with @%s and it's type must be subtype of %s.";
+                String errorFieldName = fieldMetadata.getName();
+                String annotationName = FragmentViewBinding.class.getSimpleName();
+                String errorLine = format(locale, errorLineTemplate, errorsCount, errorFieldName, annotationName, ANDROID_VIEW_DATA_BINDING_CANONICAL_NAME);
+
+                errorString = errorString.concat(errorLine);
+            }
+
+
+            //@BindView validation
+            int bindViewErrorsCount = 0;
+
+            for (int i = 0; i < fragmentMetadata.getBindViews().size(); i++) {
+                String requiredTypeName = ANDROID_VIEW_CANONICAL_NAME;
+                String annotationName = BindView.class.getSimpleName();
+                FragmentMetadata.BindView bindViewMetadata = fragmentMetadata.getBindViews().get(i);
+
+                if (!bindViewMetadata.getTypeInformation().is(requiredTypeName)) {
+                    if (i == 0) {
+                        errorsCount++;
+
+                        String errorLineTemplate = "\n%d. @%s errors:";
+                        String errorLine = format(locale, errorLineTemplate, annotationName);
+
+                        errorString = errorString.concat(errorLine);
+                    }
+
+                    bindViewErrorsCount++;
+
+                    String errorLineTemplate = "\n%d.%d. Field \"%s\" is annotated with @%s and it's type must be subtype of %s.";
+                    String errorFieldName = bindViewMetadata.getName();
+                    String errorLine = format(Locale.getDefault(), errorLineTemplate, errorsCount, bindViewErrorsCount, errorFieldName, annotationName, requiredTypeName);
+
+                    errorString = errorString.concat(errorLine);
+                }
+            }
+
+            if (errorsCount > 0) {
+                messager.printMessage(ERROR, errorString);
+                return false;
+            }
+        }
+
+        return isValid;
+    }
+
+    private boolean validateParcelable(List<ParcelableMetadata> targets) {
+        if (targets.isEmpty()) {
+            return true;
+        }
+
+        boolean result = requireSuperclassForClassMetadata(ANDROID_PARCELABLE_CANONICAL_NAME, targets, LightbulbParcelable.class);
+        result &= requireParcelIgnoredFieldNotFinal(targets);
 
         return result;
     }
 
     private boolean requireParcelIgnoredFieldNotFinal(List<ParcelableMetadata> targets) {
         if (!targets.isEmpty()) {
-            String errorMessage = String.format("Ignored fields for classes annotated with @%s cannot be final. Problems found:", LightbulbParcelable.class.getSimpleName());
+            String errorMessage = format("Ignored fields for classes annotated with @%s cannot be final. Problems found:", LightbulbParcelable.class.getSimpleName());
             int classIndex = 0;
             for (ParcelableMetadata target : targets) {
                 List<IgnoredField> fields = target.getIgnoredFields().stream().filter(FieldMetadata::isFinal).toList();
                 if (!fields.isEmpty()) {
                     classIndex++;
                     String errorType = target.getTypeInformation().getTypeMirror().toString();
-                    String errorTypeLine = String.format(Locale.getDefault(), "\n   %d: %s", classIndex, errorType);
+                    String errorTypeLine = format(Locale.getDefault(), "\n   %d: %s", classIndex, errorType);
                     errorMessage = errorMessage.concat(errorTypeLine);
 
                     int fieldIndex = 0;
@@ -96,7 +170,7 @@ public class ValidateAnnotationsStep implements GenerationStep {
                         String errorField = field.getName();
                         String accessModifier = field.getAccessModifier().toString();
                         String type = field.getTypeInformation().getTypeMirror().toString();
-                        String errorFieldLine = String.format(Locale.getDefault(), "\n      %d.%d: %s final %s %s;", classIndex, fieldIndex, accessModifier, type, errorField);
+                        String errorFieldLine = format(Locale.getDefault(), "\n      %d.%d: %s final %s %s;", classIndex, fieldIndex, accessModifier, type, errorField);
                         errorMessage = errorMessage.concat(errorFieldLine);
                     }
                 }
@@ -109,24 +183,41 @@ public class ValidateAnnotationsStep implements GenerationStep {
         return true;
     }
 
-    private boolean requireSuperclass(Class<? extends Annotation> targetAnnotation, String requiredClassCannonicalName, List<? extends ClassMetadata> targets) {
-        if (!targets.isEmpty()) {
-            String errorMessage = String.format("Classes annotated with @%s must be subclasses of %s. Problems found:", targetAnnotation.getSimpleName(), requiredClassCannonicalName);
-            int count = 0;
-            for (BaseMetadata<TypeElement> target : targets) {
-                boolean extendsFragment = target.getTypeInformation().is(requiredClassCannonicalName);
-                if (!extendsFragment) {
-                    count++;
-                    String errorType = target.getTypeInformation().getTypeMirror().toString();
-                    String errorLine = String.format(Locale.getDefault(), "\n%d: %s", count, errorType);
-                    errorMessage = errorMessage.concat(errorLine);
-                }
+    private <T extends BaseMetadata<? extends Element>> boolean requireSuperclassForMetadata(String requiredClassCannonicalName, T target) {
+        boolean result = true;
+
+        boolean extendsRequiredClass = target.getTypeInformation().is(requiredClassCannonicalName);
+        String errorTemplate = "Classes annotated with @%s must be subclasses of %s. Problems found:";
+
+
+        String annotationName = targetAnnotation.getSimpleName();
+        String errorMessage = format(errorTemplate, annotationName, requiredClassCannonicalName);
+        int errorsFound = 0;
+
+        for (T target : targets) {
+            boolean hasAnnotation = target.getElement().getAnnotation(targetAnnotation) != null;
+            boolean extendsRequiredClass = target.getTypeInformation().is(requiredClassCannonicalName);
+
+            if (validationAction != null) {
+                result &= validationAction.apply(target);
             }
-            if (count > 0) {
-                messager.printMessage(ERROR, errorMessage);
-                return false;
+
+            if (!hasAnnotation || extendsRequiredClass) {
+                continue;
             }
+
+            errorsFound++;
+            String errorType = target.getTypeInformation().getTypeMirror().toString();
+            String errorLine = format(Locale.getDefault(), "\n%d: %s", errorsFound, errorType);
+            errorMessage = errorMessage.concat(errorLine);
         }
-        return true;
+
+        if (errorsFound > 0) {
+            messager.printMessage(ERROR, errorMessage);
+            result = false;
+        }
+
+
+        return result;
     }
 }

@@ -62,7 +62,7 @@ public class FragmentAnnotationReader extends AnnotationReader {
                 ViewModel vModel = new ViewModel((VariableElement) annotatedElem.getElement());
                 viewModels.add(vModel);
             } else if (annotation instanceof FragmentViewBinding viewBinding) {
-                ViewBinding vBinding = new ViewBinding((VariableElement) annotatedElem.getElement());
+                ViewBinding vBinding = new ViewBinding((VariableElement) annotatedElem.getElement(), viewBinding.layoutName());
                 viewBindings.add(vBinding);
             }
         }

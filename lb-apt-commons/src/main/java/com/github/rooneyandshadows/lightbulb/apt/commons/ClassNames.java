@@ -50,6 +50,8 @@ public class ClassNames {
     public static final String ANDROID_VIEW_DATA_BINDING_CANONICAL_NAME = resolveCanonical(ANDROIDX_DATA_BINDING, ANDROID_VIEW_DATA_BINDING_SIMPLE_NAME);
     public static final String ANDROID_VIEW_MODEL_PROVIDER_SIMPLE_NAME = "ViewModelProvider";
     public static final String ANDROID_VIEW_MODEL_PROVIDER_CANONICAL_NAME = resolveCanonical(ANDROIDX_LIFECYCLE, ANDROID_VIEW_MODEL_PROVIDER_SIMPLE_NAME);
+    public static final String ANDROID_VIEW_MODEL_SIMPLE_NAME = "ViewModel";
+    public static final String ANDROID_VIEW_MODEL_CANONICAL_NAME = resolveCanonical(ANDROIDX_LIFECYCLE, ANDROID_VIEW_MODEL_SIMPLE_NAME);
 
     private static String resolveCanonical(String packageName, String simpleClassName) {
         return String.format("%s.%s", packageName, simpleClassName);

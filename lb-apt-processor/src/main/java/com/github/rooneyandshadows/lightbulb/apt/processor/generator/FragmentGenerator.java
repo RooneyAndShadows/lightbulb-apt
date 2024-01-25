@@ -168,7 +168,6 @@ public class FragmentGenerator extends CodeGenerator {
             String setStatement = field.getValueSetStatement("view.findViewById($T.id.$L)");
 
             builder.addStatement("$T view = getView()", ANDROID_VIEW);
-            builder.addStatement("$T $L = view.findViewById($T.id.$L)", ANDROID_VIEW);
             builder.addStatement(setStatement, ANDROID_R, resourceName);
         });
 
