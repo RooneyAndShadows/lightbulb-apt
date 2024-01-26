@@ -4,7 +4,7 @@ plugins {
     id 'maven-publish'
 }
 
-group "$environment.root_namespace"
+group "$environment.group_id"
 version = "$environment.version"
 
 dependencies {

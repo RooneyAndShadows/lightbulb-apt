@@ -25,7 +25,7 @@ public class FragRoot extends Fragment {
     private int identifier;
     @FragmentViewModel
     private FragRootVM viewModel;
-    @FragmentViewBinding
+    @FragmentViewBinding(layoutName = "frag_root")
     private FragRootBinding viewBinding;
 
     @Override

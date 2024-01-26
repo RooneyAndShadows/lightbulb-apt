@@ -156,6 +156,10 @@ public class ServiceGenerator extends CodeGenerator {
     }
 
     private void generateRoutingMember(List<FieldSpec> fields, List<MethodSpec> methods) {
+        if (!hasRoutingElements) {
+            return;
+        }
+
         ClassName routerClassName = classNames.getAppRouterClassName();
         String generatedRouterSimpleClassName = routerClassName.simpleName();
         String fieldName = MemberUtils.getFieldNameForClass(generatedRouterSimpleClassName);

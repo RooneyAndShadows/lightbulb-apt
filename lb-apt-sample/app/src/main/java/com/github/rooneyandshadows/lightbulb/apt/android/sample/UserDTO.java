@@ -1,14 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.sample;
 
-import android.os.Parcel;
 import com.github.rooneyandshadows.lightbulb.apt.android.core.parcelable.BlankParcelable;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.IgnoreParcel;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbParcelable;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Date;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 
 @LightbulbParcelable

@@ -3,11 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.validator.base;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 
 import javax.annotation.processing.Messager;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-
-import static java.lang.String.format;
 
 @SuppressWarnings("SameParameterValue")
 public abstract class AnnotationResultValidator {
@@ -25,52 +21,27 @@ public abstract class AnnotationResultValidator {
         return validateResult(messager, annotationResultsRegistry);
     }
 
-    protected static class ValidateResult {
-        private final String heading;
-        private final List<ErrorLine> errors = new ArrayList<>();
+    protected final static class ErrorString {
+        private String errorString = "";
 
-        public ValidateResult(String initialErrorString) {
-            this.heading = initialErrorString;
+        public ErrorString(String format, Object... args) {
+            append(format, args);
         }
 
-        public void addError(ErrorLine errorLine) {
-            errors.add(errorLine);
+        public ErrorString(String string) {
+            append(string);
         }
 
-        public boolean isValid() {
-            return errors.isEmpty();
+        public void append(String format, Object... args) {
+            errorString = errorString.concat(String.format(Locale.getDefault(), format, args));
         }
 
-
-        public String getErrorText() {
-            return printRecursively(heading, errors, "", 1);
+        public void append(String string) {
+            errorString = errorString.concat(string);
         }
 
-        private String printRecursively(String target, List<ErrorLine> errors, String prefix, int indent) {
-            for (int index = 0; index < errors.size(); index++) {
-                ErrorLine errorLine = errors.get(index);
-                String currentPrefix = format(Locale.getDefault(), "\n%" + indent * 4 + "s%s%d.", prefix, index++);
-
-                target = target.concat(format("%s %s", currentPrefix, errorLine.errorText));
-
-                if (!errorLine.subErrors.isEmpty()) {
-                    target = printRecursively(target, errorLine.subErrors, currentPrefix, indent + 1);
-                }
-            }
-            return target;
-        }
-
-        public static final class ErrorLine {
-            private final String errorText;
-            private final List<ErrorLine> subErrors = new ArrayList<>();
-
-            public ErrorLine(String errorText) {
-                this.errorText = errorText;
-            }
-
-            public void addSubError(ErrorLine errorLine) {
-                subErrors.add(errorLine);
-            }
+        public String getErrorString() {
+            return errorString;
         }
     }
 }

@@ -69,8 +69,8 @@ public class FragmentGenerator extends CodeGenerator {
         targets.addAll(fragmentMetadata.getScreenParameters());
         targets.addAll(fragmentMetadata.getBindViews());
         targets.addAll(fragmentMetadata.getPersistedValues());
-        targets.addAll(fragmentMetadata.getViewBindings());
-        targets.addAll(fragmentMetadata.getViewModels());
+        targets.add(fragmentMetadata.getViewBindings().get(0));
+        targets.add(fragmentMetadata.getViewModels().get(0));
 
         copyFieldsForSupertypeTransformation(targets, fields, methods);
     }
@@ -137,7 +137,7 @@ public class FragmentGenerator extends CodeGenerator {
             FragmentMetadata.ViewBinding viewBinding = fragmentMetadata.getViewBindings().get(0);
             Field field = Field.from(viewBinding);
 
-            builder.addStatement(field.getValueSetStatement("$T.inflate(inflater,$T.layout.$L,container,false)"), ANDROID_DATA_BINDING_UTIL, ANDROID_R, layoutName)
+            builder.addStatement(field.getValueSetStatement("$T.inflate(inflater,$T.layout.$L,container,false)"), ANDROID_DATA_BINDING_UTIL, ANDROID_R, viewBinding.getLayoutName())
                     .addStatement("$L.setLifecycleOwner(getViewLifecycleOwner())", field.getValueAccessor())
                     .addStatement("return $L.getRoot()", field.getValueAccessor());
         } else {
