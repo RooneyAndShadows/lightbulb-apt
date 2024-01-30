@@ -29,15 +29,17 @@ public class ActivityAnnotationReader extends AnnotationReader {
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
         String fragmentContainerId = null;
+        String layoutName = null;
 
         for (AnnotatedElement element : annotatedElements) {
             Annotation annotation = element.getAnnotation();
             if (annotation instanceof LightbulbActivity lightbulbActivity) {
                 fragmentContainerId = lightbulbActivity.fragmentContainerId();
+                layoutName = lightbulbActivity.layoutName();
             }
         }
 
-        ActivityMetadata metadata = new ActivityMetadata(target, fragmentContainerId);
+        ActivityMetadata metadata = new ActivityMetadata(target, fragmentContainerId,layoutName);
 
         activityMetadataList.add(metadata);
     }

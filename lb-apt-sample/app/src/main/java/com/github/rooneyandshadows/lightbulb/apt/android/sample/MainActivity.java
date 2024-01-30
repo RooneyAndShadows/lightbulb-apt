@@ -6,15 +6,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.github.rooneyandshadows.lightbulb.apt.android.sample.lightbulb.service.LightbulbService;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbActivity;
 
-@LightbulbActivity()
+import java.util.UUID;
+
+@LightbulbActivity(layoutName = "activity_main", fragmentContainerId = "fragmentContainer")
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
-            LightbulbService.route().toCommonRoot(42).newRootScreen();
+            LightbulbService.route().toCommonRoot(0, UUID.randomUUID()).newRootScreen();
         }
     }
 }

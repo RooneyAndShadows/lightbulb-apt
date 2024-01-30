@@ -2,6 +2,9 @@ package com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transfor
 
 import com.github.rooneyandshadows.lightbulb.apt.annotations.IgnoreParcel
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbParcelable
+import com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions
+import com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions.PARCEL
+import com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions.PARCELABLE_CREATOR
 import com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames
 import com.github.rooneyandshadows.lightbulb.apt.plugin.transformation.transformations.base.ClassTransformation
@@ -39,7 +42,7 @@ internal class ChangeParcelableSuperclassTransformation(
     }
 
     private fun assureConstructorWithParcel(classPool: ClassPool, ctClass: CtClass) {
-        val parcelClass = classPool.getCtClass("android.os.Parcel")
+        val parcelClass = classPool.getCtClass(PARCEL.cannonicalName)
 
         try {
             val constructor = ctClass.getDeclaredConstructor(arrayOf(parcelClass))
@@ -56,8 +59,8 @@ internal class ChangeParcelableSuperclassTransformation(
     private fun createCreatorClass(classPool: ClassPool, ctClass: CtClass): CtClass {
         val arrayClass = classPool.getCtClass("${ctClass.name}[]")
         val intClass = classPool.getCtClass("int")
-        val parcelClass = classPool.getCtClass("android.os.Parcel")
-        val parcelableCreatorClass = classPool.getCtClass("android.os.Parcelable\$Creator")
+        val parcelClass = classPool.getCtClass(PARCEL.cannonicalName)
+        val parcelableCreatorClass = classPool.getCtClass(PARCELABLE_CREATOR.cannonicalName)
         val creatorClass = ctClass.makeNestedClass("Creator", true)
         val createFromParcelMethod = CtMethod(ctClass, "createFromParcel", arrayOf(parcelClass), creatorClass)
         val newArrayMethod = CtMethod(arrayClass, "newArray", arrayOf(intClass), creatorClass)

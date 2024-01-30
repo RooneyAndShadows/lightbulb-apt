@@ -8,5 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 public @interface LightbulbActivity {
-    String fragmentContainerId() default "fragmentContainer";
+    String layoutName();
+
+    String fragmentContainerId();
 }

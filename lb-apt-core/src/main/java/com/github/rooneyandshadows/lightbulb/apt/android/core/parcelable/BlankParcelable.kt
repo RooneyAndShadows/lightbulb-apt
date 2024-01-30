@@ -3,8 +3,8 @@ package com.github.rooneyandshadows.lightbulb.apt.android.core.parcelable
 import android.os.Parcel
 import android.os.Parcelable
 
+@Suppress("unused", "UNUSED_PARAMETER")
 open class BlankParcelable() : Parcelable {
-
 
     constructor(parcel: Parcel) : this() {
     }

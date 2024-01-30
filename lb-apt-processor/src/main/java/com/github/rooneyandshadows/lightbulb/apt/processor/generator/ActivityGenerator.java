@@ -72,9 +72,7 @@ public class ActivityGenerator extends CodeGenerator {
 
     @SuppressWarnings("ConstantValue")
     private void generateOnCreateMethod(ActivityMetadata activityMetadata, List<MethodSpec> destination) {
-        if (!hasRouter) {
-            return;
-        }
+        ClassName RClassName = classNames.localAndroidResources();
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder("onCreate")
                 .addModifiers(PUBLIC)
@@ -83,11 +81,18 @@ public class ActivityGenerator extends CodeGenerator {
                 .returns(void.class)
                 .addStatement("super.onCreate(savedInstanceState)");
 
+        String layoutName = activityMetadata.getLayoutName();
+
+        if (layoutName != null && !layoutName.isBlank()) {
+            builder.addStatement("setContentView($T.layout.$L)",RClassName , layoutName);
+        }
+
         if (hasRouter) {
             ClassName routerClassName = classNames.getAppRouterClassName();
             ClassName appNavigatorClassName = classNames.getLightbulbServiceClassName();
-            ClassName RClassName = classNames.androidResources();
+
             String fragmentContainerId = activityMetadata.getFragmentContainerId();
+
 
             builder.addStatement("$T $L = $T.id.$L", INTEGER, "fragmentContainerId", RClassName, fragmentContainerId);
             builder.addStatement("$L = new $T($L,$L)", ROUTER_FIELD_NAME, routerClassName, "this", "fragmentContainerId");

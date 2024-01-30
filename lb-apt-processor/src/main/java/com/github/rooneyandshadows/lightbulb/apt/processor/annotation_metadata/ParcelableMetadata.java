@@ -9,7 +9,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassNames.ANDROID_PARCEL_CANONICAL_NAME;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions.PARCEL;
 
 public final class ParcelableMetadata extends ClassMetadata {
     private final List<TargetField> targetFields;
@@ -43,12 +43,12 @@ public final class ParcelableMetadata extends ClassMetadata {
 
     private boolean checkSuperClassForParcelConstructor() {
         TypeInformation superClassTypeInfo = getTypeInformation().getSuperClassType();
-        return superClassTypeInfo != null && superClassTypeInfo.hasConstructorWithParameters(ElementUtils::isAccessModifierAtLeastProtected, ANDROID_PARCEL_CANONICAL_NAME);
+        return superClassTypeInfo != null && superClassTypeInfo.hasConstructorWithParameters(ElementUtils::isAccessModifierAtLeastProtected, PARCEL.getCannonicalName());
     }
 
     private boolean checkForParcelConstructor() {
         TypeInformation typeInfo = getTypeInformation();
-        return typeInfo != null && typeInfo.hasConstructorWithParameters(ANDROID_PARCEL_CANONICAL_NAME);
+        return typeInfo != null && typeInfo.hasConstructorWithParameters(PARCEL.getCannonicalName());
     }
 
     public static final class TargetField extends FieldMetadata {

@@ -11,7 +11,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 private const val rootProject = "com.github.rooneyandshadows.lightbulb-apt"
-private const val version = "2.0.0-RC6"
+private const val version = "2.0.0-RC7"
 
 const val PLUGIN_EXTENSION_NAME = "lightbulb"
 const val PLUGIN_TASK_GROUP = "lightbulb"

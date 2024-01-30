@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
+import com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
@@ -13,8 +13,6 @@ import javax.lang.model.type.TypeMirror;
 import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
@@ -62,20 +60,9 @@ public final class TypeInformation {
         return new TypeInformation(superClassTypeMirror);
     }
 
-    /*public boolean hasConstructorWithParameters(TypeMirror... paramTypes) {
-        return hasConstructorWithParameters(null, paramTypes);
-    }*/
-
     public boolean hasConstructorWithParameters(String... paramTypes) {
         return hasConstructorWithParameters(null, paramTypes);
     }
-
-    /*public boolean hasConstructorWithParameters(Predicate<ExecutableElement> predicate, TypeMirror... paramTypes) {
-        String[] paramTypesArray = Arrays.stream(paramTypes)
-                .map(TypeMirror::toString)
-                .toArray(String[]::new);
-        return hasConstructorWithParameters(predicate, paramTypesArray);
-    }*/
 
     public boolean hasConstructorWithParameters(Predicate<ExecutableElement> predicate, String... paramTypes) {
         if (isPrimitive) {
@@ -191,6 +178,10 @@ public final class TypeInformation {
 
     public boolean isMap() {
         return is(mapType);
+    }
+
+    public boolean is(@NotNull ClassDefinitions.ClassInfo classInfo) {
+        return is(typeMirror, classInfo.getCannonicalName());
     }
 
     public boolean is(@NotNull Type type) {

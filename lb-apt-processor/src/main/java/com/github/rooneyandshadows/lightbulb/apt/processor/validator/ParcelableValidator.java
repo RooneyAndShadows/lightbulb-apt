@@ -9,9 +9,8 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.validator.base.Annota
 
 import javax.annotation.processing.Messager;
 import java.util.List;
-import java.util.Locale;
 
-import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassNames.ANDROID_PARCELABLE_CANONICAL_NAME;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions.PARCELABLE;
 import static java.lang.String.format;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
@@ -51,8 +50,8 @@ public class ParcelableValidator extends AnnotationResultValidator {
     }
 
     private boolean validateSuperClass(ParcelableMetadata target, ErrorString errorString) {
-        if (!target.getTypeInformation().is(ANDROID_PARCELABLE_CANONICAL_NAME)) {
-            errorString.append("\n\tClasses annotated with @%s must be subclasses of %s.", LightbulbParcelable.class.getSimpleName(), ANDROID_PARCELABLE_CANONICAL_NAME);
+        if (!target.getTypeInformation().is(PARCELABLE)) {
+            errorString.append("\n\tClasses annotated with @%s must be subclasses of %s.", LightbulbParcelable.class.getSimpleName(), PARCELABLE);
             return false;
         }
         return true;

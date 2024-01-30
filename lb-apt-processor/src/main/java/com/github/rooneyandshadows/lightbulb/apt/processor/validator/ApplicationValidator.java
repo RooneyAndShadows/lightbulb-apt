@@ -8,7 +8,7 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.validator.base.Annota
 import javax.annotation.processing.Messager;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassNames.ANDROID_APPLICATION_CANONICAL_NAME;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions.APPLICATION;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 public class ApplicationValidator extends AnnotationResultValidator {
@@ -45,8 +45,8 @@ public class ApplicationValidator extends AnnotationResultValidator {
     }
 
     private boolean validateSuperClass(ApplicationMetadata target, ErrorString errorString) {
-        if (!target.getTypeInformation().is(ANDROID_APPLICATION_CANONICAL_NAME)) {
-            errorString.append("Classes annotated with @%s must be subclasses of %s.", LightbulbApplication.class.getSimpleName(), ANDROID_APPLICATION_CANONICAL_NAME);
+        if (!target.getTypeInformation().is(APPLICATION)) {
+            errorString.append("Classes annotated with @%s must be subclasses of %s.", LightbulbApplication.class.getSimpleName(), APPLICATION);
             return false;
         }
         return true;

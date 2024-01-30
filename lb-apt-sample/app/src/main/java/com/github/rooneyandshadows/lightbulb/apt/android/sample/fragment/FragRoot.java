@@ -10,12 +10,11 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.github.rooneyandshadows.lightbulb.apt.android.sample.databinding.FragRootBinding;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentViewBinding;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentViewModel;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbFragment;
+import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Date;
+import java.util.UUID;
 
 
 @LightbulbFragment(layoutName = "frag_root")
@@ -23,10 +22,21 @@ import org.jetbrains.annotations.NotNull;
 public class FragRoot extends Fragment {
     @FragmentParameter
     private int identifier;
+    @FragmentParameter
+    private UUID userId;
+    @FragmentStatePersisted
+    private int persistedInt;
+    @FragmentStatePersisted
+    private String persistedString;
+    @FragmentStatePersisted
+    private Date persistedDate;
+    @FragmentStatePersisted
+    private UUID persistedUUID;
     @FragmentViewModel
     private FragRootVM viewModel;
     @FragmentViewBinding(layoutName = "frag_root")
     private FragRootBinding viewBinding;
+
 
     @Override
     public void onViewCreated(@NonNull @NotNull View view, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {

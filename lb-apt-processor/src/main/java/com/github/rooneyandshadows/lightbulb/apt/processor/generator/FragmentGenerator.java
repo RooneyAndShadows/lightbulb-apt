@@ -24,7 +24,7 @@ public class FragmentGenerator extends CodeGenerator {
 
     public FragmentGenerator(Filer filer, Elements elements, PackageNames packageNames, ClassNameUtils classNames, AnnotationResultsRegistry annotationResultsRegistry) {
         super(filer, elements, packageNames, classNames, annotationResultsRegistry);
-        this.ANDROID_R = classNames.androidResources();
+        this.ANDROID_R = classNames.localAndroidResources();
         fragmentMetadataList = annotationResultsRegistry.getFragmentDescriptions();
     }
 

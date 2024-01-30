@@ -22,7 +22,7 @@ buildscript {
         environment = [
                 "group_id"       : "com.github.rooneyandshadows.lightbulb-apt",
                 "core_namespace"       : 'com.github.rooneyandshadows.lightbulb.apt.core',
-                "version"              : "2.0.0-RC6" //TODO chande version in extensions.kt in plugin
+                "version"              : "2.0.0-RC7" //TODO chande version in extensions.kt in plugin
         ]
     }
 }
