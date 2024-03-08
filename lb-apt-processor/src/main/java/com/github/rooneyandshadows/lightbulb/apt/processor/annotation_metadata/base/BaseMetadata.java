@@ -15,7 +15,7 @@ public abstract class BaseMetadata<T extends Element> {
         this.name = element.getSimpleName().toString();
         this.element = element;
         this.typeMirror = element.asType();
-        this.typeInformation = new TypeInformation(typeMirror);
+        this.typeInformation = new TypeInformation(element);
     }
 
     public String getName() {

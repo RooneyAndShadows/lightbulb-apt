@@ -7,7 +7,19 @@ public abstract class ClassMetadata extends BaseMetadata<TypeElement> {
         super(element);
     }
 
-    public final String getClassSimpleName(){
-        return element.getSimpleName().toString();
+    public final String getSimpleName() {
+        return typeInformation.getSimpleName();
+    }
+
+    public final String getQualifiedName() {
+        return typeInformation.getQualifiedName();
+    }
+
+    public final String getResolvedQualifiedName() {
+        return typeInformation.getQualifiedResolvedName();
+    }
+
+    public final String getResolvedSimpleName() {
+        return typeInformation.getSimpleResolvedName();
     }
 }

@@ -62,12 +62,12 @@ public abstract class CodeGenerator {
 
     @NotNull
     protected ClassName getInstrumentedClassName(String packageName, ClassMetadata metadata, boolean prefix) {
-        return classNames.generateInstrumentedClassName(packageName, metadata.getClassSimpleName(), prefix);
+        return classNames.generateInstrumentedClassName(packageName, metadata.getResolvedSimpleName(), prefix);
     }
 
     @NotNull
     protected ClassName getInstrumentedClassName(String packageName, ClassMetadata metadata) {
-        return classNames.generateInstrumentedClassName(packageName, metadata.getClassSimpleName(), true);
+        return classNames.generateInstrumentedClassName(packageName, metadata.getResolvedSimpleName(), true);
     }
 
     protected void copyFieldsForSupertypeTransformation(List<? extends FieldMetadata> targets, List<FieldSpec> fields, List<MethodSpec> methods) {

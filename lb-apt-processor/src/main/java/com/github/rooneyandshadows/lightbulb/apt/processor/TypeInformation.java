@@ -18,7 +18,7 @@ import java.util.function.Predicate;
 import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 
 
-@SuppressWarnings({"DuplicatedCode", "RedundantIfStatement", "unused"})
+@SuppressWarnings({"DuplicatedCode", "RedundantIfStatement", "unused", "FieldCanBeLocal"})
 public final class TypeInformation {
     private static final String stringType = String.class.getCanonicalName();
     private static final String intType = Integer.class.getCanonicalName();
@@ -36,12 +36,22 @@ public final class TypeInformation {
     private static final String offsetDateType = OffsetDateTime.class.getCanonicalName();
     private static final String listType = List.class.getCanonicalName();
     private static final String mapType = Map.class.getCanonicalName();
+    private final Element element;
     private final TypeMirror typeMirror;
     private final boolean isPrimitive;
+    private final boolean isNested;
+    private final String packageName;
+    private final String simpleResolvedName;
+    private final String qualifiedResolvedName;
 
-    public TypeInformation(TypeMirror typeMirror) {
-        this.typeMirror = typeMirror;
+    public TypeInformation(Element typeElement) {
+        this.element = typeElement;
+        this.typeMirror = typeElement.asType();
         this.isPrimitive = !(typeMirror instanceof DeclaredType);
+        this.isNested = !isPrimitive && ((TypeElement) ((DeclaredType) typeMirror).asElement()).getNestingKind().isNested();
+        this.packageName = extractPackageName();
+        this.simpleResolvedName = extractResolvedSimpleName();
+        this.qualifiedResolvedName = extractResolvedQualifiedName();
     }
 
     @Nullable
@@ -57,7 +67,9 @@ public final class TypeInformation {
             return null;
         }
 
-        return new TypeInformation(superClassTypeMirror);
+        TypeElement superclassTypeElement = (TypeElement) ((DeclaredType) superClassTypeMirror).asElement();
+
+        return new TypeInformation(superclassTypeElement);
     }
 
     public boolean hasConstructorWithParameters(String... paramTypes) {
@@ -112,10 +124,44 @@ public final class TypeInformation {
         DeclaredType type = (DeclaredType) typeMirror;
 
         type.getTypeArguments().forEach(typeArg -> {
-            result.add(new TypeInformation(typeArg));
+            TypeElement typeArgElement = (TypeElement) ((DeclaredType) typeArg).asElement();
+            result.add(new TypeInformation(typeArgElement));
         });
 
         return result;
+    }
+
+
+    public boolean isNested() {
+        return isNested;
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public String getSimpleName() {
+        if (isPrimitive || !isNested) {
+            return simpleResolvedName;
+        }
+
+        return ((DeclaredType) typeMirror).asElement().getSimpleName().toString();
+    }
+
+    public String getSimpleResolvedName() {
+        return simpleResolvedName;
+    }
+
+    public String getQualifiedResolvedName() {
+        return qualifiedResolvedName;
+    }
+
+    public String getQualifiedName() {
+        if (isPrimitive || !isNested) {
+            return qualifiedResolvedName;
+        }
+
+        return ((TypeElement) ((DeclaredType) typeMirror).asElement()).getQualifiedName().toString();
     }
 
     public TypeMirror getTypeMirror() {
@@ -298,5 +344,40 @@ public final class TypeInformation {
         }
 
         return false;
+    }
+
+    private String extractPackageName() {
+        String fullName = typeMirror.toString();
+
+        if (isPrimitive) {
+            int endIndex = fullName.lastIndexOf(".");
+            return endIndex != -1 ? fullName.substring(0, endIndex - 1) : "";
+        }
+
+        TypeElement typeElement = (TypeElement) ((DeclaredType) typeMirror).asElement();
+
+        Element enclosing = typeElement.getEnclosingElement();
+
+        while (enclosing.getKind() != ElementKind.PACKAGE) {
+            enclosing = enclosing.getEnclosingElement();
+        }
+
+        return enclosing.toString();
+    }
+
+    private String extractResolvedSimpleName() {
+        String simpleName = typeMirror.toString().replace(packageName.concat("."), "");
+
+        return isNested ? simpleName.replace(".", "$") : simpleName;
+    }
+
+    private String extractResolvedQualifiedName() {
+        String fullName = typeMirror.toString();
+
+        if (isPrimitive || !isNested) {
+            return fullName;
+        }
+
+        return packageName.concat(".").concat(simpleResolvedName);
     }
 }

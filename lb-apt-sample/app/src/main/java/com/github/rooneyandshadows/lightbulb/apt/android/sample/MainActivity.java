@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState == null) {
-            LightbulbService.route().toCommonRoot(0, UUID.randomUUID()).newRootScreen();
+            LightbulbService.route().toCommonHome(0, UUID.randomUUID()).newRootScreen();
         }
     }
 }

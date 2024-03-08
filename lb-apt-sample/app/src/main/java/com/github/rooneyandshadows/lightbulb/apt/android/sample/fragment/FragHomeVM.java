@@ -3,7 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.android.sample.fragment;
 import androidx.lifecycle.ViewModel;
 
 
-public class FragRootVM extends ViewModel {
+public class FragHomeVM extends ViewModel {
     private int identifier;
 
     public int getIdentifier() {

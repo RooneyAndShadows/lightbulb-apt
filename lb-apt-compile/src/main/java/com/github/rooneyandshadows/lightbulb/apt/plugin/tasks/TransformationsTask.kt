@@ -62,6 +62,10 @@ abstract class TransformationsTask @Inject constructor(
 
     @TaskAction
     fun taskAction() {
+        getTransformationsClasspath().asFileTree.forEachIndexed { index, file ->
+            println("%d: %s".format(index,file.path))
+        }
+
         val baseDir = project.buildDir.path
         val lightbulbDir = baseDir.appendDirectory("intermediates", "lightbulb")
 

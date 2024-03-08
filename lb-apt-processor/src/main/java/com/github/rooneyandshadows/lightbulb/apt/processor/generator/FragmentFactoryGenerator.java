@@ -52,7 +52,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
 
         generateFragmentNewInstanceMethods(fragmentMetadata, methods);
 
-        TypeSpec initializerClass = TypeSpec.classBuilder(fragmentMetadata.getClassSimpleName())
+        TypeSpec initializerClass = TypeSpec.classBuilder(fragmentMetadata.getSimpleName())
                 .addModifiers(FINAL, PUBLIC)
                 .addMethods(methods)
                 .build();
@@ -62,7 +62,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     }
 
     private void generateFragmentNewInstanceMethods(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
-        TypeInformation fragmentType = new TypeInformation(fragmentMetadata.getElement().asType());
+        TypeInformation fragmentType = new TypeInformation(fragmentMetadata.getElement());
 
         if (!fragmentType.canBeInstantiated()) {
             return;
