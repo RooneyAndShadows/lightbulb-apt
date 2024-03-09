@@ -12,32 +12,33 @@ public final class FragmentMetadata extends ClassMetadata {
     private final String layoutName;
     private final String screenName;
     private final String screenGroupName;
+    private final ViewModel viewModel;
+    private final ViewBinding viewBinding;
     private final List<ScreenParameter> screenParameters;
     private final List<StatePersisted> persistedValues;
     private final List<BindView> bindViews;
-    private final List<ViewModel> viewModels;
-    private final List<ViewBinding> viewBindings;
 
     public FragmentMetadata(
             TypeElement element,
             String layoutName,
             String screenName,
             String screenGroupName,
+            ViewModel viewModels,
+            ViewBinding viewBinding,
             List<ScreenParameter> screenParameters,
             List<StatePersisted> persistedValues,
-            List<BindView> bindViews,
-            List<ViewModel> viewModels,
-            List<ViewBinding> viewBindings
+            List<BindView> bindViews
     ) {
         super(element);
         this.layoutName = layoutName;
         this.screenName = screenName;
         this.screenGroupName = screenGroupName;
+        this.viewModel = viewModels;
+        this.viewBinding = viewBinding;
         this.screenParameters = screenParameters;
         this.persistedValues = persistedValues;
         this.bindViews = bindViews;
-        this.viewModels = viewModels;
-        this.viewBindings = viewBindings;
+
     }
 
     public boolean isScreen() {
@@ -64,12 +65,12 @@ public final class FragmentMetadata extends ClassMetadata {
         return bindViews;
     }
 
-    public List<ViewModel> getViewModels() {
-        return viewModels;
+    public ViewModel getViewModel() {
+        return viewModel;
     }
 
-    public List<ViewBinding> getViewBindings() {
-        return viewBindings;
+    public ViewBinding getViewBinding() {
+        return viewBinding;
     }
 
     public boolean hasBindViews() {
@@ -88,12 +89,12 @@ public final class FragmentMetadata extends ClassMetadata {
         return screenParameters.stream().anyMatch(ScreenParameter::isOptional);
     }
 
-    public boolean hasViewBindings() {
-        return !viewBindings.isEmpty();
+    public boolean hasViewBinding() {
+        return viewBinding != null;
     }
 
-    public boolean hasViewModels() {
-        return !viewModels.isEmpty();
+    public boolean hasViewModel() {
+        return viewModel != null;
     }
 
     public List<ScreenParameter> getScreenParameters(boolean includeOptional) {

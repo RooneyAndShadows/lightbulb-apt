@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
@@ -42,12 +42,12 @@ public final class ParcelableMetadata extends ClassMetadata {
     }
 
     private boolean checkSuperClassForParcelConstructor() {
-        TypeInformation superClassTypeInfo = getTypeInformation().getSuperClassType();
+        TypeDefinition superClassTypeInfo = getTypeInformation().getSuperClassType();
         return superClassTypeInfo != null && superClassTypeInfo.hasConstructorWithParameters(ElementUtils::isAccessModifierAtLeastProtected, PARCEL.getCannonicalName());
     }
 
     private boolean checkForParcelConstructor() {
-        TypeInformation typeInfo = getTypeInformation();
+        TypeDefinition typeInfo = getTypeInformation();
         return typeInfo != null && typeInfo.hasConstructorWithParameters(PARCEL.getCannonicalName());
     }
 

@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
-import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
@@ -19,7 +19,7 @@ public class ParcelableCodeGenerator {
     }
 
     public CodeBlock generateWriteStatement(DeclaredValueHolder valueHolder, String bundleVariableName) {
-        TypeInformation type = valueHolder.getTypeInformation();
+        TypeDefinition type = valueHolder.getTypeInformation();
 
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
 
@@ -57,7 +57,7 @@ public class ParcelableCodeGenerator {
     }
 
     public CodeBlock generateReadStatement(DeclaredValueHolder valueHolder, String bundleVariableName) {
-        TypeInformation type = valueHolder.getTypeInformation();
+        TypeDefinition type = valueHolder.getTypeInformation();
 
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
 
@@ -448,8 +448,8 @@ public class ParcelableCodeGenerator {
     }
 
     private void readSparseArray(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeInformation type = valueHolder.getTypeInformation();
-        List<TypeInformation> typeArgs = type.getParametrizedTypes();
+        TypeDefinition type = valueHolder.getTypeInformation();
+        List<TypeDefinition> typeArgs = type.getParametrizedTypes();
         TypeName typeName = TypeName.get(type.getTypeMirror());
         TypeName valTypeName = TypeName.get(typeArgs.get(0).getTypeMirror());
         String variableName = valueHolder.getName();
@@ -481,8 +481,8 @@ public class ParcelableCodeGenerator {
     }
 
     private void readList(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeInformation type = valueHolder.getTypeInformation();
-        List<TypeInformation> typeArgs = type.getParametrizedTypes();
+        TypeDefinition type = valueHolder.getTypeInformation();
+        List<TypeDefinition> typeArgs = type.getParametrizedTypes();
         TypeName typeName = TypeName.get(type.getTypeMirror());
         TypeName valTypeName = TypeName.get(typeArgs.get(0).getTypeMirror());
         String variableName = valueHolder.getName();
@@ -515,8 +515,8 @@ public class ParcelableCodeGenerator {
     }
 
     private void readMap(CodeBlock.Builder cbBuilder, DeclaredValueHolder valueHolder, String parcelVariableName) {
-        TypeInformation type = valueHolder.getTypeInformation();
-        List<TypeInformation> typeArgs = type.getParametrizedTypes();
+        TypeDefinition type = valueHolder.getTypeInformation();
+        List<TypeDefinition> typeArgs = type.getParametrizedTypes();
         TypeName typeName = TypeName.get(type.getTypeMirror());
         TypeName keyTypeName = TypeName.get(typeArgs.get(0).getTypeMirror());
         TypeName valTypeName = TypeName.get(typeArgs.get(1).getTypeMirror());

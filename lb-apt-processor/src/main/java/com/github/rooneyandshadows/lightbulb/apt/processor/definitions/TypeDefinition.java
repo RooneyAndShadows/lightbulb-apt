@@ -1,4 +1,4 @@
-package com.github.rooneyandshadows.lightbulb.apt.processor;
+package com.github.rooneyandshadows.lightbulb.apt.processor.definitions;
 
 import com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions;
 import com.squareup.javapoet.ClassName;
@@ -19,24 +19,7 @@ import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 
 
 @SuppressWarnings({"DuplicatedCode", "RedundantIfStatement", "unused", "FieldCanBeLocal"})
-public final class TypeInformation {
-    private static final String stringType = String.class.getCanonicalName();
-    private static final String intType = Integer.class.getCanonicalName();
-    private static final String intPrimType = int.class.getCanonicalName();
-    private static final String booleanType = Boolean.class.getCanonicalName();
-    private static final String booleanPrimType = boolean.class.getCanonicalName();
-    private static final String uuidType = java.util.UUID.class.getCanonicalName();
-    private static final String floatType = Float.class.getCanonicalName();
-    private static final String floatPrimType = float.class.getCanonicalName();
-    private static final String longType = Long.class.getCanonicalName();
-    private static final String longPrimType = long.class.getCanonicalName();
-    private static final String doubleType = Double.class.getCanonicalName();
-    private static final String doublePrimType = double.class.getCanonicalName();
-    private static final String dateType = Date.class.getCanonicalName();
-    private static final String offsetDateType = OffsetDateTime.class.getCanonicalName();
-    private static final String listType = List.class.getCanonicalName();
-    private static final String mapType = Map.class.getCanonicalName();
-    private final Element element;
+public final class TypeDefinition {
     private final TypeMirror typeMirror;
     private final boolean isPrimitive;
     private final boolean isNested;
@@ -44,9 +27,8 @@ public final class TypeInformation {
     private final String simpleResolvedName;
     private final String qualifiedResolvedName;
 
-    public TypeInformation(Element typeElement) {
-        this.element = typeElement;
-        this.typeMirror = typeElement.asType();
+    public TypeDefinition(TypeMirror typeMirror) {
+        this.typeMirror = typeMirror;
         this.isPrimitive = !(typeMirror instanceof DeclaredType);
         this.isNested = !isPrimitive && ((TypeElement) ((DeclaredType) typeMirror).asElement()).getNestingKind().isNested();
         this.packageName = extractPackageName();
@@ -55,7 +37,7 @@ public final class TypeInformation {
     }
 
     @Nullable
-    public TypeInformation getSuperClassType() {
+    public TypeDefinition getSuperClassType() {
         if (isPrimitive) {
             return null;
         }
@@ -69,7 +51,7 @@ public final class TypeInformation {
 
         TypeElement superclassTypeElement = (TypeElement) ((DeclaredType) superClassTypeMirror).asElement();
 
-        return new TypeInformation(superclassTypeElement);
+        return new TypeDefinition(superclassTypeElement.asType());
     }
 
     public boolean hasConstructorWithParameters(String... paramTypes) {
@@ -89,10 +71,13 @@ public final class TypeInformation {
                     if (element.getKind() != CONSTRUCTOR) {
                         return false;
                     }
+
                     ExecutableElement constructor = (ExecutableElement) element;
+
                     if (constructor.getParameters().size() != paramTypes.length) {
                         return false;
                     }
+
                     for (int pos = 0; pos < constructor.getParameters().size(); pos++) {
                         VariableElement param = constructor.getParameters().get(pos);
                         String paramType = param.asType().toString();
@@ -114,8 +99,8 @@ public final class TypeInformation {
         }
     }
 
-    public List<TypeInformation> getParametrizedTypes() {
-        List<TypeInformation> result = new ArrayList<>();
+    public List<TypeDefinition> getParametrizedTypes() {
+        List<TypeDefinition> result = new ArrayList<>();
 
         if (!isParametrized()) {
             return result;
@@ -125,7 +110,7 @@ public final class TypeInformation {
 
         type.getTypeArguments().forEach(typeArg -> {
             TypeElement typeArgElement = (TypeElement) ((DeclaredType) typeArg).asElement();
-            result.add(new TypeInformation(typeArgElement));
+            result.add(new TypeDefinition(typeArgElement.asType()));
         });
 
         return result;
@@ -183,47 +168,47 @@ public final class TypeInformation {
     }
 
     public boolean isString() {
-        return is(stringType);
+        return is(String.class.getCanonicalName());
     }
 
     public boolean isUUID() {
-        return is(uuidType);
+        return is(UUID.class.getCanonicalName());
     }
 
     public boolean isDate() {
-        return is(dateType);
+        return is(Date.class.getCanonicalName());
     }
 
     public boolean isOffsetDate() {
-        return is(offsetDateType);
+        return is(OffsetDateTime.class.getCanonicalName());
     }
 
     public boolean isInt() {
-        return isOneOf(intType, intPrimType);
+        return isOneOf(Integer.class.getCanonicalName(), int.class.getCanonicalName());
     }
 
     public boolean isBoolean() {
-        return isOneOf(booleanType, booleanPrimType);
+        return isOneOf(Boolean.class.getCanonicalName(), boolean.class.getCanonicalName());
     }
 
     public boolean isFloat() {
-        return isOneOf(floatType, floatPrimType);
+        return isOneOf(Float.class.getCanonicalName(), float.class.getCanonicalName());
     }
 
     public boolean isLong() {
-        return isOneOf(longType, longPrimType);
+        return isOneOf(Long.class.getCanonicalName(), long.class.getCanonicalName());
     }
 
     public boolean isDouble() {
-        return isOneOf(doubleType, doublePrimType);
+        return isOneOf(Double.class.getCanonicalName(), double.class.getCanonicalName());
     }
 
     public boolean isList() {
-        return is(listType);
+        return is(List.class.getCanonicalName());
     }
 
     public boolean isMap() {
-        return is(mapType);
+        return is(Map.class.getCanonicalName());
     }
 
     public boolean is(@NotNull ClassDefinitions.ClassInfo classInfo) {

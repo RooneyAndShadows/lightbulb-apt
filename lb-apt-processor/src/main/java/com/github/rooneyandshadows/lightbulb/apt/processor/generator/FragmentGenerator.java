@@ -69,8 +69,12 @@ public class FragmentGenerator extends CodeGenerator {
         targets.addAll(fragmentMetadata.getScreenParameters());
         targets.addAll(fragmentMetadata.getBindViews());
         targets.addAll(fragmentMetadata.getPersistedValues());
-        targets.add(fragmentMetadata.getViewBindings().get(0));
-        targets.add(fragmentMetadata.getViewModels().get(0));
+        if (fragmentMetadata.hasViewBinding()) {
+            targets.add(fragmentMetadata.getViewBinding());
+        }
+        if (fragmentMetadata.hasViewModel()) {
+            targets.add(fragmentMetadata.getViewModel());
+        }
 
         copyFieldsForSupertypeTransformation(targets, fields, methods);
     }
@@ -78,7 +82,7 @@ public class FragmentGenerator extends CodeGenerator {
     private void generateOnCreateMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
         boolean hasParameters = fragmentMetadata.hasParameters();
         boolean hasPersistedVars = fragmentMetadata.hasPersistedValues();
-        boolean hasViewModels = fragmentMetadata.hasViewModels();
+        boolean hasViewModels = fragmentMetadata.hasViewModel();
 
         if (!hasParameters && !hasPersistedVars && !hasViewModels) {
             return;
@@ -92,7 +96,7 @@ public class FragmentGenerator extends CodeGenerator {
                 .addStatement("super.onCreate(savedInstanceState)");
 
         if (hasViewModels) {
-            FragmentMetadata.ViewModel viewModel = fragmentMetadata.getViewModels().get(0);
+            FragmentMetadata.ViewModel viewModel = fragmentMetadata.getViewModel();
             Field field = Field.from(viewModel);
             TypeName viewModelTypeName = classNames.getTypeName(viewModel);
 
@@ -120,7 +124,7 @@ public class FragmentGenerator extends CodeGenerator {
     private void generateOnCreateViewMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
         String layoutName = fragmentMetadata.getLayoutName();
 
-        if ((layoutName == null || layoutName.isBlank()) && !fragmentMetadata.hasViewBindings()) {
+        if ((layoutName == null || layoutName.isBlank()) && !fragmentMetadata.hasViewBinding()) {
             return;
         }
 
@@ -133,8 +137,8 @@ public class FragmentGenerator extends CodeGenerator {
                 .returns(ANDROID_VIEW)
                 .addStatement("super.onCreateView(inflater,container,savedInstanceState)");
 
-        if (fragmentMetadata.hasViewBindings()) {
-            FragmentMetadata.ViewBinding viewBinding = fragmentMetadata.getViewBindings().get(0);
+        if (fragmentMetadata.hasViewBinding()) {
+            FragmentMetadata.ViewBinding viewBinding = fragmentMetadata.getViewBinding();
             Field field = Field.from(viewBinding);
 
             builder.addStatement(field.getValueSetStatement("$T.inflate(inflater,$T.layout.$L,container,false)"), ANDROID_DATA_BINDING_UTIL, ANDROID_R, viewBinding.getLayoutName())

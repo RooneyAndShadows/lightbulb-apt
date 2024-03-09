@@ -7,7 +7,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 
-public abstract class FieldMetadata extends BaseMetadata<VariableElement> {
+public abstract class FieldMetadata extends TypedMetadata<VariableElement> {
     private final String setterName;
     private final String getterName;
     private final Modifier accessModifier;

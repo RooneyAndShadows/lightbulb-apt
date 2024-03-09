@@ -1,12 +1,12 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 
 public abstract class DeclaredValueHolder {
     protected final String name;
-    protected final TypeInformation typeInformation;
+    protected final TypeDefinition typeInformation;
 
-    public DeclaredValueHolder(String name, TypeInformation typeInformation) {
+    public DeclaredValueHolder(String name, TypeDefinition typeInformation) {
         this.name = name;
         this.typeInformation = typeInformation;
     }
@@ -19,7 +19,7 @@ public abstract class DeclaredValueHolder {
         return name;
     }
 
-    public final TypeInformation getTypeInformation() {
+    public final TypeDefinition getTypeInformation() {
         return typeInformation;
     }
 }

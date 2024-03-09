@@ -2,13 +2,13 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.
 
 import javax.lang.model.element.TypeElement;
 
-public abstract class ClassMetadata extends BaseMetadata<TypeElement> {
+public abstract class ClassMetadata extends TypedMetadata<TypeElement> {
     public ClassMetadata(TypeElement element) {
         super(element);
     }
 
     public final String getSimpleName() {
-        return typeInformation.getSimpleName();
+        return name;
     }
 
     public final String getQualifiedName() {

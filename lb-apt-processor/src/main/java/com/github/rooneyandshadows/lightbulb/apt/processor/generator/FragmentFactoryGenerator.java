@@ -1,12 +1,11 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
+import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Variable;
-import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
-import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Filer;
@@ -14,7 +13,7 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.FRAGMENT_FACTORY_CLASS_NAME;
 import static javax.lang.model.element.Modifier.*;
 
 @SuppressWarnings("SameParameterValue")
@@ -62,9 +61,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     }
 
     private void generateFragmentNewInstanceMethods(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
-        TypeInformation fragmentType = new TypeInformation(fragmentMetadata.getElement());
-
-        if (!fragmentType.canBeInstantiated()) {
+        if (!fragmentMetadata.getTypeInformation().canBeInstantiated()) {
             return;
         }
 

@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
-import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.TypeName;
 
@@ -19,7 +19,7 @@ public class BundleCodeGenerator {
             DeclaredValueHolder valueHolder,
             String bundleVariableName
     ) {
-        TypeInformation type = valueHolder.getTypeInformation();
+        TypeDefinition type = valueHolder.getTypeInformation();
         String key = String.format("KEY_%s", valueHolder.getName());
         boolean checkForNull = !type.isPrimitive();
 
@@ -66,7 +66,7 @@ public class BundleCodeGenerator {
             boolean requireExistence,
             boolean requireNotNull
     ) {
-        TypeInformation type = valueHolder.getTypeInformation();
+        TypeDefinition type = valueHolder.getTypeInformation();
         String key = String.format("KEY_%s", valueHolder.getName());
         String tmpVarName = valueHolder.getName().concat("FromBundle");
 
@@ -131,7 +131,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
@@ -150,7 +150,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
@@ -174,7 +174,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
@@ -198,7 +198,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
@@ -222,7 +222,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
@@ -246,7 +246,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
@@ -270,7 +270,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 
@@ -294,7 +294,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
         String dateStringTmpVarName = key.concat("DateString");
@@ -324,7 +324,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
         String dateStringTmpVarName = key.concat("OffsetDateString");
@@ -354,7 +354,7 @@ public class BundleCodeGenerator {
             String key,
             String tmpVarName
     ) {
-        TypeInformation typeInformation = valueHolder.getTypeInformation();
+        TypeDefinition typeInformation = valueHolder.getTypeInformation();
         TypeName typeName = TypeName.get(typeInformation.getTypeMirror());
         String setStatement = valueHolder.getValueSetStatement(tmpVarName);
 

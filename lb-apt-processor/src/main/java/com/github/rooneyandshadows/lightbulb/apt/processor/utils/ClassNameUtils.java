@@ -1,9 +1,9 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.BaseMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.TypedMetadata;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
@@ -87,12 +87,12 @@ public class ClassNameUtils {
     }
 
     @NotNull
-    public TypeName getTypeName(TypeInformation typeInformation) {
+    public TypeName getTypeName(TypeDefinition typeInformation) {
         return TypeName.get(typeInformation.getTypeMirror());
     }
 
     @NotNull
-    public TypeName getTypeName(BaseMetadata<?> metadata) {
+    public TypeName getTypeName(TypedMetadata<?> metadata) {
         return TypeName.get(metadata.getTypeMirror());
     }
 

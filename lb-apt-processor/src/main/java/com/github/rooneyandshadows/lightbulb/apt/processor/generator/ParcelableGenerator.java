@@ -1,7 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ParcelableMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
@@ -47,7 +47,7 @@ public class ParcelableGenerator extends CodeGenerator {
                     .addFields(fields)
                     .addMethods(methods);
 
-            TypeInformation superTypeInformation = parcelableMetadata.getTypeInformation().getSuperClassType();
+            TypeDefinition superTypeInformation = parcelableMetadata.getTypeInformation().getSuperClassType();
             if (superTypeInformation != null) {
                 if (!superTypeInformation.is(ANDROID_PARCELABLE)) {
                     parcelableClassBuilder.addSuperinterface(ANDROID_PARCELABLE);

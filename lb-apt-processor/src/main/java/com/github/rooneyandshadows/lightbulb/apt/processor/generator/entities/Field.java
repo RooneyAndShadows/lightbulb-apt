@@ -2,7 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.base.DeclaredValueHolder;
-import com.github.rooneyandshadows.lightbulb.apt.processor.TypeInformation;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,7 +12,7 @@ public class Field extends DeclaredValueHolder {
     private final String setter;
     private final String getter;
 
-    public Field(String name, TypeInformation typeInformation, @Nullable String setterName, @Nullable String getterName) {
+    public Field(String name, TypeDefinition typeInformation, @Nullable String setterName, @Nullable String getterName) {
         super(name, typeInformation);
         this.setter = setterName;
         this.getter = getterName;

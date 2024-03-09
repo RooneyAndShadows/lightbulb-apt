@@ -36,11 +36,11 @@ public class FragmentAnnotationReader extends AnnotationReader {
         String layoutName = null;
         String screenName = null;
         String screenGroupName = null;
+        ViewBinding viewBinding = null;
+        ViewModel viewModel = null;
         List<ScreenParameter> screenParameters = new ArrayList<>();
         List<StatePersisted> persistedValues = new ArrayList<>();
         List<BindView> bindViews = new ArrayList<>();
-        List<ViewBinding> viewBindings = new ArrayList<>();
-        List<ViewModel> viewModels = new ArrayList<>();
 
         for (AnnotatedElement annotatedElem : annotatedElements) {
             Annotation annotation = annotatedElem.getAnnotation();
@@ -58,12 +58,10 @@ public class FragmentAnnotationReader extends AnnotationReader {
             } else if (annotation instanceof com.github.rooneyandshadows.lightbulb.apt.annotations.BindView bindView) {
                 BindView bView = new BindView((VariableElement) annotatedElem.getElement(), bindView.name());
                 bindViews.add(bView);
-            } else if (annotation instanceof FragmentViewModel viewModel) {
-                ViewModel vModel = new ViewModel((VariableElement) annotatedElem.getElement());
-                viewModels.add(vModel);
-            } else if (annotation instanceof FragmentViewBinding viewBinding) {
-                ViewBinding vBinding = new ViewBinding((VariableElement) annotatedElem.getElement(), viewBinding.layoutName());
-                viewBindings.add(vBinding);
+            } else if (annotation instanceof FragmentViewModel) {
+                viewModel = new ViewModel((VariableElement) annotatedElem.getElement());
+            } else if (annotation instanceof FragmentViewBinding viewBindingAnnotation) {
+                viewBinding = new ViewBinding((VariableElement) annotatedElem.getElement(), viewBindingAnnotation.layoutName());
             }
         }
 
@@ -72,11 +70,11 @@ public class FragmentAnnotationReader extends AnnotationReader {
                 layoutName,
                 screenName,
                 screenGroupName,
+                viewModel,
+                viewBinding,
                 screenParameters,
                 persistedValues,
-                bindViews,
-                viewModels,
-                viewBindings
+                bindViews
         );
 
 

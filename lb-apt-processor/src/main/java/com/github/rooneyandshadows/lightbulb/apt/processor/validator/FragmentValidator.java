@@ -57,17 +57,21 @@ public class FragmentValidator extends AnnotationResultValidator {
     }
 
     private boolean validateViewDataBinding(FragmentMetadata fragmentMetadata, ErrorString errorMessage) {
-        if (!fragmentMetadata.getViewBindings().get(0).getTypeInformation().is(VIEW_DATA_BINDING)) {
-            errorMessage.append("\n\tField \"%s\" is annotated with @%s and it's type must be subtype of %s.", fragmentMetadata.getViewBindings().get(0).getName(), FragmentViewBinding.class.getSimpleName(), VIEW_DATA_BINDING);
-            return false;
+        if (fragmentMetadata.hasViewBinding()) {
+            if (!fragmentMetadata.getViewBinding().getTypeInformation().is(VIEW_DATA_BINDING)) {
+                errorMessage.append("\n\tField \"%s\" is annotated with @%s and it's type must be subtype of %s.", fragmentMetadata.getViewBinding().getName(), FragmentViewBinding.class.getSimpleName(), VIEW_DATA_BINDING);
+                return false;
+            }
         }
         return true;
     }
 
     private boolean validateViewModel(FragmentMetadata fragmentMetadata, ErrorString errorMessage) {
-        if (!fragmentMetadata.getViewModels().get(0).getTypeInformation().is(VIEW_MODEL)) {
-            errorMessage.append("\n\tField \"%s\" is annotated with @%s and it's type must be subtype of %s.", fragmentMetadata.getViewBindings().get(0).getName(), FragmentViewModel.class.getSimpleName(), VIEW_MODEL);
-            return false;
+        if (fragmentMetadata.hasViewModel()) {
+            if (!fragmentMetadata.getViewModel().getTypeInformation().is(VIEW_MODEL)) {
+                errorMessage.append("\n\tField \"%s\" is annotated with @%s and it's type must be subtype of %s.", fragmentMetadata.getViewBinding().getName(), FragmentViewModel.class.getSimpleName(), VIEW_MODEL);
+                return false;
+            }
         }
         return true;
     }
