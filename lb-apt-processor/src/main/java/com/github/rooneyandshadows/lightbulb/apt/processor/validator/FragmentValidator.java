@@ -9,7 +9,6 @@ import javax.annotation.processing.Messager;
 import java.util.*;
 
 import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions.*;
-import static java.lang.String.format;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 public class FragmentValidator extends AnnotationResultValidator {

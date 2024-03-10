@@ -18,7 +18,6 @@ import java.util.List;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.ANDROID_APPLICATION;
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.ANDROID_CONTEXT;
 import static javax.lang.model.element.Modifier.*;
-import static javax.lang.model.element.Modifier.PUBLIC;
 
 @SuppressWarnings("DuplicatedCode")
 public class ServiceGenerator extends CodeGenerator {

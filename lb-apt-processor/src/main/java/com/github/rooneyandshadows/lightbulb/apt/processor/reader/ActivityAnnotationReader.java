@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbActivity;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ActivityMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ClassDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
@@ -28,18 +29,8 @@ public class ActivityAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        String fragmentContainerId = null;
-        String layoutName = null;
-
-        for (AnnotatedElement element : annotatedElements) {
-            Annotation annotation = element.getAnnotation();
-            if (annotation instanceof LightbulbActivity lightbulbActivity) {
-                fragmentContainerId = lightbulbActivity.fragmentContainerId();
-                layoutName = lightbulbActivity.layoutName();
-            }
-        }
-
-        ActivityMetadata metadata = new ActivityMetadata(target, fragmentContainerId,layoutName);
+        ClassDefinition activityClassDefinition = new ClassDefinition(target);
+        ActivityMetadata metadata = new ActivityMetadata(activityClassDefinition, annotatedElements);
 
         activityMetadataList.add(metadata);
     }

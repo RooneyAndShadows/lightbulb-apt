@@ -1,11 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor;
 
-import com.github.rooneyandshadows.lightbulb.apt.annotations.BindView;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbActivity;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbFragment;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentParameter;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentScreen;
-import com.github.rooneyandshadows.lightbulb.apt.annotations.FragmentStatePersisted;
 import com.google.auto.service.AutoService;
 
 import javax.annotation.processing.*;

@@ -92,7 +92,7 @@ public class ClassNameUtils {
     }
 
     @NotNull
-    public TypeName getTypeName(TypedMetadata<?> metadata) {
+    public TypeName getTypeName(TypedMetadata metadata) {
         return TypeName.get(metadata.getTypeMirror());
     }
 

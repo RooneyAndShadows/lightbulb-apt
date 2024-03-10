@@ -6,7 +6,6 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegi
 import com.github.rooneyandshadows.lightbulb.apt.processor.validator.base.AnnotationResultValidator;
 
 import javax.annotation.processing.Messager;
-import java.util.Locale;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 

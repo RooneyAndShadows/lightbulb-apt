@@ -6,6 +6,7 @@ import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
@@ -193,7 +194,7 @@ public class ElementUtils {
                 .anyMatch(modifier -> modifier == Modifier.FINAL);
     }
 
-    public static boolean hasAnnotation(Element element, Class<? extends Annotation> annotationTarget) {
+    public static boolean hasAnnotation(AnnotatedConstruct element, Class<? extends Annotation> annotationTarget) {
         return element.getAnnotation(annotationTarget) != null;
     }
 }

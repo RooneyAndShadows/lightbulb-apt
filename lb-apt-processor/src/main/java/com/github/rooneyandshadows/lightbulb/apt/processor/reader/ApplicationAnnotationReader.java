@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbApplication;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.ApplicationMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ClassDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
@@ -28,7 +29,8 @@ public class ApplicationAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        ApplicationMetadata metadata = new ApplicationMetadata(target);
+        ClassDefinition ApplicationClassDefinition = new ClassDefinition(target);
+        ApplicationMetadata metadata = new ApplicationMetadata(ApplicationClassDefinition, annotatedElements);
 
         applicationMetadataList.add(metadata);
     }

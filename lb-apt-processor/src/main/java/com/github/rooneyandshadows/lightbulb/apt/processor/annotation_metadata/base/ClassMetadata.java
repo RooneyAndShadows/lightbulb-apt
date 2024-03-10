@@ -1,34 +1,33 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ClassDefinition;
-
-import javax.lang.model.element.TypeElement;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 
 public abstract class ClassMetadata extends TypedMetadata {
     protected final ClassDefinition classDefinition;
 
-    public ClassMetadata(TypeElement element) {
-        super(element);
-        this.classDefinition = new ClassDefinition(element);
+    public ClassMetadata(ClassDefinition classDefinition) {
+        super(classDefinition.getType());
+        this.classDefinition = classDefinition;
     }
 
-    public ClassMetadata(TypeElement element) {
-        super(element);
+    public final TypeDefinition getType() {
+        return definition;
     }
 
     public final String getSimpleName() {
-        return name;
+        return definition.getSimpleName();
     }
 
     public final String getQualifiedName() {
-        return typeDefinition.getQualifiedName();
+        return definition.getQualifiedName();
     }
 
     public final String getResolvedQualifiedName() {
-        return typeDefinition.getQualifiedResolvedName();
+        return definition.getQualifiedResolvedName();
     }
 
     public final String getResolvedSimpleName() {
-        return typeDefinition.getSimpleResolvedName();
+        return definition.getSimpleResolvedName();
     }
 }

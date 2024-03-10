@@ -3,8 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.reader;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.*;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.BindView;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ClassDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotationReader;
 
@@ -12,7 +11,6 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -33,50 +31,8 @@ public class FragmentAnnotationReader extends AnnotationReader {
 
     @Override
     protected void handleAnnotationsForClass(TypeElement target, List<AnnotatedElement> annotatedElements) {
-        String layoutName = null;
-        String screenName = null;
-        String screenGroupName = null;
-        ViewBinding viewBinding = null;
-        ViewModel viewModel = null;
-        List<ScreenParameter> screenParameters = new ArrayList<>();
-        List<StatePersisted> persistedValues = new ArrayList<>();
-        List<BindView> bindViews = new ArrayList<>();
-
-        for (AnnotatedElement annotatedElem : annotatedElements) {
-            Annotation annotation = annotatedElem.getAnnotation();
-            if (annotation instanceof LightbulbFragment lightbulbFragment) {
-                layoutName = lightbulbFragment.layoutName();
-            } else if (annotation instanceof FragmentScreen fragmentScreen) {
-                screenName = fragmentScreen.screenName();
-                screenGroupName = fragmentScreen.screenGroup();
-            } else if (annotation instanceof FragmentParameter fragmentParameter) {
-                ScreenParameter parameter = new ScreenParameter((VariableElement) annotatedElem.getElement(), fragmentParameter.optional());
-                screenParameters.add(parameter);
-            } else if (annotation instanceof FragmentStatePersisted fragmentStatePersisted) {
-                StatePersisted statePersisted = new StatePersisted((VariableElement) annotatedElem.getElement());
-                persistedValues.add(statePersisted);
-            } else if (annotation instanceof com.github.rooneyandshadows.lightbulb.apt.annotations.BindView bindView) {
-                BindView bView = new BindView((VariableElement) annotatedElem.getElement(), bindView.name());
-                bindViews.add(bView);
-            } else if (annotation instanceof FragmentViewModel) {
-                viewModel = new ViewModel((VariableElement) annotatedElem.getElement());
-            } else if (annotation instanceof FragmentViewBinding viewBindingAnnotation) {
-                viewBinding = new ViewBinding((VariableElement) annotatedElem.getElement(), viewBindingAnnotation.layoutName());
-            }
-        }
-
-        FragmentMetadata metadata = new FragmentMetadata(
-                target,
-                layoutName,
-                screenName,
-                screenGroupName,
-                viewModel,
-                viewBinding,
-                screenParameters,
-                persistedValues,
-                bindViews
-        );
-
+        ClassDefinition fragmentClassDefinition = new ClassDefinition(target);
+        FragmentMetadata metadata = new FragmentMetadata(fragmentClassDefinition, annotatedElements);
 
         fragmentsMetadata.add(metadata);
     }

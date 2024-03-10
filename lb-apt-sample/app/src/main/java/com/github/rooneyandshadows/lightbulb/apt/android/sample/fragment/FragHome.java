@@ -1,9 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.sample.fragment;
 
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.View;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;

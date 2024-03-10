@@ -1,17 +1,20 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata;
 
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbActivity;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ClassDefinition;
+import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 
-import javax.lang.model.element.TypeElement;
+import java.lang.annotation.Annotation;
+import java.util.List;
 
 public final class ActivityMetadata extends ClassMetadata {
-    private final String layoutName;
-    private final String fragmentContainerId;
+    private String layoutName;
+    private String fragmentContainerId;
 
-    public ActivityMetadata(TypeElement element, String fragmentContainerId,String layoutName) {
-        super(element);
-        this.fragmentContainerId = fragmentContainerId;
-        this.layoutName = layoutName;
+    public ActivityMetadata(ClassDefinition activityClassDefinition, List<AnnotatedElement> annotatedElements) {
+        super(activityClassDefinition);
+        extractValues(annotatedElements);
     }
 
     public String getFragmentContainerId() {
@@ -20,5 +23,15 @@ public final class ActivityMetadata extends ClassMetadata {
 
     public String getLayoutName() {
         return layoutName;
+    }
+
+    private void extractValues(List<AnnotatedElement> annotatedElements) {
+        for (AnnotatedElement element : annotatedElements) {
+            Annotation annotation = element.getAnnotation();
+            if (annotation instanceof LightbulbActivity lightbulbActivity) {
+                fragmentContainerId = lightbulbActivity.fragmentContainerId();
+                layoutName = lightbulbActivity.layoutName();
+            }
+        }
     }
 }

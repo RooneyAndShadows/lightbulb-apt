@@ -1,21 +1,15 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base;
 
-import javax.lang.model.element.Element;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.BaseDefinition;
 
-public abstract class BaseMetadata<T extends Element> {
-    protected final String name;
-    protected final T element;
+public abstract class BaseMetadata<T extends BaseDefinition<?>> {
+    protected final T definition;
 
-    public BaseMetadata(T element) {
-        this.name = element.getSimpleName().toString();
-        this.element = element;
+    public BaseMetadata(T definition) {
+        this.definition = definition;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public T getElement() {
-        return element;
+    public T getDefinition() {
+        return definition;
     }
 }

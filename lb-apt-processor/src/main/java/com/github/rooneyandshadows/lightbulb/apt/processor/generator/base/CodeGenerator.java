@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.List;
 
 import static javax.lang.model.element.Modifier.*;
-import static javax.lang.model.element.Modifier.ABSTRACT;
 
 @SuppressWarnings("SameParameterValue")
 public abstract class CodeGenerator {

@@ -1,22 +1,37 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata;
 
+import com.github.rooneyandshadows.lightbulb.apt.annotations.LightbulbStorage;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ClassDefinition;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.FieldDefinition;
+import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class StorageMetadata extends ClassMetadata {
-    private final String name;
-    private final String[] subKeys;
-    private final List<TargetField> targetFields;
+    private String name;
+    private String[] subKeys;
+    private final List<TargetField> targetFields = new ArrayList<>();
 
-    public StorageMetadata(TypeElement element, String name, String[] subKeys, List<TargetField> targetFields) {
-        super(element);
-        this.name = name;
-        this.subKeys = subKeys;
-        this.targetFields = targetFields;
+    public StorageMetadata(ClassDefinition storageClassDefinition, List<AnnotatedElement> annotatedElements) {
+        super(storageClassDefinition);
+        extractValues(annotatedElements);
+    }
+
+    private void extractValues(List<AnnotatedElement> annotatedElements) {
+        List<TargetField> targets = classDefinition.getFields().stream().map(TargetField::new).toList();
+        targetFields.addAll(targets);
+
+        for (AnnotatedElement element : annotatedElements) {
+            Annotation annotation = element.getAnnotation();
+            if (annotation instanceof LightbulbStorage lightbulbStorage) {
+                name = lightbulbStorage.name();
+                subKeys = lightbulbStorage.subKeys();
+            }
+        }
     }
 
     public String getName() {
@@ -32,8 +47,8 @@ public final class StorageMetadata extends ClassMetadata {
     }
 
     public static final class TargetField extends FieldMetadata {
-        public TargetField(VariableElement element) {
-            super(element);
+        public TargetField(FieldDefinition fieldDefinition) {
+            super(fieldDefinition);
         }
     }
 }

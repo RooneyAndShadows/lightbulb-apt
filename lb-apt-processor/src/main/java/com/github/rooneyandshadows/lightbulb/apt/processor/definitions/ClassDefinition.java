@@ -2,11 +2,8 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.definitions;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.BaseDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
-import org.jetbrains.annotations.Nullable;
 
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import java.util.List;
 
 
