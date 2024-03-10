@@ -34,7 +34,7 @@ public class ParcelableValidator extends AnnotationResultValidator {
         boolean isValid = true;
 
         for (ParcelableMetadata target : parcelableDescriptions) {
-            ErrorString errorMessage = new ErrorString("Problems found in class %s", target.getTypeInformation().getTypeMirror());
+            ErrorString errorMessage = new ErrorString("Problems found in class %s", target.getTypeDefinition().getTypeMirror());
 
             boolean isMetadataValid = validateSuperClass(target, errorMessage);
              isMetadataValid &= validateParcelIgnoredFields(target, errorMessage);
@@ -50,7 +50,7 @@ public class ParcelableValidator extends AnnotationResultValidator {
     }
 
     private boolean validateSuperClass(ParcelableMetadata target, ErrorString errorString) {
-        if (!target.getTypeInformation().is(PARCELABLE)) {
+        if (!target.getTypeDefinition().is(PARCELABLE)) {
             errorString.append("\n\tClasses annotated with @%s must be subclasses of %s.", LightbulbParcelable.class.getSimpleName(), PARCELABLE);
             return false;
         }
@@ -68,7 +68,7 @@ public class ParcelableValidator extends AnnotationResultValidator {
         for (IgnoredField field : ignoredFinalFields) {
             String errorField = field.getName();
             String accessModifier = field.getAccessModifier().toString();
-            String type = field.getTypeInformation().getTypeMirror().toString();
+            String type = field.getTypeDefinition().getTypeMirror().toString();
 
             errorMessage.append("\n\t\t %s final %s %s;", accessModifier, type, errorField);
         }

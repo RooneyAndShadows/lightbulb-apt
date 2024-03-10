@@ -61,7 +61,7 @@ public class FragmentFactoryGenerator extends CodeGenerator {
     }
 
     private void generateFragmentNewInstanceMethods(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
-        if (!fragmentMetadata.getTypeInformation().canBeInstantiated()) {
+        if (!fragmentMetadata.getTypeDefinition().canBeInstantiated()) {
             return;
         }
 

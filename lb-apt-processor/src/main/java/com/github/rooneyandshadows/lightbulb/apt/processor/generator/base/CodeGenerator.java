@@ -109,7 +109,7 @@ public abstract class CodeGenerator {
     }
 
     protected ParameterSpec generateFragmentScreenParameterSpec(ScreenParameter parameter) {
-        TypeName fieldTypeName = TypeName.get(parameter.getTypeInformation().getTypeMirror());
+        TypeName fieldTypeName = TypeName.get(parameter.getTypeDefinition().getTypeMirror());
         String parameterName = parameter.getName();
         boolean isNullable = parameter.isNullable() || parameter.isOptional();
 

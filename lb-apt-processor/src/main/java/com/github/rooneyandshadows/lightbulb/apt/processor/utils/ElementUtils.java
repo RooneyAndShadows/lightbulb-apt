@@ -106,6 +106,20 @@ public class ElementUtils {
         return exists ? getterName : null;
     }
 
+    public static List<ExecutableElement> getMethods(TypeElement typeElement) {
+        return typeElement.getEnclosedElements().stream()
+                .filter(target -> target.getKind() != METHOD)
+                .map(element -> (ExecutableElement) element)
+                .toList();
+    }
+
+    public static List<VariableElement> getFields(TypeElement typeElement) {
+        return typeElement.getEnclosedElements().stream()
+                .filter(target -> target.getKind() != FIELD)
+                .map(element -> (VariableElement) element)
+                .toList();
+    }
+
     private static boolean methodExists(Element classElement, String methodName) {
         if (classElement.getKind() != CLASS) return false;
         Pattern pattern = compile("^".concat(methodName).concat("(\\$.*)?$"), CASE_INSENSITIVE);
@@ -167,6 +181,10 @@ public class ElementUtils {
         }
 
         return getAccessModifier(method);
+    }
+
+    public static boolean isNullable(Element element) {
+        return element.getAnnotation(Nullable.class) != null || element.getAnnotation(NotNull.class) == null;
     }
 
     public static boolean isFinal(Element element) {

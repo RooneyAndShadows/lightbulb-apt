@@ -30,7 +30,7 @@ public class ApplicationValidator extends AnnotationResultValidator {
         boolean isValid = true;
 
         for (ApplicationMetadata target : targets) {
-            ErrorString errorMessage = new ErrorString("Problems found in class %s", target.getTypeInformation().getTypeMirror());
+            ErrorString errorMessage = new ErrorString("Problems found in class %s", target.getTypeDefinition().getTypeMirror());
 
             boolean isMetadataValid = validateSuperClass(target, errorMessage);
 
@@ -45,7 +45,7 @@ public class ApplicationValidator extends AnnotationResultValidator {
     }
 
     private boolean validateSuperClass(ApplicationMetadata target, ErrorString errorString) {
-        if (!target.getTypeInformation().is(APPLICATION)) {
+        if (!target.getTypeDefinition().is(APPLICATION)) {
             errorString.append("Classes annotated with @%s must be subclasses of %s.", LightbulbApplication.class.getSimpleName(), APPLICATION);
             return false;
         }

@@ -42,12 +42,12 @@ public final class ParcelableMetadata extends ClassMetadata {
     }
 
     private boolean checkSuperClassForParcelConstructor() {
-        TypeDefinition superClassTypeInfo = getTypeInformation().getSuperClassType();
+        TypeDefinition superClassTypeInfo = getTypeDefinition().getSuperClassType();
         return superClassTypeInfo != null && superClassTypeInfo.hasConstructorWithParameters(ElementUtils::isAccessModifierAtLeastProtected, PARCEL.getCannonicalName());
     }
 
     private boolean checkForParcelConstructor() {
-        TypeDefinition typeInfo = getTypeInformation();
+        TypeDefinition typeInfo = getTypeDefinition();
         return typeInfo != null && typeInfo.hasConstructorWithParameters(PARCEL.getCannonicalName());
     }
 

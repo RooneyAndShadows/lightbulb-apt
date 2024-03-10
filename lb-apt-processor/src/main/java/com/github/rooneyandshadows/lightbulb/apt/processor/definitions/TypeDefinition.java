@@ -1,6 +1,7 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.definitions;
 
 import com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.BaseDefinition;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +20,7 @@ import static javax.lang.model.element.ElementKind.CONSTRUCTOR;
 
 
 @SuppressWarnings({"DuplicatedCode", "RedundantIfStatement", "unused", "FieldCanBeLocal"})
-public final class TypeDefinition {
+public final class TypeDefinition extends BaseDefinition<TypeMirror> {
     private final TypeMirror typeMirror;
     private final boolean isPrimitive;
     private final boolean isNested;
@@ -28,6 +29,7 @@ public final class TypeDefinition {
     private final String qualifiedResolvedName;
 
     public TypeDefinition(TypeMirror typeMirror) {
+        super(typeMirror);
         this.typeMirror = typeMirror;
         this.isPrimitive = !(typeMirror instanceof DeclaredType);
         this.isNested = !isPrimitive && ((TypeElement) ((DeclaredType) typeMirror).asElement()).getNestingKind().isNested();

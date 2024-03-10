@@ -47,7 +47,7 @@ public class ParcelableGenerator extends CodeGenerator {
                     .addFields(fields)
                     .addMethods(methods);
 
-            TypeDefinition superTypeInformation = parcelableMetadata.getTypeInformation().getSuperClassType();
+            TypeDefinition superTypeInformation = parcelableMetadata.getTypeDefinition().getSuperClassType();
             if (superTypeInformation != null) {
                 if (!superTypeInformation.is(ANDROID_PARCELABLE)) {
                     parcelableClassBuilder.addSuperinterface(ANDROID_PARCELABLE);

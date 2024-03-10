@@ -1,48 +1,37 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.definitions;
 
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.BaseDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
-import org.jetbrains.annotations.Nullable;
 
-import javax.lang.model.element.*;
+import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 
-public final class MethodDefinition {
+public final class MethodDefinition extends BaseDefinition<ExecutableElement> {
     private final boolean isFinal;
     private final TypeDefinition returnType;
-    private final List<Parameter> parameters;
+    private final List<ParameterDefinition> parameters;
 
     public MethodDefinition(ExecutableElement methodElement) {
+        super(methodElement);
         this.isFinal = ElementUtils.isFinal(methodElement);
         this.returnType = new TypeDefinition(methodElement.getReturnType());
-        this.parameters = Parameter.from(methodElement);
+        this.parameters = methodElement.getParameters().stream().map(ParameterDefinition::new).toList();
     }
 
-    public static class Parameter {
-        private final String name;
-        private final TypeDefinition type;
-        private final boolean nullable;
+    public boolean isFinal() {
+        return isFinal;
+    }
 
-        public Parameter(VariableElement element) {
-            this.name = element.getSimpleName().toString();
-            this.type = new TypeDefinition(element.asType());
-            this.nullable = element.getAnnotation(Nullable.class) != null;
-        }
+    public TypeDefinition getReturnType() {
+        return returnType;
+    }
 
-        public String getName() {
-            return name;
-        }
+    public List<ParameterDefinition> getParameters() {
+        return parameters;
+    }
 
-        public TypeDefinition getType() {
-            return type;
-        }
-
-        public boolean isNullable() {
-            return nullable;
-        }
-
-        private static List<Parameter> from(ExecutableElement methodElement) {
-            return methodElement.getParameters().stream().map(Parameter::new).toList();
-        }
+    public static List<MethodDefinition> from(List<ExecutableElement> methods){
+        return methods.stream().map(MethodDefinition::new).toList();
     }
 }
