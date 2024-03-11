@@ -14,7 +14,7 @@ public class ParameterDefinition extends ElementDefinition<VariableElement> {
         super(element);
         this.name = element.getSimpleName().toString();
         this.type = new TypeDefinition(element.asType());
-        this.nullable = ElementUtils.isNullable(element);
+        this.nullable = !type.isPrimitive() && ElementUtils.isNullable(element);
     }
 
     public String getName() {

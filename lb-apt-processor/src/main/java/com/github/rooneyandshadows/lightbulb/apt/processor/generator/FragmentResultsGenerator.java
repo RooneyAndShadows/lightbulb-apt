@@ -32,9 +32,9 @@ public class FragmentResultsGenerator extends CodeGenerator {
         TypeSpec.Builder rootClassBuilder = TypeSpec.classBuilder(FRAGMENT_RESULT_CLASS_NAME)
                 .addModifiers(PUBLIC, FINAL);
 
-        for (FragmentMetadata fragmentBindingData : fragmentMetadataList) {
-            generateFragmentWrapper(innerClasses, fragmentBindingData);
-        }
+        fragmentMetadataList.stream().filter(FragmentMetadata::hasResultListeners).toList().forEach(fragmentMetadata -> {
+            generateFragmentWrapper(innerClasses, fragmentMetadata);
+        });
 
         rootClassBuilder.addTypes(innerClasses);
 
@@ -70,7 +70,7 @@ public class FragmentResultsGenerator extends CodeGenerator {
         String methodName = resultListenerMetadata.getMethod().getName();
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder(resultListenerMetadata.getMethod().getName())
-                .addModifiers(PUBLIC, STATIC)
+                .addModifiers(PUBLIC, FINAL)
                 .returns(void.class)
                 .addParameter(ClassNameUtils.ANDROID_FRAGMENT_MANAGER, "fragManager")
                 .addStatement("$T fragmentResultToSend = new $T()", ClassNameUtils.ANDROID_BUNDLE, ClassNameUtils.ANDROID_BUNDLE);

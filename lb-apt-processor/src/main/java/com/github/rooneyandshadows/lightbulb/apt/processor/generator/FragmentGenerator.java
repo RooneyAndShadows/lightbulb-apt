@@ -4,8 +4,10 @@ import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegi
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.MethodMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ParameterDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
+import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Variable;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.squareup.javapoet.*;
@@ -14,6 +16,7 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.*;
 import static javax.lang.model.element.Modifier.*;
@@ -91,6 +94,7 @@ public class FragmentGenerator extends CodeGenerator {
         boolean hasParameters = fragmentMetadata.hasParameters();
         boolean hasPersistedVars = fragmentMetadata.hasPersistedValues();
         boolean hasViewModels = fragmentMetadata.hasViewModel();
+        boolean hasResultListeners = fragmentMetadata.hasResultListeners();
 
         if (!hasParameters && !hasPersistedVars && !hasViewModels) {
             return;
@@ -102,6 +106,42 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .returns(void.class)
                 .addStatement("super.onCreate(savedInstanceState)");
+
+        if (hasResultListeners) {
+            fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
+                String key = resultListenerMetadata.getMethod().getName();
+
+                MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("onFragmentResult")
+                        .addModifiers(PUBLIC)
+                        .returns(void.class)
+                        .addAnnotation(Override.class)
+                        .addParameter(STRING, "requestKey")
+                        .addParameter(ANDROID_BUNDLE, "bundle");
+
+                resultListenerMetadata.getMethod().getParameters(true).forEach(parameterDefinition -> {
+                    TypeName parameterType = classNames.getTypeName(parameterDefinition.getType());
+                    String declareStatement = parameterDefinition.isNullable() ? "$T $L = null" : "$T $L";
+
+                    methodBuilder.addStatement(declareStatement, parameterType, parameterDefinition.getName());
+
+                    Variable field = new Variable(parameterDefinition.getName(), parameterDefinition.getType());
+                    CodeBlock readCodeBlock = bundleCodeGenerator.generateReadStatement(field, "bundle", !parameterDefinition.isNullable(), !parameterDefinition.isNullable());
+
+                    methodBuilder.addCode(readCodeBlock);
+                });
+
+                String orderedParams = generateCommaSeparatedParamsString(resultListenerMetadata);
+
+                methodBuilder.addStatement("$L($L)", resultListenerMetadata.getMethod().getName(), orderedParams);
+
+                TypeSpec listener = TypeSpec.anonymousClassBuilder("")
+                        .addSuperinterface(ANDROID_FRAGMENT_RESULT_LISTENER)
+                        .addMethod(methodBuilder.build())
+                        .build();
+
+                builder.addStatement("getParentFragmentManager().setFragmentResultListener($S,this,$L)", key, listener);
+            });
+        }
 
         if (hasViewModels) {
             FragmentMetadata.ViewModelMetadata viewModel = fragmentMetadata.getViewModel();
@@ -281,5 +321,19 @@ public class FragmentGenerator extends CodeGenerator {
         });
 
         destination.add(builder.build());
+    }
+
+    private String generateCommaSeparatedParamsString(MethodMetadata methodMetadata) {
+        String paramsString = "";
+        List<ParameterDefinition> collection = methodMetadata.getMethod().getParameters(true);
+        for (int index = 0; index < collection.size(); index++) {
+            ParameterDefinition param = collection.get(index);
+            boolean isLast = index == collection.size() - 1;
+            paramsString = paramsString.concat(param.getName());
+            if (!isLast) {
+                paramsString = paramsString.concat(", ");
+            }
+        }
+        return paramsString;
     }
 }

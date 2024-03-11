@@ -31,6 +31,7 @@ public class ClassNameUtils {
      */
     public static final ClassName ANDROID_FRAGMENT = from(FRAGMENT);
     public static final ClassName ANDROID_FRAGMENT_MANAGER = from(FRAGMENT_MANAGER);
+    public static final ClassName ANDROID_FRAGMENT_RESULT_LISTENER = from(FRAGMENT_RESULT_LISTENER);
     public static final ClassName ANDROID_ACTIVITY = from(ACTIVITY);
     public static final ClassName ANDROID_BUNDLE = from(BUNDLE);
     public static final ClassName ANDROID_PARCEL = from(PARCEL);

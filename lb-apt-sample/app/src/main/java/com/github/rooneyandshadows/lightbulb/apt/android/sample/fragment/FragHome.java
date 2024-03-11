@@ -43,15 +43,6 @@ public class FragHome extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        getParentFragmentManager().setFragmentResultListener("DUMMY_KEY", this, (requestKey, result) -> {
-            FragAction.ActionResult data = BundleUtils.getParcelable("data", result, FragAction.ActionResult.class);
-            //onListUpdate(data);
-        });
-    }
-
-    @Override
     public void onViewCreated(@NonNull @NotNull View view, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewModel.setIdentifier(identifier);
@@ -59,19 +50,5 @@ public class FragHome extends Fragment {
             LightbulbService.route().toCommonAction().forward();
             //Toast.makeText(requireContext(), String.valueOf(identifier), Toast.LENGTH_LONG).show();
         });
-    }
-
-    @LightbulbParcelable
-    public static class ActionResult extends BlankParcelable {
-        private final String messages = "Test Data.";
-        private final int id = 1;
-
-        public String getMessages() {
-            return messages;
-        }
-
-        public int getId() {
-            return id;
-        }
     }
 }

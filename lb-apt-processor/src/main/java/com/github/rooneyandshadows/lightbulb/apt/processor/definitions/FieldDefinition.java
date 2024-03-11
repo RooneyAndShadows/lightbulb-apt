@@ -27,7 +27,7 @@ public final class FieldDefinition extends ElementDefinition<VariableElement> {
         this.getterAccessModifier = ElementUtils.getMethodAccessModifier(enclosingClassElement, getterName);
         this.type = new TypeDefinition(element.asType());
         this.isFinal = ElementUtils.isFinal(element);
-        this.isNullable = ElementUtils.isNullable(element);
+        this.isNullable = !type.isPrimitive() && ElementUtils.isNullable(element);
     }
 
     public String getSetterName() {
