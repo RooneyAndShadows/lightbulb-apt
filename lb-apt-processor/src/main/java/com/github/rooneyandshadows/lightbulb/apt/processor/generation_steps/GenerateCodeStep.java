@@ -32,6 +32,7 @@ public class GenerateCodeStep implements GenerationStep {
         generators.add(new ApplicationGenerator(filer, elements, packageNames, classNames, resultsRegistry));
         generators.add(new FragmentGenerator(filer, elements, packageNames, classNames, resultsRegistry));
         generators.add(new FragmentFactoryGenerator(filer, elements, packageNames, classNames, resultsRegistry));
+        generators.add(new FragmentResultsGenerator(filer, elements, packageNames, classNames, resultsRegistry));
         generators.add(new RoutingGenerator(filer, elements, packageNames, classNames, resultsRegistry));
         generators.add(new ActivityGenerator(filer, elements, packageNames, classNames, resultsRegistry));
         generators.add(new StorageGenerator(filer, elements, packageNames, classNames, resultsRegistry));

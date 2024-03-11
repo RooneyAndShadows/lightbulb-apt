@@ -10,10 +10,8 @@ import java.util.List;
 
 
 public final class FieldDefinition extends ElementDefinition<VariableElement> {
-    private final String name;
     private final String setterName;
     private final String getterName;
-    private final Modifier accessModifier;
     private final Modifier setterAccessModifier;
     private final Modifier getterAccessModifier;
     private final TypeDefinition type;
@@ -23,19 +21,13 @@ public final class FieldDefinition extends ElementDefinition<VariableElement> {
     public FieldDefinition(VariableElement element) {
         super(element);
         TypeElement enclosingClassElement = (TypeElement) element.getEnclosingElement();
-        this.name = element.getSimpleName().toString();
         this.setterName = ElementUtils.findFieldSetterName(enclosingClassElement, name);
         this.getterName = ElementUtils.findFieldGetterName(enclosingClassElement, name);
-        this.accessModifier = ElementUtils.getAccessModifier(element);
         this.setterAccessModifier = ElementUtils.getMethodAccessModifier(enclosingClassElement, setterName);
         this.getterAccessModifier = ElementUtils.getMethodAccessModifier(enclosingClassElement, getterName);
         this.type = new TypeDefinition(element.asType());
         this.isFinal = ElementUtils.isFinal(element);
         this.isNullable = ElementUtils.isNullable(element);
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getSetterName() {
@@ -44,10 +36,6 @@ public final class FieldDefinition extends ElementDefinition<VariableElement> {
 
     public String getGetterName() {
         return getterName;
-    }
-
-    public Modifier getAccessModifier() {
-        return accessModifier;
     }
 
     public Modifier getSetterAccessModifier() {

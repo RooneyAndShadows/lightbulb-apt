@@ -3,26 +3,31 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.MethodMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ClassDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.FieldDefinition;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.MethodDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.reader.base.AnnotatedElement;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public final class FragmentMetadata extends ClassMetadata {
     private String layoutName;
     private String screenName;
     private String screenGroupName;
-    private ViewModel viewModel;
-    private ViewBinding viewBinding;
-    private final List<ScreenParameter> screenParameters = new ArrayList<>();
-    private final List<StatePersisted> persistedValues = new ArrayList<>();
-    private final List<BindView> bindViews = new ArrayList<>();
+    private ViewModelMetadata viewModel;
+    private ViewBindingMetadata viewBinding;
+    private final List<ScreenParameterMetadata> screenParameters = new ArrayList<>();
+    private final List<StatePersistedMetadata> persistedValues = new ArrayList<>();
+    private final List<BindViewMetadata> bindViews = new ArrayList<>();
+    private final List<ResultListenerMetadata> resultListeners = new ArrayList<>();
 
     public FragmentMetadata(ClassDefinition fragmentClassDefinition, List<AnnotatedElement> annotatedElements) {
         super(fragmentClassDefinition);
@@ -40,21 +45,24 @@ public final class FragmentMetadata extends ClassMetadata {
                 screenGroupName = fragmentScreen.screenGroup();
             } else if (annotation instanceof FragmentParameter fragmentParameterAnnotation) {
                 FieldDefinition fieldDefinition = new FieldDefinition((VariableElement) element);
-                ScreenParameter parameter = new ScreenParameter(fieldDefinition, fragmentParameterAnnotation);
+                ScreenParameterMetadata parameter = new ScreenParameterMetadata(fieldDefinition, fragmentParameterAnnotation);
                 screenParameters.add(parameter);
             } else if (annotation instanceof FragmentStatePersisted fragmentStatePersistedAnnotation) {
                 FieldDefinition fieldDefinition = new FieldDefinition((VariableElement) element);
-                persistedValues.add(new StatePersisted(fieldDefinition, fragmentStatePersistedAnnotation));
+                persistedValues.add(new StatePersistedMetadata(fieldDefinition, fragmentStatePersistedAnnotation));
             } else if (annotation instanceof com.github.rooneyandshadows.lightbulb.apt.annotations.BindView bindViewAnnotation) {
                 FieldDefinition fieldDefinition = new FieldDefinition((VariableElement) element);
-                BindView bView = new BindView(fieldDefinition, bindViewAnnotation);
+                BindViewMetadata bView = new BindViewMetadata(fieldDefinition, bindViewAnnotation);
                 bindViews.add(bView);
             } else if (annotation instanceof FragmentViewModel viewModelAnnotation) {
                 FieldDefinition fieldDefinition = new FieldDefinition((VariableElement) element);
-                viewModel = new ViewModel(fieldDefinition, viewModelAnnotation);
+                viewModel = new ViewModelMetadata(fieldDefinition, viewModelAnnotation);
             } else if (annotation instanceof FragmentViewBinding viewBindingAnnotation) {
                 FieldDefinition fieldDefinition = new FieldDefinition((VariableElement) element);
-                viewBinding = new ViewBinding(fieldDefinition, viewBindingAnnotation);
+                viewBinding = new ViewBindingMetadata(fieldDefinition, viewBindingAnnotation);
+            } else if (annotation instanceof ResultListener resultListenerAnnotation) {
+                MethodDefinition methodDefinition = new MethodDefinition((ExecutableElement) element);
+                resultListeners.add(new ResultListenerMetadata(methodDefinition, resultListenerAnnotation));
             }
         }
     }
@@ -71,24 +79,28 @@ public final class FragmentMetadata extends ClassMetadata {
         return screenName;
     }
 
-    public List<ScreenParameter> getScreenParameters() {
+    public List<ScreenParameterMetadata> getScreenParameters() {
         return screenParameters;
     }
 
-    public List<StatePersisted> getPersistedValues() {
+    public List<StatePersistedMetadata> getPersistedValues() {
         return persistedValues;
     }
 
-    public List<BindView> getBindViews() {
+    public List<BindViewMetadata> getBindViews() {
         return bindViews;
     }
 
-    public ViewModel getViewModel() {
+    public ViewModelMetadata getViewModel() {
         return viewModel;
     }
 
-    public ViewBinding getViewBinding() {
+    public ViewBindingMetadata getViewBinding() {
         return viewBinding;
+    }
+
+    public List<ResultListenerMetadata> getResultListeners() {
+        return resultListeners;
     }
 
     public boolean hasBindViews() {
@@ -103,8 +115,12 @@ public final class FragmentMetadata extends ClassMetadata {
         return !screenParameters.isEmpty();
     }
 
+    public boolean hasResultListeners() {
+        return !resultListeners.isEmpty();
+    }
+
     public boolean hasOptionalParameters() {
-        return screenParameters.stream().anyMatch(ScreenParameter::isOptional);
+        return screenParameters.stream().anyMatch(ScreenParameterMetadata::isOptional);
     }
 
     public boolean hasViewBinding() {
@@ -115,7 +131,7 @@ public final class FragmentMetadata extends ClassMetadata {
         return viewModel != null;
     }
 
-    public List<ScreenParameter> getScreenParameters(boolean includeOptional) {
+    public List<ScreenParameterMetadata> getScreenParameters(boolean includeOptional) {
         return includeOptional ? screenParameters : screenParameters.stream()
                 .filter(paramInfo -> !paramInfo.isOptional())
                 .collect(Collectors.toList());
@@ -128,10 +144,10 @@ public final class FragmentMetadata extends ClassMetadata {
         return screenGroupName;
     }
 
-    public static final class ScreenParameter extends FieldMetadata {
+    public static final class ScreenParameterMetadata extends FieldMetadata {
         private final boolean optional;
 
-        public ScreenParameter(FieldDefinition fieldDefinition, FragmentParameter annotation) {
+        public ScreenParameterMetadata(FieldDefinition fieldDefinition, FragmentParameter annotation) {
             super(fieldDefinition);
             this.optional = annotation.optional();
         }
@@ -141,16 +157,16 @@ public final class FragmentMetadata extends ClassMetadata {
         }
     }
 
-    public static final class StatePersisted extends FieldMetadata {
-        public StatePersisted(FieldDefinition fieldDefinition, FragmentStatePersisted annotation) {
+    public static final class StatePersistedMetadata extends FieldMetadata {
+        public StatePersistedMetadata(FieldDefinition fieldDefinition, FragmentStatePersisted annotation) {
             super(fieldDefinition);
         }
     }
 
-    public static final class BindView extends FieldMetadata {
+    public static final class BindViewMetadata extends FieldMetadata {
         private final String resourceName;
 
-        public BindView(FieldDefinition fieldDefinition, com.github.rooneyandshadows.lightbulb.apt.annotations.BindView annotation) {
+        public BindViewMetadata(FieldDefinition fieldDefinition, com.github.rooneyandshadows.lightbulb.apt.annotations.BindView annotation) {
             super(fieldDefinition);
             this.resourceName = annotation.name();
         }
@@ -160,10 +176,10 @@ public final class FragmentMetadata extends ClassMetadata {
         }
     }
 
-    public static final class ViewBinding extends FieldMetadata {
+    public static final class ViewBindingMetadata extends FieldMetadata {
         private final String layoutName;
 
-        public ViewBinding(FieldDefinition fieldDefinition, FragmentViewBinding annotation) {
+        public ViewBindingMetadata(FieldDefinition fieldDefinition, FragmentViewBinding annotation) {
             super(fieldDefinition);
             this.layoutName = annotation.layoutName();
         }
@@ -173,9 +189,15 @@ public final class FragmentMetadata extends ClassMetadata {
         }
     }
 
-    public static final class ViewModel extends FieldMetadata {
-        public ViewModel(FieldDefinition fieldDefinition, FragmentViewModel annotation) {
+    public static final class ViewModelMetadata extends FieldMetadata {
+        public ViewModelMetadata(FieldDefinition fieldDefinition, FragmentViewModel annotation) {
             super(fieldDefinition);
+        }
+    }
+
+    public static final class ResultListenerMetadata extends MethodMetadata {
+        public ResultListenerMetadata(MethodDefinition methodDefinition, ResultListener annotation) {
+            super(methodDefinition);
         }
     }
 }

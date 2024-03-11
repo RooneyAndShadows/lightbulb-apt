@@ -71,6 +71,10 @@ public class PackageNames {
         return resolve(getLightbulbPackage(), "fragments");
     }
 
+    public String getFragmentsResultPackage() {
+        return resolve(getFragmentsPackage(), "result");
+    }
+
     public String getFragmentsFactoryPackage() {
         return resolve(getFragmentsPackage(), "factory");
     }

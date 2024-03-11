@@ -37,10 +37,10 @@ public class FragHome extends Fragment {
     @FragmentViewBinding(layoutName = "frag_root")
     private FragRootBinding viewBinding;
 
-    //@ResultHandler(key = "DUMMY_KEY")
-    //public void onListUpdate(FragAction.ActionResult result) {
-    //    Toast.makeText(requireContext(), data, Toast.LENGTH_LONG).show();
-    //}
+    @ResultListener()
+    public void onListUpdate(String blabla,int test,@Nullable String test1, @NotNull String test2) {
+
+    }
 
     @Override
     public void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {

@@ -82,9 +82,9 @@ public class FragmentFactoryGenerator extends CodeGenerator {
                 .addStatement("$T arguments = new $T()", ClassNameUtils.ANDROID_BUNDLE, ClassNameUtils.ANDROID_BUNDLE);
 
         fragmentMetadata.getScreenParameters(includeOptionalParams).forEach(parameter -> {
-            Variable variable = Variable.from(parameter);
+            Variable variable = new Variable(parameter.getName(),parameter.getType());
             CodeBlock writeIntoBundleCodeBlock = bundleCodeGenerator.generateWriteStatement(variable, "arguments");
-            ParameterSpec parameterSpec = generateFragmentScreenParameterSpec(parameter);
+            ParameterSpec parameterSpec = generateScreenParameterSpec(parameter);
 
             builder.addParameter(parameterSpec);
             builder.addCode(writeIntoBundleCodeBlock);

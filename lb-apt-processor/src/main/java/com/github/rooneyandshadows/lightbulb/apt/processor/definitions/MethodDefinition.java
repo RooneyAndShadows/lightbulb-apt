@@ -27,11 +27,19 @@ public final class MethodDefinition extends ElementDefinition<ExecutableElement>
         return returnType;
     }
 
-    public List<ParameterDefinition> getParameters() {
-        return parameters;
+    public List<ParameterDefinition> getParameters(boolean includeNullable) {
+        return parameters.stream().filter(parameterDefinition -> includeNullable || !parameterDefinition.isNullable()).toList();
     }
 
-    public static List<MethodDefinition> from(List<ExecutableElement> methods){
+    public boolean hasParameters() {
+        return !parameters.isEmpty();
+    }
+
+    public boolean hasNullableParameters() {
+        return parameters.stream().anyMatch(ParameterDefinition::isNullable);
+    }
+
+    public static List<MethodDefinition> from(List<ExecutableElement> methods) {
         return methods.stream().map(MethodDefinition::new).toList();
     }
 }

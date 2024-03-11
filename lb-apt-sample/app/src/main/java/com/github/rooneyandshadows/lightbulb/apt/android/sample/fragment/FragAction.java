@@ -29,6 +29,7 @@ public class FragAction extends Fragment {
             BundleUtils.putParcelable("data", data, new ActionResult());
             getParentFragmentManager().setFragmentResult("DUMMY_KEY", data);
             LightbulbService.route().back();
+            //FragmentResult.FragHome.onListUpdate(getParentFragmentManager(), "safas", 1, "asfasf", "asfasf");
             //Toast.makeText(requireContext(), String.valueOf(identifier), Toast.LENGTH_LONG).show();
         });
     }

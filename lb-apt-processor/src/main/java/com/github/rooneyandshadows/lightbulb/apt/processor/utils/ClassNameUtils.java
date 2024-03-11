@@ -2,6 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.MethodMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.TypedMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.squareup.javapoet.ClassName;
@@ -29,6 +30,7 @@ public class ClassNameUtils {
      * Android
      */
     public static final ClassName ANDROID_FRAGMENT = from(FRAGMENT);
+    public static final ClassName ANDROID_FRAGMENT_MANAGER = from(FRAGMENT_MANAGER);
     public static final ClassName ANDROID_ACTIVITY = from(ACTIVITY);
     public static final ClassName ANDROID_BUNDLE = from(BUNDLE);
     public static final ClassName ANDROID_PARCEL = from(PARCEL);
@@ -121,6 +123,10 @@ public class ClassNameUtils {
 
     public ClassName getAppRouterClassName() {
         return ClassName.get(packageNames.getRoutingPackage(), ROUTING_APP_ROUTER_CLASS_NAME);
+    }
+
+    public ClassName getFragmentResultClassName() {
+        return ClassName.get(packageNames.getFragmentsResultPackage(), FRAGMENT_RESULT_CLASS_NAME);
     }
 
     public ClassName getLightbulbServiceClassName() {

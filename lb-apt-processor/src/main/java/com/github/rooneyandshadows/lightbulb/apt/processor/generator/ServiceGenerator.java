@@ -56,6 +56,7 @@ public class ServiceGenerator extends CodeGenerator {
         generateInstance(lightbulbServiceClassName, fields, methods);
         generateContextMember(fields, methods);
         generateRoutingMember(fields, methods);
+        generateFragmentResultMember(fields, methods);
         generateStorageMembers(fields, methods);
         generateBindRouterMethod(methods);
         generateUnbindRouterMethod(methods);
@@ -152,6 +153,29 @@ public class ServiceGenerator extends CodeGenerator {
             fields.add(storageField);
             methods.add(storageGetter);
         });
+    }
+
+    private void generateFragmentResultMember(List<FieldSpec> fields, List<MethodSpec> methods) {
+        if (!hasRoutingElements) {
+            return;
+        }
+
+        ClassName fragmentResultClassName = classNames.getFragmentResultClassName();
+        String generatedFragmentResultSimpleClassName = fragmentResultClassName.simpleName();
+        String fieldName = MemberUtils.getFieldNameForClass(generatedFragmentResultSimpleClassName);
+
+        FieldSpec fragmentResultField = FieldSpec.builder(fragmentResultClassName, fieldName, PRIVATE)
+                .build();
+
+        MethodSpec fragmentResultMethod = MethodSpec.methodBuilder("fragmentResult")
+                .addModifiers(PUBLIC, STATIC, FINAL)
+                .addAnnotation(NotNull.class)
+                .returns(fragmentResultClassName)
+                .addStatement("return getInstance().$L", fieldName)
+                .build();
+
+        fields.add(fragmentResultField);
+        methods.add(fragmentResultMethod);
     }
 
     private void generateRoutingMember(List<FieldSpec> fields, List<MethodSpec> methods) {

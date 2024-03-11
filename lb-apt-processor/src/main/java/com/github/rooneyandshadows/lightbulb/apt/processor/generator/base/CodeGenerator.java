@@ -1,10 +1,13 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator.base;
 
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ScreenParameter;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ScreenParameterMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.MethodMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.ParameterDefinition;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.*;
 import com.squareup.javapoet.*;
 import org.jetbrains.annotations.NotNull;
@@ -69,6 +72,26 @@ public abstract class CodeGenerator {
         return classNames.generateInstrumentedClassName(packageName, metadata.getResolvedSimpleName(), true);
     }
 
+    protected void copyMethodsForSupertypeTransformation(List<? extends MethodMetadata> targets, List<MethodSpec> methods) {
+        targets.forEach(methodMetadata -> {
+            Modifier methodAccess = methodMetadata.getAccessModifier() == PRIVATE ? PROTECTED : methodMetadata.getAccessModifier();
+            TypeName returnType = classNames.getTypeName(methodMetadata.getMethod().getReturnType());
+
+
+            MethodSpec.Builder builder = MethodSpec.methodBuilder(methodMetadata.getMethod().getName())
+                    .addModifiers(methodAccess, ABSTRACT)
+                    .returns(returnType);
+
+            methodMetadata.getMethod().getParameters(true).forEach(parameterDefinition -> {
+                builder.addParameter(generateParameterSpec(parameterDefinition));
+            });
+
+
+            methods.add(builder.build());
+
+        });
+    }
+
     protected void copyFieldsForSupertypeTransformation(List<? extends FieldMetadata> targets, List<FieldSpec> fields, List<MethodSpec> methods) {
         targets.forEach(fieldMetadata -> {
             boolean hasSetter = fieldMetadata.hasSetter();
@@ -88,7 +111,7 @@ public abstract class CodeGenerator {
                 Modifier getterAccess = fieldMetadata.getGetterAccessModifier() == PRIVATE ? PROTECTED : fieldMetadata.getGetterAccessModifier();
 
                 MethodSpec.Builder getterBuilder = MethodSpec.methodBuilder(fieldMetadata.getGetterName())
-                        .addModifiers(getterAccess,ABSTRACT)
+                        .addModifiers(getterAccess, ABSTRACT)
                         .returns(fieldTypeName);
 
 
@@ -100,19 +123,25 @@ public abstract class CodeGenerator {
 
                 MethodSpec.Builder setterBuilder = MethodSpec.methodBuilder(fieldMetadata.getSetterName())
                         .addParameter(fieldTypeName, "value")
-                        .addModifiers(setterAccess,ABSTRACT);
+                        .addModifiers(setterAccess, ABSTRACT);
 
                 methods.add(setterBuilder.build());
             }
         });
     }
 
-    protected ParameterSpec generateFragmentScreenParameterSpec(ScreenParameter parameter) {
-        TypeName fieldTypeName = TypeName.get(parameter.getType().getTypeMirror());
-        String parameterName = parameter.getName();
-        boolean isNullable = parameter.isNullable() || parameter.isOptional();
+    protected ParameterSpec generateScreenParameterSpec(ScreenParameterMetadata parameter) {
+        return generateParameterSpec(parameter.getName(), parameter.getType(), parameter.isNullable() || parameter.isOptional());
+    }
 
-        return ParameterSpec.builder(fieldTypeName, parameterName)
+    protected ParameterSpec generateParameterSpec(ParameterDefinition parameterDefinition) {
+        return generateParameterSpec(parameterDefinition.getName(), parameterDefinition.getType(), parameterDefinition.isNullable());
+    }
+
+    protected ParameterSpec generateParameterSpec(String name, TypeDefinition type, boolean isNullable) {
+        TypeName fieldTypeName = TypeName.get(type.getTypeMirror());
+
+        return ParameterSpec.builder(fieldTypeName, name)
                 .addAnnotation(isNullable ? Nullable.class : NotNull.class)
                 .build();
     }

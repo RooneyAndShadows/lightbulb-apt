@@ -79,7 +79,7 @@ public class FragmentValidator extends AnnotationResultValidator {
         int errorsCount = 0;
         String annotationName = BindView.class.getSimpleName();
         for (int i = 0; i < fragmentMetadata.getBindViews().size(); i++) {
-            FragmentMetadata.BindView bindViewMetadata = fragmentMetadata.getBindViews().get(i);
+            FragmentMetadata.BindViewMetadata bindViewMetadata = fragmentMetadata.getBindViews().get(i);
             if (!bindViewMetadata.getType().is(VIEW)) {
                 if (errorsCount == 0) {
                     errorsCount++;

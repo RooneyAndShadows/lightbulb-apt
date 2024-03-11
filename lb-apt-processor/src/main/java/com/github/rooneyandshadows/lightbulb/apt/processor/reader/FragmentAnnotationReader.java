@@ -19,8 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry.AnnotationResultTypes.LIGHTBULB_FRAGMENT_DESCRIPTION;
-import static javax.lang.model.element.ElementKind.CLASS;
-import static javax.lang.model.element.ElementKind.FIELD;
+import static javax.lang.model.element.ElementKind.*;
 
 public class FragmentAnnotationReader extends AnnotationReader {
     private final List<FragmentMetadata> fragmentsMetadata = new ArrayList<>();
@@ -51,7 +50,8 @@ public class FragmentAnnotationReader extends AnnotationReader {
         targets.put(FragmentStatePersisted.class, FIELD);
         targets.put(FragmentViewBinding.class, FIELD);
         targets.put(FragmentViewModel.class, FIELD);
-        targets.put(com.github.rooneyandshadows.lightbulb.apt.annotations.BindView.class, FIELD);
+        targets.put(BindView.class, FIELD);
+        targets.put(ResultListener.class, METHOD);
         return targets;
     }
 }

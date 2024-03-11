@@ -18,6 +18,7 @@ public class ClassDefinitions {
      */
     public static final ClassInfo PARCEL = new ClassInfo(ANDROID_OS, "Parcel");
     public static final ClassInfo FRAGMENT = new ClassInfo(ANDROIDX_FRAGMENT_APP, "Fragment");
+    public static final ClassInfo FRAGMENT_MANAGER = new ClassInfo(ANDROIDX_FRAGMENT_APP, "FragmentManager");
     public static final ClassInfo ACTIVITY = new ClassInfo(ANDROIDX_APPCOMPAT_APP, "AppCompatActivity");
     public static final ClassInfo BUNDLE = new ClassInfo(ANDROID_OS, "Bundle");
     public static final ClassInfo PARCELABLE =new ClassInfo(ANDROID_OS, "Parcelable");

@@ -2,6 +2,9 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.MethodDefinition;
 
+import javax.lang.model.element.Modifier;
+
+
 public abstract class MethodMetadata extends BaseMetadata<MethodDefinition> {
     protected final MethodDefinition methodDefinition;
 
@@ -10,7 +13,11 @@ public abstract class MethodMetadata extends BaseMetadata<MethodDefinition> {
         this.methodDefinition = methodDefinition;
     }
 
-    public MethodDefinition getDefinition() {
+    public MethodDefinition getMethod() {
         return methodDefinition;
+    }
+
+    public Modifier getAccessModifier(){
+        return methodDefinition.getAccessModifier();
     }
 }

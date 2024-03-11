@@ -19,12 +19,4 @@ public class Variable extends DeclaredValueHolder {
     public String getValueSetStatement(String setVarName) {
         return String.format("%s = %s", name, setVarName);
     }
-
-    @NotNull
-    public static Variable from(FieldMetadata fieldMetadata) {
-        return new Variable(
-                fieldMetadata.getName(),
-                fieldMetadata.getType()
-        );
-    }
 }

@@ -3,6 +3,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.MethodMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.entities.Field;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
@@ -38,6 +39,7 @@ public class FragmentGenerator extends CodeGenerator {
             List<MethodSpec> methods = new ArrayList<>();
 
             generateFields(fragmentMetadata, fields, methods);
+            generateAbstractMethods(fragmentMetadata, methods);
             generateOnCreateMethod(fragmentMetadata, methods);
             generateOnCreateViewMethod(fragmentMetadata, methods);
             generateOnViewCreatedMethod(fragmentMetadata, methods);
@@ -79,6 +81,12 @@ public class FragmentGenerator extends CodeGenerator {
         copyFieldsForSupertypeTransformation(targets, fields, methods);
     }
 
+    private void generateAbstractMethods(FragmentMetadata fragmentMetadata, List<MethodSpec> methods) {
+        List<MethodMetadata> targets = new ArrayList<>(fragmentMetadata.getResultListeners());
+
+        copyMethodsForSupertypeTransformation(targets, methods);
+    }
+
     private void generateOnCreateMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
         boolean hasParameters = fragmentMetadata.hasParameters();
         boolean hasPersistedVars = fragmentMetadata.hasPersistedValues();
@@ -96,7 +104,7 @@ public class FragmentGenerator extends CodeGenerator {
                 .addStatement("super.onCreate(savedInstanceState)");
 
         if (hasViewModels) {
-            FragmentMetadata.ViewModel viewModel = fragmentMetadata.getViewModel();
+            FragmentMetadata.ViewModelMetadata viewModel = fragmentMetadata.getViewModel();
             Field field = Field.from(viewModel);
             TypeName viewModelTypeName = classNames.getTypeName(viewModel);
 
@@ -138,7 +146,7 @@ public class FragmentGenerator extends CodeGenerator {
                 .addStatement("super.onCreateView(inflater,container,savedInstanceState)");
 
         if (fragmentMetadata.hasViewBinding()) {
-            FragmentMetadata.ViewBinding viewBinding = fragmentMetadata.getViewBinding();
+            FragmentMetadata.ViewBindingMetadata viewBinding = fragmentMetadata.getViewBinding();
             Field field = Field.from(viewBinding);
 
             builder.addStatement(field.getValueSetStatement("$T.inflate(inflater,$T.layout.$L,container,false)"), ANDROID_DATA_BINDING_UTIL, ANDROID_R, viewBinding.getLayoutName())
