@@ -24,7 +24,7 @@ public class Variable extends DeclaredValueHolder {
     public static Variable from(FieldMetadata fieldMetadata) {
         return new Variable(
                 fieldMetadata.getName(),
-                fieldMetadata.getTypeDefinition()
+                fieldMetadata.getType()
         );
     }
 }

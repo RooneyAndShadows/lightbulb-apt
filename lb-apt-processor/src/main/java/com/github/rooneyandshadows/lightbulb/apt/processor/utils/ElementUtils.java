@@ -22,6 +22,7 @@ import static java.util.regex.Pattern.*;
 import static javax.lang.model.element.ElementKind.*;
 import static javax.lang.model.element.Modifier.PROTECTED;
 
+@SuppressWarnings("unused")
 public class ElementUtils {
 
     public static TypeName getTypeOfFieldElement(Element element) {
@@ -109,14 +110,14 @@ public class ElementUtils {
 
     public static List<ExecutableElement> getMethods(TypeElement typeElement) {
         return typeElement.getEnclosedElements().stream()
-                .filter(target -> target.getKind() != METHOD)
+                .filter(target -> target.getKind() == METHOD)
                 .map(element -> (ExecutableElement) element)
                 .toList();
     }
 
     public static List<VariableElement> getFields(TypeElement typeElement) {
         return typeElement.getEnclosedElements().stream()
-                .filter(target -> target.getKind() != FIELD)
+                .filter(target -> target.getKind() == FIELD)
                 .map(element -> (VariableElement) element)
                 .toList();
     }
@@ -148,8 +149,7 @@ public class ElementUtils {
     }
 
     @NotNull
-    public static Modifier accessModifierAtLeast(@NotNull Element test, @NotNull Modifier target) {
-        Modifier accessModifier = getAccessModifier(test);
+    public static Modifier accessModifierAtLeast(@Nullable Modifier accessModifier, @NotNull Modifier target) {
 
         if (accessModifier == null || target.ordinal() <= accessModifier.ordinal()) {
             return target;

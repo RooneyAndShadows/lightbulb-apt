@@ -1,15 +1,14 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
-import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.TypedMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.lang.model.element.TypeElement;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -72,18 +71,18 @@ public class ClassNameUtils {
 
     @NotNull
     public ClassName getClassName(ClassMetadata metadata) {
-        return ClassName.get(metadata.getElement());
+        return from(metadata.getQualifiedName());
     }
 
     @Nullable
     public ClassName getSuperClassName(ClassMetadata metadata) {
-        TypeElement superTypeElement = ElementUtils.getSuperType(metadata.getElement());
+        TypeDefinition superTypeDefinition = metadata.getType().getSuperClassType();
 
-        if (superTypeElement == null) {
+        if (superTypeDefinition == null) {
             return null;
         }
 
-        return ClassName.get(superTypeElement);
+        return from(superTypeDefinition.getQualifiedName());
     }
 
     @NotNull
@@ -93,7 +92,7 @@ public class ClassNameUtils {
 
     @NotNull
     public TypeName getTypeName(TypedMetadata metadata) {
-        return TypeName.get(metadata.getTypeMirror());
+        return TypeName.get(metadata.getType().getTypeMirror());
     }
 
     public ClassName generateInstrumentedClassName(String classPackage, String className) {

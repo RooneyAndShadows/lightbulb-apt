@@ -8,8 +8,4 @@ public abstract class BaseMetadata<T extends BaseDefinition<?>> {
     public BaseMetadata(T definition) {
         this.definition = definition;
     }
-
-    public T getDefinition() {
-        return definition;
-    }
 }

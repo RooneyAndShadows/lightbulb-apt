@@ -1,13 +1,13 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.definitions;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.BaseDefinition;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.ElementDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 
-public final class MethodDefinition extends BaseDefinition<ExecutableElement> {
+public final class MethodDefinition extends ElementDefinition<ExecutableElement> {
     private final boolean isFinal;
     private final TypeDefinition returnType;
     private final List<ParameterDefinition> parameters;

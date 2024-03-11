@@ -76,7 +76,7 @@ public abstract class CodeGenerator {
             TypeName fieldTypeName = classNames.getTypeName(fieldMetadata);
 
             if (!hasGetter || !hasSetter) {
-                Modifier fieldAccess = ElementUtils.accessModifierAtLeast(fieldMetadata.getElement(), PROTECTED);
+                Modifier fieldAccess = ElementUtils.accessModifierAtLeast(fieldMetadata.getAccessModifier(), PROTECTED);
 
                 FieldSpec fieldSpec = FieldSpec.builder(fieldTypeName, fieldMetadata.getName())
                         .addModifiers(fieldAccess)
@@ -108,7 +108,7 @@ public abstract class CodeGenerator {
     }
 
     protected ParameterSpec generateFragmentScreenParameterSpec(ScreenParameter parameter) {
-        TypeName fieldTypeName = TypeName.get(parameter.getTypeDefinition().getTypeMirror());
+        TypeName fieldTypeName = TypeName.get(parameter.getType().getTypeMirror());
         String parameterName = parameter.getName();
         boolean isNullable = parameter.isNullable() || parameter.isOptional();
 

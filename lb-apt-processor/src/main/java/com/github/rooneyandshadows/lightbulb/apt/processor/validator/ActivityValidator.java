@@ -31,7 +31,7 @@ public class ActivityValidator extends AnnotationResultValidator {
         boolean isValid = true;
 
         for (ActivityMetadata target : targets) {
-            ErrorString errorMessage = new ErrorString("Problems found in class %s", target.getTypeDefinition().getTypeMirror());
+            ErrorString errorMessage = new ErrorString("Problems found in class %s", target.getType().getQualifiedName());
 
             boolean isMetadataValid = validateSuperClass(target, errorMessage);
 
@@ -46,7 +46,7 @@ public class ActivityValidator extends AnnotationResultValidator {
     }
 
     private boolean validateSuperClass(ActivityMetadata target, ErrorString errorString) {
-        if (!target.getTypeDefinition().is(ACTIVITY)) {
+        if (!target.getType().is(ACTIVITY)) {
             errorString.append("Classes annotated with @%s must be subclasses of %s.", LightbulbActivity.class.getSimpleName(), ACTIVITY);
             return false;
         }

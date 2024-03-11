@@ -40,7 +40,7 @@ public class Field extends DeclaredValueHolder {
     public static Field from(FieldMetadata fieldMetadata) {
         return new Field(
                 fieldMetadata.getName(),
-                fieldMetadata.getTypeDefinition(),
+                fieldMetadata.getType(),
                 fieldMetadata.getSetterName(),
                 fieldMetadata.getGetterName()
         );

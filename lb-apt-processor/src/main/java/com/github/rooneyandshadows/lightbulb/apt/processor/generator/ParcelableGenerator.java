@@ -36,7 +36,6 @@ public class ParcelableGenerator extends CodeGenerator {
             List<MethodSpec> methods = new ArrayList<>();
 
             generateFields(parcelableMetadata, fields, methods);
-            //generateCreatorField(parcelableMetadata, fields);
             generateConstructorMethod(parcelableMetadata, methods);
             generateWriteToParcelMethod(parcelableMetadata, methods);
             generateDescribeContentsMethod(methods);
@@ -47,7 +46,8 @@ public class ParcelableGenerator extends CodeGenerator {
                     .addFields(fields)
                     .addMethods(methods);
 
-            TypeDefinition superTypeInformation = parcelableMetadata.getTypeDefinition().getSuperClassType();
+            TypeDefinition superTypeInformation = parcelableMetadata.getType().getSuperClassType();
+
             if (superTypeInformation != null) {
                 if (!superTypeInformation.is(ANDROID_PARCELABLE)) {
                     parcelableClassBuilder.addSuperinterface(ANDROID_PARCELABLE);
@@ -121,42 +121,5 @@ public class ParcelableGenerator extends CodeGenerator {
         });
 
         methods.add(writeToParcelMethodBuilder.build());
-    }
-
-    private void generateCreatorField(ParcelableMetadata parcelableMetadata, List<FieldSpec> fields) {
-        ClassName instrumentedClassName = getInstrumentedClassName(packageNames.getParcelablePackage(), parcelableMetadata);
-        ParameterizedTypeName typeName = ParameterizedTypeName.get(ANDROID_PARCELABLE_CREATOR, instrumentedClassName);
-
-        TypeSpec.Builder creatorBuilder = TypeSpec.anonymousClassBuilder("")
-                .addSuperinterface(typeName);
-
-        MethodSpec createFromParcelMethod = MethodSpec.methodBuilder("createFromParcel")
-                .addModifiers(PUBLIC)
-                .addAnnotation(Override.class)
-                .addParameter(ANDROID_PARCEL, "in")
-                .returns(instrumentedClassName)
-                .addStatement("return new $T(in)", instrumentedClassName)
-                .build();
-
-        ArrayTypeName returnType = ArrayTypeName.of(instrumentedClassName);
-
-        MethodSpec newArrayMethod = MethodSpec.methodBuilder("newArray")
-                .addModifiers(PUBLIC)
-                .addAnnotation(Override.class)
-                .addParameter(TypeName.INT, "size")
-                .returns(returnType)
-                .addStatement("return new $T[size]", instrumentedClassName)
-                .build();
-
-        creatorBuilder.addMethod(createFromParcelMethod);
-        creatorBuilder.addMethod(newArrayMethod);
-
-        TypeSpec creator = creatorBuilder.build();
-
-        FieldSpec fieldSpec = FieldSpec.builder(typeName, "CREATOR", PUBLIC, STATIC, FINAL)
-                .initializer("$L", creator)
-                .build();
-
-        fields.add(fieldSpec);
     }
 }

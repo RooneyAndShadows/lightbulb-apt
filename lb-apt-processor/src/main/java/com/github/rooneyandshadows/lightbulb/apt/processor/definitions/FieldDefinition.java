@@ -1,6 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.definitions;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.BaseDefinition;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.ElementDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 
 import javax.lang.model.element.Modifier;
@@ -9,7 +9,7 @@ import javax.lang.model.element.VariableElement;
 import java.util.List;
 
 
-public final class FieldDefinition extends BaseDefinition<VariableElement> {
+public final class FieldDefinition extends ElementDefinition<VariableElement> {
     private final String name;
     private final String setterName;
     private final String getterName;

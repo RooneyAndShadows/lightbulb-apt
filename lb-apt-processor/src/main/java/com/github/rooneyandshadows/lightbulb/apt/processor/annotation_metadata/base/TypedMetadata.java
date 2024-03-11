@@ -7,4 +7,8 @@ public abstract class TypedMetadata extends BaseMetadata<TypeDefinition> {
     public TypedMetadata(TypeDefinition definition) {
         super(definition);
     }
+
+    public TypeDefinition getType(){
+        return definition;
+    }
 }

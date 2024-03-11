@@ -1,13 +1,13 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.definitions;
 
-import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.BaseDefinition;
+import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.base.ElementDefinition;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ElementUtils;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
 
 
-public final class ClassDefinition extends BaseDefinition<TypeElement> {
+public final class ClassDefinition extends ElementDefinition<TypeElement> {
     private final String name;
     private final TypeDefinition type;
     private final List<MethodDefinition> methods;
