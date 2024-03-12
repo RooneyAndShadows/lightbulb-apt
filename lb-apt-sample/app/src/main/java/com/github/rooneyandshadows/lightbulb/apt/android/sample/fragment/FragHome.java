@@ -27,12 +27,6 @@ public class FragHome extends Fragment {
     private UUID userId;
     @FragmentStatePersisted
     private int persistedInt;
-    @FragmentStatePersisted
-    private String persistedString;
-    @FragmentStatePersisted
-    private Date persistedDate;
-    @FragmentStatePersisted
-    private UUID persistedUUID;
     @FragmentViewModel
     private FragHomeVM viewModel;
     @FragmentViewBinding(layoutName = "frag_root")

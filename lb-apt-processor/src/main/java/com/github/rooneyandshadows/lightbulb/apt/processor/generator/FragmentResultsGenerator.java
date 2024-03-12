@@ -53,7 +53,7 @@ public class FragmentResultsGenerator extends CodeGenerator {
             MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                     .addModifiers(PUBLIC, FINAL)
                     .returns(innerClassName)
-                    .addStatement("return new $T()",innerClassName);
+                    .addStatement("return new $T()", innerClassName);
 
             methods.add(builder.build());
             innerClasses.add(resultClass);
@@ -72,6 +72,7 @@ public class FragmentResultsGenerator extends CodeGenerator {
 
     private void generateFragmentListener(FragmentMetadata.ResultListenerMetadata resultListenerMetadata, List<MethodSpec> destination) {
         String methodName = resultListenerMetadata.getMethod().getName();
+        String methodEnclosingClassSimpleName = resultListenerMetadata.getMethod().getEnclosingClassName();
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder(resultListenerMetadata.getMethod().getName())
                 .addModifiers(PUBLIC, FINAL)
@@ -88,7 +89,9 @@ public class FragmentResultsGenerator extends CodeGenerator {
             builder.addCode(writeIntoBundleCodeBlock);
         });
 
-        builder.addStatement("fragManager.setFragmentResult($S,$L)", methodName, "fragmentResultToSend");
+        String tag = String.format("%s_%s", methodEnclosingClassSimpleName, methodName);
+
+        builder.addStatement("fragManager.setFragmentResult($S,$L)", tag, "fragmentResultToSend");
 
         destination.add(builder.build());
     }

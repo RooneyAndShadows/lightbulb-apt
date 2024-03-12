@@ -109,7 +109,10 @@ public class FragmentGenerator extends CodeGenerator {
 
         if (hasResultListeners) {
             fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
-                String key = resultListenerMetadata.getMethod().getName();
+                String methodName = resultListenerMetadata.getMethod().getName();
+                String methodEnclosingClassSimpleName = resultListenerMetadata.getMethod().getEnclosingClassName();
+
+                String tag = String.format("%s_%s", methodEnclosingClassSimpleName, methodName);
 
                 MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("onFragmentResult")
                         .addModifiers(PUBLIC)
@@ -139,7 +142,7 @@ public class FragmentGenerator extends CodeGenerator {
                         .addMethod(methodBuilder.build())
                         .build();
 
-                builder.addStatement("getParentFragmentManager().setFragmentResultListener($S,this,$L)", key, listener);
+                builder.addStatement("getParentFragmentManager().setFragmentResultListener($S,this,$L)", tag, listener);
             });
         }
 
