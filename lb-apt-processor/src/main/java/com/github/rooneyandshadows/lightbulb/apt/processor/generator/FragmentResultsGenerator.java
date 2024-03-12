@@ -1,5 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
+import com.github.rooneyandshadows.java.commons.string.StringUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
@@ -28,14 +29,37 @@ public class FragmentResultsGenerator extends CodeGenerator {
     @Override
     protected void generateCode(AnnotationResultsRegistry annotationResultsRegistry) {
         List<TypeSpec> innerClasses = new ArrayList<>();
+        List<MethodSpec> methods = new ArrayList<>();
 
         TypeSpec.Builder rootClassBuilder = TypeSpec.classBuilder(FRAGMENT_RESULT_CLASS_NAME)
                 .addModifiers(PUBLIC, FINAL);
 
         fragmentMetadataList.stream().filter(FragmentMetadata::hasResultListeners).toList().forEach(fragmentMetadata -> {
-            generateFragmentWrapper(innerClasses, fragmentMetadata);
+            String innerClassNameString = fragmentMetadata.getSimpleName();
+            List<MethodSpec> innerClassMethods = new ArrayList<>();
+
+            fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
+                generateFragmentListener(resultListenerMetadata, innerClassMethods);
+            });
+
+            TypeSpec resultClass = TypeSpec.classBuilder(innerClassNameString)
+                    .addModifiers(FINAL, PUBLIC)
+                    .addMethods(innerClassMethods)
+                    .build();
+
+            String methodName = "get".concat(resultClass.name);
+            ClassName innerClassName = ClassName.get("", resultClass.name);
+
+            MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
+                    .addModifiers(PUBLIC, FINAL)
+                    .returns(innerClassName)
+                    .addStatement("return new $T()",innerClassName);
+
+            methods.add(builder.build());
+            innerClasses.add(resultClass);
         });
 
+        rootClassBuilder.addMethods(methods);
         rootClassBuilder.addTypes(innerClasses);
 
         writeClassFile(packageNames.getFragmentsResultPackage(), rootClassBuilder);
@@ -46,27 +70,7 @@ public class FragmentResultsGenerator extends CodeGenerator {
         return annotationResultsRegistry.getFragmentDescriptions().stream().anyMatch(FragmentMetadata::hasResultListeners);
     }
 
-    private void generateFragmentWrapper(List<TypeSpec> classes, FragmentMetadata fragmentMetadata) {
-        List<MethodSpec> methods = new ArrayList<>();
-
-        generateFragmentResultListeners(fragmentMetadata, methods);
-
-        TypeSpec initializerClass = TypeSpec.classBuilder(fragmentMetadata.getSimpleName())
-                .addModifiers(FINAL, PUBLIC)
-                .addMethods(methods)
-                .build();
-
-        classes.add(initializerClass);
-
-    }
-
-    private void generateFragmentResultListeners(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
-        fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
-            generateFragmentListener(resultListenerMetadata, true, destination);
-        });
-    }
-
-    private void generateFragmentListener(FragmentMetadata.ResultListenerMetadata resultListenerMetadata, boolean includeOptionalParams, List<MethodSpec> destination) {
+    private void generateFragmentListener(FragmentMetadata.ResultListenerMetadata resultListenerMetadata, List<MethodSpec> destination) {
         String methodName = resultListenerMetadata.getMethod().getName();
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder(resultListenerMetadata.getMethod().getName())
@@ -75,7 +79,7 @@ public class FragmentResultsGenerator extends CodeGenerator {
                 .addParameter(ClassNameUtils.ANDROID_FRAGMENT_MANAGER, "fragManager")
                 .addStatement("$T fragmentResultToSend = new $T()", ClassNameUtils.ANDROID_BUNDLE, ClassNameUtils.ANDROID_BUNDLE);
 
-        resultListenerMetadata.getMethod().getParameters(includeOptionalParams).forEach(parameterDefinition -> {
+        resultListenerMetadata.getMethod().getParameters(true).forEach(parameterDefinition -> {
             Variable variable = new Variable(parameterDefinition.getName(), parameterDefinition.getType());
             CodeBlock writeIntoBundleCodeBlock = bundleCodeGenerator.generateWriteStatement(variable, "fragmentResultToSend");
             ParameterSpec parameterSpec = generateParameterSpec(parameterDefinition.getName(), parameterDefinition.getType(), parameterDefinition.isNullable());

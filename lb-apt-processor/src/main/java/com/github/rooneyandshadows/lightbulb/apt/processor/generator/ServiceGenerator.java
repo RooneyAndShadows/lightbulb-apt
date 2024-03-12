@@ -23,6 +23,7 @@ import static javax.lang.model.element.Modifier.*;
 public class ServiceGenerator extends CodeGenerator {
     private final String servicePackage;
     private final boolean hasRoutingElements;
+    private final boolean hasFragmentResultHandlers;
     private final boolean hasStorageElements;
     private final List<StorageMetadata> storageMetadataList;
 
@@ -31,6 +32,7 @@ public class ServiceGenerator extends CodeGenerator {
         servicePackage = packageNames.getServicePackage();
         hasRoutingElements = annotationResultsRegistry.hasRoutingScreens();
         hasStorageElements = annotationResultsRegistry.hasStorageDescriptions();
+        hasFragmentResultHandlers = annotationResultsRegistry.hasFragmentResultHandlers();
         storageMetadataList = annotationResultsRegistry.getStorageDescriptions();
     }
 
@@ -75,14 +77,25 @@ public class ServiceGenerator extends CodeGenerator {
         FieldSpec instanceField = FieldSpec.builder(lightbulbServiceClassName, "instance", PRIVATE, STATIC)
                 .build();
 
-        MethodSpec getInstanceMethod = MethodSpec.methodBuilder("getInstance")
+        MethodSpec.Builder getInstanceMethodBuilder = MethodSpec.methodBuilder("getInstance")
                 .addModifiers(PUBLIC, STATIC, SYNCHRONIZED)
-                .returns(lightbulbServiceClassName)
-                .beginControlFlow("if(instance == null)")
-                .addStatement("instance = new $T()", lightbulbServiceClassName)
-                .endControlFlow()
-                .addStatement("return instance")
-                .build();
+                .returns(lightbulbServiceClassName);
+
+        getInstanceMethodBuilder.beginControlFlow("if(instance == null)");
+        getInstanceMethodBuilder.addStatement("instance = new $T()", lightbulbServiceClassName);
+
+        if (hasFragmentResultHandlers) {
+            ClassName fragmentResultClassName = classNames.getFragmentResultClassName();
+            String generatedFragmentResultSimpleClassName = fragmentResultClassName.simpleName();
+            String fieldName = MemberUtils.getFieldNameForClass(generatedFragmentResultSimpleClassName);
+
+            getInstanceMethodBuilder.addStatement("instance.$L = new $T()", fieldName, fragmentResultClassName);
+        }
+
+        getInstanceMethodBuilder.endControlFlow();
+        getInstanceMethodBuilder.addStatement("return instance");
+
+        MethodSpec getInstanceMethod = getInstanceMethodBuilder.build();
 
         fields.add(instanceField);
         methods.add(getInstanceMethod);
@@ -156,18 +169,19 @@ public class ServiceGenerator extends CodeGenerator {
     }
 
     private void generateFragmentResultMember(List<FieldSpec> fields, List<MethodSpec> methods) {
-        if (!hasRoutingElements) {
+        if (!hasFragmentResultHandlers) {
             return;
         }
 
         ClassName fragmentResultClassName = classNames.getFragmentResultClassName();
         String generatedFragmentResultSimpleClassName = fragmentResultClassName.simpleName();
         String fieldName = MemberUtils.getFieldNameForClass(generatedFragmentResultSimpleClassName);
+        String getterName = MemberUtils.getFieldGetterName(generatedFragmentResultSimpleClassName);
 
         FieldSpec fragmentResultField = FieldSpec.builder(fragmentResultClassName, fieldName, PRIVATE)
                 .build();
 
-        MethodSpec fragmentResultMethod = MethodSpec.methodBuilder("fragmentResult")
+        MethodSpec fragmentResultMethod = MethodSpec.methodBuilder(getterName)
                 .addModifiers(PUBLIC, STATIC, FINAL)
                 .addAnnotation(NotNull.class)
                 .returns(fragmentResultClassName)

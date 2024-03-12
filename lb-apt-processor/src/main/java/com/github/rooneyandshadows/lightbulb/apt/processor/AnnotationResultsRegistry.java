@@ -65,6 +65,11 @@ public final class AnnotationResultsRegistry {
         return fragmentBindings.stream().anyMatch(FragmentMetadata::isScreen);
     }
 
+    public boolean hasFragmentResultHandlers() {
+        List<FragmentMetadata> fragmentBindings = getFragmentDescriptions();
+        return fragmentBindings.stream().anyMatch(FragmentMetadata::hasResultListeners);
+    }
+
     public enum AnnotationResultTypes {
         LIGHTBULB_FRAGMENT_DESCRIPTION,
         LIGHTBULB_ACTIVITY_DESCRIPTION,
