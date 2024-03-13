@@ -2,7 +2,6 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.utils;
 
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.ClassMetadata;
-import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.MethodMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.TypedMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.definitions.TypeDefinition;
 import com.squareup.javapoet.ClassName;

@@ -1,6 +1,5 @@
 package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
-import com.github.rooneyandshadows.java.commons.string.StringUtils;
 import com.github.rooneyandshadows.lightbulb.apt.commons.PackageNames;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
@@ -39,11 +38,11 @@ public class FragmentResultsGenerator extends CodeGenerator {
             List<MethodSpec> innerClassMethods = new ArrayList<>();
 
             fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
-                generateFragmentListener(resultListenerMetadata, innerClassMethods);
+                generateFragmentListener(fragmentMetadata, resultListenerMetadata, innerClassMethods);
             });
 
             TypeSpec resultClass = TypeSpec.classBuilder(innerClassNameString)
-                    .addModifiers(FINAL, PUBLIC)
+                    .addModifiers(FINAL, PUBLIC, STATIC)
                     .addMethods(innerClassMethods)
                     .build();
 
@@ -70,9 +69,9 @@ public class FragmentResultsGenerator extends CodeGenerator {
         return annotationResultsRegistry.getFragmentDescriptions().stream().anyMatch(FragmentMetadata::hasResultListeners);
     }
 
-    private void generateFragmentListener(FragmentMetadata.ResultListenerMetadata resultListenerMetadata, List<MethodSpec> destination) {
+    private void generateFragmentListener(FragmentMetadata fragmentHost, FragmentMetadata.ResultListenerMetadata resultListenerMetadata, List<MethodSpec> destination) {
         String methodName = resultListenerMetadata.getMethod().getName();
-        String methodEnclosingClassSimpleName = resultListenerMetadata.getMethod().getEnclosingClassName();
+        String methodEnclosingClassSimpleName = fragmentHost.getType().getQualifiedName();
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder(resultListenerMetadata.getMethod().getName())
                 .addModifiers(PUBLIC, FINAL)

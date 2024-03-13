@@ -16,7 +16,6 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.*;
 import static javax.lang.model.element.Modifier.*;
@@ -110,7 +109,7 @@ public class FragmentGenerator extends CodeGenerator {
         if (hasResultListeners) {
             fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
                 String methodName = resultListenerMetadata.getMethod().getName();
-                String methodEnclosingClassSimpleName = resultListenerMetadata.getMethod().getEnclosingClassName();
+                String methodEnclosingClassSimpleName = fragmentMetadata.getType().getQualifiedName();
 
                 String tag = String.format("%s_%s", methodEnclosingClassSimpleName, methodName);
 

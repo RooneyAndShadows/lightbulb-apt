@@ -2,19 +2,15 @@ package com.github.rooneyandshadows.lightbulb.apt.android.sample.fragment;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.github.rooneyandshadows.lightbulb.apt.android.core.parcelable.BlankParcelable;
-import com.github.rooneyandshadows.lightbulb.apt.android.core.utils.BundleUtils;
 import com.github.rooneyandshadows.lightbulb.apt.android.sample.databinding.FragRootBinding;
 import com.github.rooneyandshadows.lightbulb.apt.android.sample.lightbulb.service.LightbulbService;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Date;
 import java.util.UUID;
 
 
@@ -32,7 +28,7 @@ public class FragHome extends Fragment {
     @FragmentViewBinding(layoutName = "frag_root")
     private FragRootBinding viewBinding;
 
-    @ResultListener()
+    @ResultListener
     public void onListUpdate(String userName,UUID userId) {
         System.out.println("RESULT RECEIVED:");
         System.out.printf("userName: %s%n",userName);
