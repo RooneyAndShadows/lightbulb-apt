@@ -8,9 +8,6 @@ import androidx.fragment.app.Fragment;
 import com.github.rooneyandshadows.lightbulb.apt.android.sample.databinding.FragActionBinding;
 import com.github.rooneyandshadows.lightbulb.apt.android.sample.lightbulb.service.LightbulbService;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.UUID;
 
 
 @LightbulbFragment(layoutName = "frag_action")
@@ -22,10 +19,16 @@ public class FragAction extends Fragment {
     private FragActionBinding viewBinding;
 
     @Override
-    public void onViewCreated(@NonNull @NotNull View view, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+    public void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewBinding.testButton.setOnClickListener(v -> {
-            LightbulbService.getFragmentResult().getFragHome().onListUpdate(getParentFragmentManager(),"userName1", UUID.randomUUID());
+            LightbulbService.getFragmentResult().getFragHome().onListEdit(getParentFragmentManager(),1);
             LightbulbService.route().back();
         });
     }

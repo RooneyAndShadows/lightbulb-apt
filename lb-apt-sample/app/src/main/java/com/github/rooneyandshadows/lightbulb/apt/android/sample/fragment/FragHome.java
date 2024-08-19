@@ -35,6 +35,12 @@ public class FragHome extends Fragment {
         System.out.printf("userId: %s%n",userId.toString());
     }
 
+    @ResultListener
+    public void onListEdit(int num) {
+        System.out.println("RESULT RECEIVED:");
+        System.out.printf("userName: %s%n",num);
+    }
+
     @Override
     public void onViewCreated(@NonNull @NotNull View view, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
