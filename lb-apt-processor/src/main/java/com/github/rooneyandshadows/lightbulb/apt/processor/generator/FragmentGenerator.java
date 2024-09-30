@@ -43,6 +43,7 @@ public class FragmentGenerator extends CodeGenerator {
             generateFields(fragmentMetadata, fields, methods);
             generateAbstractMethods(fragmentMetadata, methods);
             generateOnCreateMethod(fragmentMetadata, methods);
+            generateOnDestroyMethod(fragmentMetadata,methods);
             generateOnCreateViewMethod(fragmentMetadata, methods);
             generateOnViewCreatedMethod(fragmentMetadata, methods);
             generateOnSaveInstanceStateMethod(fragmentMetadata, methods);
@@ -95,7 +96,7 @@ public class FragmentGenerator extends CodeGenerator {
         boolean hasViewModels = fragmentMetadata.hasViewModel();
         boolean hasResultListeners = fragmentMetadata.hasResultListeners();
 
-        if (!hasParameters && !hasPersistedVars && !hasViewModels) {
+        if (!hasParameters && !hasPersistedVars && !hasViewModels && !hasResultListeners) {
             return;
         }
 
@@ -166,6 +167,33 @@ public class FragmentGenerator extends CodeGenerator {
             builder.beginControlFlow("if(savedInstanceState != null)")
                     .addStatement("restoreVariablesState(savedInstanceState)")
                     .endControlFlow();
+        }
+
+        destination.add(builder.build());
+    }
+
+    @SuppressWarnings("ConstantValue")
+    private void generateOnDestroyMethod(FragmentMetadata fragmentMetadata,List<MethodSpec> destination) {
+        boolean hasResultListeners = fragmentMetadata.hasResultListeners();
+
+        if (!hasResultListeners) {
+            return;
+        }
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("onDestroy")
+                .addModifiers(PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(void.class)
+                .addStatement("super.onDestroy()");
+
+        if (hasResultListeners) {
+            fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
+                String methodName = resultListenerMetadata.getMethod().getName();
+                String methodEnclosingClassSimpleName = fragmentMetadata.getType().getQualifiedName();
+                String tag = String.format("%s_%s", methodEnclosingClassSimpleName, methodName);
+
+                builder.addStatement("getParentFragmentManager().clearFragmentResultListener($S)", tag);
+            });
         }
 
         destination.add(builder.build());

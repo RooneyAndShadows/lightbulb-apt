@@ -38,7 +38,7 @@ public class FragHome extends Fragment {
     @ResultListener
     public void onListEdit(int num) {
         System.out.println("RESULT RECEIVED:");
-        System.out.printf("userName: %s%n",num);
+        System.out.printf("number: %s%n",num);
     }
 
     @Override
