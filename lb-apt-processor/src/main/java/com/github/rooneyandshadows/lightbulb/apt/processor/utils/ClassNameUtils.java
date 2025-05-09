@@ -140,6 +140,20 @@ public class ClassNameUtils {
     private static ClassName from(String canonicalName) {
         String packageName = canonicalName.substring(0, canonicalName.lastIndexOf("."));
         String name = canonicalName.substring(canonicalName.lastIndexOf('.') + 1);
-        return ClassName.get(packageName, name);
+
+        boolean isNestedClass = name.contains("$");
+
+        if (!isNestedClass) {
+            return ClassName.get(packageName, name);
+        } else {
+            String[] resolved = name.split("\\$");
+            ClassName currentClassName = ClassName.get(packageName, resolved[0]);
+            for (int i = 1; i < resolved.length; i++) {
+                currentClassName = currentClassName.nestedClass(resolved[i]);
+            }
+
+
+            return currentClassName;
+        }
     }
 }
