@@ -28,6 +28,7 @@ public class FragAction extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewBinding.testButton.setOnClickListener(v -> {
+            //TODO ADD FEATURE for adding result trough router (LightbulbService.route().toCommonHome().withOnListUpdateResult(String userName,UUID userId))
             LightbulbService.getFragmentResult().getFragHome().onListEdit(getParentFragmentManager(),1);
             LightbulbService.route().back();
         });

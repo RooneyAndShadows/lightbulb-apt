@@ -17,12 +17,14 @@ buildscript {
                         java_commons: "[1.0.7,1.1.0[",
                         javassist   : "3.29.2-GA",
                         javapoet    : "1.13.0",
+                        okhttp      : "4.10.0",
+                        rx_android  : "3.0.2",
                 ]
         ]
         environment = [
-                "group_id"       : "com.github.rooneyandshadows.lightbulb-apt",
-                "core_namespace"       : 'com.github.rooneyandshadows.lightbulb.apt.core',
-                "version"              : "2.0.0-RC7" //TODO chande version in extensions.kt in plugin
+                "group_id"      : "com.github.rooneyandshadows.lightbulb-apt",
+                "core_namespace": 'com.github.rooneyandshadows.lightbulb.apt.core',
+                "version"       : "2.0.0" //TODO chande version in extensions.kt in plugin
         ]
     }
 }
