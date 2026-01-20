@@ -360,9 +360,9 @@ public class BundleCodeGenerator {
 
         cbBuilder.addStatement("$T $L", typeName, tmpVarName)
                 .beginControlFlow("if($L >= $L)", ANDROID_SDK_INT, classNames.generateVersionCodeClassName("TIRAMISU"))
-                .addStatement("$L = $L.getParcelable($S,$L)", bundleVariableName, tmpVarName, key, typeName.toString().concat(".class"))
+                .addStatement("$L = $L.getParcelable($S,$L)", tmpVarName, bundleVariableName, key, typeName.toString().concat(".class"))
                 .nextControlFlow("else")
-                .addStatement("$L = $L.getParcelable($S)", bundleVariableName, tmpVarName, key)
+                .addStatement("$L = $L.getParcelable($S)", tmpVarName, bundleVariableName, key)
                 .endControlFlow()
                 .addStatement(setStatement);
     }

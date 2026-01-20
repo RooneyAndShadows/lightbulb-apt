@@ -43,7 +43,7 @@ public class FragmentGenerator extends CodeGenerator {
             generateFields(fragmentMetadata, fields, methods);
             generateAbstractMethods(fragmentMetadata, methods);
             generateOnCreateMethod(fragmentMetadata, methods);
-            generateOnDestroyMethod(fragmentMetadata,methods);
+            generateOnDestroyMethod(fragmentMetadata, methods);
             generateOnCreateViewMethod(fragmentMetadata, methods);
             generateOnViewCreatedMethod(fragmentMetadata, methods);
             generateOnSaveInstanceStateMethod(fragmentMetadata, methods);
@@ -111,38 +111,9 @@ public class FragmentGenerator extends CodeGenerator {
             fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
                 String methodName = resultListenerMetadata.getMethod().getName();
                 String methodEnclosingClassSimpleName = fragmentMetadata.getType().getQualifiedName();
-
                 String tag = String.format("%s_%s", methodEnclosingClassSimpleName, methodName);
 
-                MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("onFragmentResult")
-                        .addModifiers(PUBLIC)
-                        .returns(void.class)
-                        .addAnnotation(Override.class)
-                        .addParameter(STRING, "requestKey")
-                        .addParameter(ANDROID_BUNDLE, "bundle");
-
-                resultListenerMetadata.getMethod().getParameters(true).forEach(parameterDefinition -> {
-                    TypeName parameterType = classNames.getTypeName(parameterDefinition.getType());
-                    String declareStatement = parameterDefinition.isNullable() ? "$T $L = null" : "$T $L";
-
-                    methodBuilder.addStatement(declareStatement, parameterType, parameterDefinition.getName());
-
-                    Variable field = new Variable(parameterDefinition.getName(), parameterDefinition.getType());
-                    CodeBlock readCodeBlock = bundleCodeGenerator.generateReadStatement(field, "bundle", !parameterDefinition.isNullable(), !parameterDefinition.isNullable());
-
-                    methodBuilder.addCode(readCodeBlock);
-                });
-
-                String orderedParams = generateCommaSeparatedParamsString(resultListenerMetadata);
-
-                methodBuilder.addStatement("$L($L)", resultListenerMetadata.getMethod().getName(), orderedParams);
-
-                TypeSpec listener = TypeSpec.anonymousClassBuilder("")
-                        .addSuperinterface(ANDROID_FRAGMENT_RESULT_LISTENER)
-                        .addMethod(methodBuilder.build())
-                        .build();
-
-                builder.addStatement("getParentFragmentManager().setFragmentResultListener($S,this,$L)", tag, listener);
+                builder.addStatement("getParentFragmentManager().clearFragmentResult($S)", tag);
             });
         }
 
@@ -173,7 +144,7 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     @SuppressWarnings("ConstantValue")
-    private void generateOnDestroyMethod(FragmentMetadata fragmentMetadata,List<MethodSpec> destination) {
+    private void generateOnDestroyMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
         boolean hasResultListeners = fragmentMetadata.hasResultListeners();
 
         if (!hasResultListeners) {
@@ -232,7 +203,9 @@ public class FragmentGenerator extends CodeGenerator {
     }
 
     private void generateOnViewCreatedMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
-        if (!fragmentMetadata.hasBindViews()) {
+        boolean hasBindViews = fragmentMetadata.hasBindViews();
+        boolean hasResultListeners = fragmentMetadata.hasResultListeners();
+        if (!hasBindViews && !hasResultListeners) {
             return;
         }
 
@@ -243,6 +216,45 @@ public class FragmentGenerator extends CodeGenerator {
                 .addParameter(ANDROID_BUNDLE, "savedInstanceState")
                 .addStatement("super.onViewCreated(fragmentView,savedInstanceState)")
                 .returns(void.class);
+
+        if (hasResultListeners) {
+            fragmentMetadata.getResultListeners().forEach(resultListenerMetadata -> {
+                String methodName = resultListenerMetadata.getMethod().getName();
+                String methodEnclosingClassSimpleName = fragmentMetadata.getType().getQualifiedName();
+
+                String tag = String.format("%s_%s", methodEnclosingClassSimpleName, methodName);
+
+                MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("onFragmentResult")
+                        .addModifiers(PUBLIC)
+                        .returns(void.class)
+                        .addAnnotation(Override.class)
+                        .addParameter(STRING, "requestKey")
+                        .addParameter(ANDROID_BUNDLE, "bundle");
+
+                resultListenerMetadata.getMethod().getParameters(true).forEach(parameterDefinition -> {
+                    TypeName parameterType = classNames.getTypeName(parameterDefinition.getType());
+                    String declareStatement = parameterDefinition.isNullable() ? "$T $L = null" : "$T $L";
+
+                    methodBuilder.addStatement(declareStatement, parameterType, parameterDefinition.getName());
+
+                    Variable field = new Variable(parameterDefinition.getName(), parameterDefinition.getType());
+                    CodeBlock readCodeBlock = bundleCodeGenerator.generateReadStatement(field, "bundle", !parameterDefinition.isNullable(), !parameterDefinition.isNullable());
+
+                    methodBuilder.addCode(readCodeBlock);
+                });
+
+                String orderedParams = generateCommaSeparatedParamsString(resultListenerMetadata);
+
+                methodBuilder.addStatement("$L($L)", resultListenerMetadata.getMethod().getName(), orderedParams);
+
+                TypeSpec listener = TypeSpec.anonymousClassBuilder("")
+                        .addSuperinterface(ANDROID_FRAGMENT_RESULT_LISTENER)
+                        .addMethod(methodBuilder.build())
+                        .build();
+
+                builder.addStatement("getParentFragmentManager().setFragmentResultListener($S,getViewLifecycleOwner(),$L)", tag, listener);
+            });
+        }
 
         fragmentMetadata.getBindViews().forEach(viewBinding -> {
             Field field = Field.from(viewBinding);
