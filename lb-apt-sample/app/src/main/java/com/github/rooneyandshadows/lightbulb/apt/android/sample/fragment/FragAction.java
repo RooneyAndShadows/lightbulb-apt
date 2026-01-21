@@ -13,7 +13,7 @@ import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 @LightbulbFragment(layoutName = "frag_action")
 @FragmentScreen(screenName = "Action")
 public class FragAction extends Fragment {
-    @FragmentViewModel
+    @FragmentViewModel()
     private FragActionVM viewModel;
     @FragmentViewBinding(layoutName = "frag_action")
     private FragActionBinding viewBinding;

@@ -190,8 +190,15 @@ public final class FragmentMetadata extends ClassMetadata {
     }
 
     public static final class ViewModelMetadata extends FieldMetadata {
+        private final boolean isOwnedWithinActivity;
+
         public ViewModelMetadata(FieldDefinition fieldDefinition, FragmentViewModel annotation) {
             super(fieldDefinition);
+            isOwnedWithinActivity = annotation.scope() == FragmentViewModel.ViewModelScope.ACTIVITY;
+        }
+
+        public boolean isOwnedWithinActivity() {
+            return isOwnedWithinActivity;
         }
     }
 

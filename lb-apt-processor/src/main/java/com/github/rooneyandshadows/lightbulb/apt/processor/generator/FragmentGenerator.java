@@ -122,7 +122,12 @@ public class FragmentGenerator extends CodeGenerator {
             Field field = Field.from(viewModel);
             TypeName viewModelTypeName = classNames.getTypeName(viewModel);
 
-            builder.addStatement(field.getValueSetStatement("new $T(this).get($T.class)"), ANDROID_VIEW_MODEL_PROVIDER, viewModelTypeName);
+            String viewModelOwner = "this";
+            if (viewModel.isOwnedWithinActivity()) {
+                viewModelOwner = "requireActivity()";
+            }
+
+            builder.addStatement(field.getValueSetStatement("new $T($L).get($T.class)"), ANDROID_VIEW_MODEL_PROVIDER, viewModelOwner, viewModelTypeName);
         }
 
         if (!hasParameters && !hasPersistedVars) {
