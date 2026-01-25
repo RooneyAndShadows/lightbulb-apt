@@ -3,12 +3,14 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.validator;
 import com.github.rooneyandshadows.lightbulb.apt.annotations.*;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ViewModelMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.validator.base.AnnotationResultValidator;
 
 import javax.annotation.processing.Messager;
 import java.util.*;
 
 import static com.github.rooneyandshadows.lightbulb.apt.commons.ClassDefinitions.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.*;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
 public class FragmentValidator extends AnnotationResultValidator {
@@ -66,20 +68,26 @@ public class FragmentValidator extends AnnotationResultValidator {
     }
 
     private boolean validateViewModel(FragmentMetadata fragmentMetadata, ErrorString errorMessage) {
-        if (fragmentMetadata.hasViewModel()) {
-            if (!fragmentMetadata.getViewModel().getType().is(VIEW_MODEL)) {
-                errorMessage.append("\n\tField \"%s\" is annotated with @%s and it's type must be subtype of %s.", fragmentMetadata.getViewModel().getName(), FragmentViewModel.class.getSimpleName(), VIEW_MODEL);
-                return false;
+        int errorsCount = 0;
+        String annotationName = FragmentViewModel.class.getSimpleName();
+        for (int i = 0; i < fragmentMetadata.getViewModels().size(); i++) {
+            ViewModelMetadata viewModelMetadata = fragmentMetadata.getViewModels().get(i);
+            if (!viewModelMetadata.getType().is(VIEW_MODEL)) {
+                if (errorsCount == 0) {
+                    errorsCount++;
+                    errorMessage.append("\n\t@%s errors:", annotationName);
+                }
+                errorMessage.append("\n\t\tField \"%s\" is annotated with @%s and it's type must be subtype of %s.", viewModelMetadata.getName(), annotationName, VIEW_MODEL);
             }
         }
-        return true;
+        return errorsCount == 0;
     }
 
     private boolean validateBindViews(FragmentMetadata fragmentMetadata, ErrorString errorMessage) {
         int errorsCount = 0;
         String annotationName = BindView.class.getSimpleName();
         for (int i = 0; i < fragmentMetadata.getBindViews().size(); i++) {
-            FragmentMetadata.BindViewMetadata bindViewMetadata = fragmentMetadata.getBindViews().get(i);
+            BindViewMetadata bindViewMetadata = fragmentMetadata.getBindViews().get(i);
             if (!bindViewMetadata.getType().is(VIEW)) {
                 if (errorsCount == 0) {
                     errorsCount++;

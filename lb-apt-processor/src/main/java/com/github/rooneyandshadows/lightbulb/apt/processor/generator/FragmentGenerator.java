@@ -74,11 +74,9 @@ public class FragmentGenerator extends CodeGenerator {
         targets.addAll(fragmentMetadata.getScreenParameters());
         targets.addAll(fragmentMetadata.getBindViews());
         targets.addAll(fragmentMetadata.getPersistedValues());
+        targets.addAll(fragmentMetadata.getViewModels());
         if (fragmentMetadata.hasViewBinding()) {
             targets.add(fragmentMetadata.getViewBinding());
-        }
-        if (fragmentMetadata.hasViewModel()) {
-            targets.add(fragmentMetadata.getViewModel());
         }
 
         copyFieldsForSupertypeTransformation(targets, fields, methods);
@@ -93,7 +91,7 @@ public class FragmentGenerator extends CodeGenerator {
     private void generateOnCreateMethod(FragmentMetadata fragmentMetadata, List<MethodSpec> destination) {
         boolean hasParameters = fragmentMetadata.hasParameters();
         boolean hasPersistedVars = fragmentMetadata.hasPersistedValues();
-        boolean hasViewModels = fragmentMetadata.hasViewModel();
+        boolean hasViewModels = fragmentMetadata.hasViewModels();
         boolean hasResultListeners = fragmentMetadata.hasResultListeners();
 
         if (!hasParameters && !hasPersistedVars && !hasViewModels && !hasResultListeners) {
@@ -118,16 +116,19 @@ public class FragmentGenerator extends CodeGenerator {
         }
 
         if (hasViewModels) {
-            FragmentMetadata.ViewModelMetadata viewModel = fragmentMetadata.getViewModel();
-            Field field = Field.from(viewModel);
-            TypeName viewModelTypeName = classNames.getTypeName(viewModel);
+            fragmentMetadata.getViewModels().forEach(viewModelMetadata -> {
+                Field field = Field.from(viewModelMetadata);
+                TypeName viewModelTypeName = classNames.getTypeName(viewModelMetadata);
 
-            String viewModelOwner = "this";
-            if (viewModel.isOwnedWithinActivity()) {
-                viewModelOwner = "requireActivity()";
-            }
+                String viewModelOwner;
+                switch (viewModelMetadata.getScope()) {
+                    case ACTIVITY -> viewModelOwner = "requireActivity()";
+                    case PARENT_FRAGMENT -> viewModelOwner = "requireParentFragment()";
+                    default -> viewModelOwner = "this";
+                }
 
-            builder.addStatement(field.getValueSetStatement("new $T($L).get($T.class)"), ANDROID_VIEW_MODEL_PROVIDER, viewModelOwner, viewModelTypeName);
+                builder.addStatement(field.getValueSetStatement("new $T($L).get($T.class)"), ANDROID_VIEW_MODEL_PROVIDER, viewModelOwner, viewModelTypeName);
+            });
         }
 
         if (!hasParameters && !hasPersistedVars) {

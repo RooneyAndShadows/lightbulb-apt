@@ -8,10 +8,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.FIELD)
 public @interface FragmentViewModel {
-    ViewModelScope scope() default ViewModelScope.FRAGMENT;
+    ViewModelScope scope() default ViewModelScope.LOCAL_FRAGMENT;
 
     enum ViewModelScope {
         ACTIVITY,
-        FRAGMENT
+        PARENT_FRAGMENT,
+        LOCAL_FRAGMENT
     }
 }

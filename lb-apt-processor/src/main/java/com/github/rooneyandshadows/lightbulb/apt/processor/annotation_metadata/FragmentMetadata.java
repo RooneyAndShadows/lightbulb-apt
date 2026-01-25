@@ -22,8 +22,8 @@ public final class FragmentMetadata extends ClassMetadata {
     private String layoutName;
     private String screenName;
     private String screenGroupName;
-    private ViewModelMetadata viewModel;
     private ViewBindingMetadata viewBinding;
+    private final List<ViewModelMetadata> viewModels = new ArrayList<>();
     private final List<ScreenParameterMetadata> screenParameters = new ArrayList<>();
     private final List<StatePersistedMetadata> persistedValues = new ArrayList<>();
     private final List<BindViewMetadata> bindViews = new ArrayList<>();
@@ -56,7 +56,7 @@ public final class FragmentMetadata extends ClassMetadata {
                 bindViews.add(bView);
             } else if (annotation instanceof FragmentViewModel viewModelAnnotation) {
                 FieldDefinition fieldDefinition = new FieldDefinition((VariableElement) element);
-                viewModel = new ViewModelMetadata(fieldDefinition, viewModelAnnotation);
+                viewModels.add(new ViewModelMetadata(fieldDefinition, viewModelAnnotation));
             } else if (annotation instanceof FragmentViewBinding viewBindingAnnotation) {
                 FieldDefinition fieldDefinition = new FieldDefinition((VariableElement) element);
                 viewBinding = new ViewBindingMetadata(fieldDefinition, viewBindingAnnotation);
@@ -91,8 +91,8 @@ public final class FragmentMetadata extends ClassMetadata {
         return bindViews;
     }
 
-    public ViewModelMetadata getViewModel() {
-        return viewModel;
+    public List<ViewModelMetadata> getViewModels() {
+        return viewModels;
     }
 
     public ViewBindingMetadata getViewBinding() {
@@ -127,8 +127,8 @@ public final class FragmentMetadata extends ClassMetadata {
         return viewBinding != null;
     }
 
-    public boolean hasViewModel() {
-        return viewModel != null;
+    public boolean hasViewModels() {
+        return !viewModels.isEmpty();
     }
 
     public List<ScreenParameterMetadata> getScreenParameters(boolean includeOptional) {
@@ -190,15 +190,25 @@ public final class FragmentMetadata extends ClassMetadata {
     }
 
     public static final class ViewModelMetadata extends FieldMetadata {
-        private final boolean isOwnedWithinActivity;
+        private final Scope scope;
 
         public ViewModelMetadata(FieldDefinition fieldDefinition, FragmentViewModel annotation) {
             super(fieldDefinition);
-            isOwnedWithinActivity = annotation.scope() == FragmentViewModel.ViewModelScope.ACTIVITY;
+            switch (annotation.scope()) {
+                case ACTIVITY -> scope = Scope.ACTIVITY;
+                case PARENT_FRAGMENT -> scope = Scope.PARENT_FRAGMENT;
+                default -> scope = Scope.LOCAL_FRAGMENT;
+            }
         }
 
-        public boolean isOwnedWithinActivity() {
-            return isOwnedWithinActivity;
+        public Scope getScope() {
+            return scope;
+        }
+
+        public enum Scope {
+            ACTIVITY,
+            PARENT_FRAGMENT,
+            LOCAL_FRAGMENT
         }
     }
 
