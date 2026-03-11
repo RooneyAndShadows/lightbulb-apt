@@ -116,7 +116,6 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     }
 
 
-
     fun back() {
         runOnUiThread {
             if (backStack.getEntriesCount() <= 1) contextActivity.moveTaskToBack(true)
@@ -137,7 +136,8 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
 
     fun backNTimesAndReplace(n: Int, newScreen: FragmentScreen, animate: Boolean) {
         runOnUiThread {
-            startTransaction(null).apply transaction@{
+            val transitionType = if (animate) TransitionTypes.ENTER else TransitionTypes.NONE
+            startTransaction(transitionType).apply transaction@{
                 val initialSize = backStack.getEntriesCount()
                 while (backStack.getEntriesCount() > initialSize - n) {
                     val fragToRemove = popCurrentFragment()
@@ -145,13 +145,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
                 }
                 val backStackName = UUID.randomUUID().toString()
                 val fragmentToAdd = newScreen.getFragment()
-                if (animate)
-                    setCustomAnimations(
-                        0,
-                        0,
-                        R.anim.enter_from_left,
-                        R.anim.exit_to_right
-                    )
+
                 add(fragmentContainerId, fragmentToAdd, backStackName)
                 runOnCommit {
                     backStack.add(backStackName)
@@ -239,7 +233,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     private fun startTransaction(transition: TransitionTypes?): FragmentTransaction {
         //fragmentManager.executePendingTransactions()
         val transaction = fragmentManager.beginTransaction().apply {
-            setReorderingAllowed(false)
+            setReorderingAllowed(true)
             when (transition) {
                 TransitionTypes.ENTER -> setCustomAnimations(
                     R.anim.enter_from_right,
