@@ -22,6 +22,7 @@ public class ClassNameUtils {
      * Lightbulb
      */
     public static final ClassName BASE_ROUTER = from(LIGHTBULB_BASE_ROUTER);
+    public static final ClassName BASE_ROUTER_ON_EXIST_STRATEGY = from(LIGHTBULB_BASE_ROUTER_ON_EXIST_STRATEGY);
     public static final ClassName BASE_STORAGE = from(LIGHTBULB_BASE_STORAGE);
     public static final ClassName DATE_UTILS = from(LIGHTBULB_DATE_UTILS);
     public static final ClassName LB_ANDROID_RESOURCES = from(LIGHTBULB_ANDROID_RESOURCES);
@@ -56,9 +57,11 @@ public class ClassNameUtils {
     public static final ClassName INTEGER = ClassName.get(Integer.class);
     public static final ClassName CLASS = ClassName.get(Class.class);
     public static final ClassName OBJECT = ClassName.get(Object.class);
+    public static final ClassName OBJECTS = ClassName.get(Objects.class);
     public static final ClassName MAP = ClassName.get(Map.class);
     public static final ClassName HASH_MAP = ClassName.get(HashMap.class);
     public static final ClassName ARRAY_LIST = ClassName.get(ArrayList.class);
+    public static final ClassName ARRAYS = ClassName.get(Arrays.class);
     public static final ClassName ILLEGAL_ARGUMENT_EXCEPTION = ClassName.get(IllegalArgumentException.class);
     private final PackageNames packageNames;
 

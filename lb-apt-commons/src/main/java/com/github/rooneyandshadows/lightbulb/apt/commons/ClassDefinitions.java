@@ -10,6 +10,7 @@ public class ClassDefinitions {
      * Lightbulb
      */
     public static final ClassInfo LIGHTBULB_BASE_ROUTER = new ClassInfo(LB_APT_CORE_ROUTING, "BaseActivityRouter");
+    public static final ClassInfo LIGHTBULB_BASE_ROUTER_ON_EXIST_STRATEGY = new ClassInfo(LB_APT_CORE_ROUTING, "BaseActivityRouter$OnExistStrategy");
     public static final ClassInfo LIGHTBULB_BASE_STORAGE = new ClassInfo(LB_APT_CORE_STORAGE, "BaseStorage");
     public static final ClassInfo LIGHTBULB_DATE_UTILS = new ClassInfo(LB_APT_CORE_UTILS, "DateUtils");
     public static final ClassInfo LIGHTBULB_ANDROID_RESOURCES = new ClassInfo(LB_APT_CORE, "R");
@@ -22,12 +23,12 @@ public class ClassDefinitions {
     public static final ClassInfo FRAGMENT_RESULT_LISTENER = new ClassInfo(ANDROIDX_FRAGMENT_APP, "FragmentResultListener");
     public static final ClassInfo ACTIVITY = new ClassInfo(ANDROIDX_APPCOMPAT_APP, "AppCompatActivity");
     public static final ClassInfo BUNDLE = new ClassInfo(ANDROID_OS, "Bundle");
-    public static final ClassInfo PARCELABLE =new ClassInfo(ANDROID_OS, "Parcelable");
+    public static final ClassInfo PARCELABLE = new ClassInfo(ANDROID_OS, "Parcelable");
     public static final ClassInfo PARCELABLE_CREATOR = new ClassInfo(ANDROID_OS, "Parcelable$Creator");
     public static final ClassInfo SPARSE_ARRAY = new ClassInfo(ANDROID_UTIL, "SparseArray");
-    public static final ClassInfo CONTEXT =new ClassInfo(ANDROID_CONTENT, "Context");
+    public static final ClassInfo CONTEXT = new ClassInfo(ANDROID_CONTENT, "Context");
     public static final ClassInfo APPLICATION = new ClassInfo(ANDROID_APP, "Application");
-    public static final ClassInfo RESOURCES =new ClassInfo(ANDROID_CONTENT_RES, "Resources");
+    public static final ClassInfo RESOURCES = new ClassInfo(ANDROID_CONTENT_RES, "Resources");
     public static final ClassInfo VIEW = new ClassInfo(PackageNames.ANDROID_VIEW, "View");
     public static final ClassInfo LAYOUT_INFLATER = new ClassInfo(PackageNames.ANDROID_VIEW, "LayoutInflater");
     public static final ClassInfo VIEW_GROUP = new ClassInfo(PackageNames.ANDROID_VIEW, "ViewGroup");

@@ -1,8 +1,6 @@
 package com.github.rooneyandshadows.lightbulb.apt.android.core.routing
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +11,6 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.github.rooneyandshadows.lightbulb.apt.android.core.utils.BundleUtils
 import com.github.rooneyandshadows.lightbulb.apt.core.R
-import java.util.*
 
 
 @Suppress("CanBePrimaryConstructorProperty", "unused", "MemberVisibilityCanBePrivate")
@@ -82,8 +79,39 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
         return backStack.getEntriesCount() == 1
     }
 
+    fun goTo(newScreen: FragmentScreen) {
+        goTo(newScreen, newScreen.getId(), OnExistStrategy.BACK_TO_EXISTING)
+    }
+
+    fun goTo(newScreen: FragmentScreen, backStackEntryName: String) {
+        goTo(newScreen, backStackEntryName, OnExistStrategy.BACK_TO_EXISTING)
+    }
+
+    fun goTo(newScreen: FragmentScreen, mode: OnExistStrategy) {
+        goTo(newScreen, newScreen.getId(), mode)
+    }
+
+    fun goTo(newScreen: FragmentScreen, backStackEntryName: String, mode: OnExistStrategy) {
+        val existingPosition = backStack.getScreenPosition(backStackEntryName)
+
+        if (existingPosition != -1) {
+            when (mode) {
+                OnExistStrategy.BACK_TO_EXISTING -> {
+                    val backSteps = backStack.getEntriesCount() - (existingPosition + 1)
+                    backNtimes(backSteps)
+                }
+
+                OnExistStrategy.MOVE_EXISTING_TO_TOP -> {
+                    moveScreenToTop(existingPosition)
+                }
+            }
+        } else {
+            forward(newScreen, backStackEntryName)
+        }
+    }
+
     fun forward(newScreen: FragmentScreen) {
-        forward(newScreen, TransitionTypes.ENTER, UUID.randomUUID().toString())
+        forward(newScreen, TransitionTypes.ENTER, newScreen.getId())
     }
 
     fun forward(newScreen: FragmentScreen, backStackEntryName: String) {
@@ -91,7 +119,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     }
 
     fun forward(newScreen: FragmentScreen, transition: TransitionTypes) {
-        forward(newScreen, transition, UUID.randomUUID().toString())
+        forward(newScreen, transition, newScreen.getId())
     }
 
     fun forward(
@@ -99,8 +127,18 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
         transition: TransitionTypes,
         backStackEntryName: String,
     ) {
+        if (backStack.hasScreen(backStackEntryName)) {
+            Log.e(
+                logTag,
+                String.format(
+                    "Failed to execute forward routing to \"%s\". Error: Screen with name \"%s\" " +
+                            "already exists in backstack. Ignoring route command",
+                    backStackEntryName,
+                    backStackEntryName
+                )
+            )
+        }
         runOnUiThread {
-            //val currentFragment = fragmentManager.findFragmentById(fragmentContainerId)
             val requestedFragment = newScreen.getFragment()
             val currentFragment = getCurrentFragment()
             startTransaction(transition).apply transaction@{
@@ -117,15 +155,27 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
 
 
     fun back() {
+        backNtimes(1)
+    }
+
+    fun backNtimes(n: Int) {
+        if (n <= 0) return
+        val moveTaskToBack = backStack.getEntriesCount() <= n
         runOnUiThread {
-            if (backStack.getEntriesCount() <= 1) contextActivity.moveTaskToBack(true)
-            else startTransaction(TransitionTypes.EXIT).apply transaction@{
-                val currentFrag = popCurrentFragment()
+            startTransaction(TransitionTypes.EXIT).apply transaction@{
+                val initialSize = backStack.getEntriesCount()
+                while (backStack.getEntriesCount() > initialSize - n) {
+                    val fragToRemove = popCurrentFragment()
+                    remove(fragToRemove!!)
+                }
+
                 val nextFragment = getCurrentFragment()
-                if (currentFrag != null)
-                    remove(currentFrag)
                 attach(nextFragment!!)
                 commitAndExecute(this@transaction)
+            }
+
+            if (moveTaskToBack) {
+                contextActivity.moveTaskToBack(true)
             }
         }
     }
@@ -135,6 +185,21 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     }
 
     fun backNTimesAndReplace(n: Int, newScreen: FragmentScreen, animate: Boolean) {
+        val backStackName = newScreen.getId()
+        val existingPosition = backStack.getScreenPosition(backStackName)
+        if (existingPosition != -1 && existingPosition < backStack.getEntriesCount() - n) {
+            Log.e(
+                logTag,
+                String.format(
+                    "Failed to execute backAndReplace routing to \"%s\". Error: Screen with name \"%s\" " +
+                            "already exists on position \"%d\" in backstack. Ignoring route command",
+                    backStackName,
+                    backStackName,
+                    existingPosition
+                )
+            )
+        }
+
         runOnUiThread {
             val transitionType = if (animate) TransitionTypes.ENTER else TransitionTypes.NONE
             startTransaction(transitionType).apply transaction@{
@@ -143,7 +208,6 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
                     val fragToRemove = popCurrentFragment()
                     remove(fragToRemove!!)
                 }
-                val backStackName = UUID.randomUUID().toString()
                 val fragmentToAdd = newScreen.getFragment()
 
                 add(fragmentContainerId, fragmentToAdd, backStackName)
@@ -192,6 +256,28 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
         action.execute(fragmentContainerId, fragmentManager, backStack)
     }
 
+    private fun moveScreenToTop(position: Int) {
+        runOnUiThread {
+            val targetName = backStack.getAt(position)!!
+            val targetFragment = fragmentManager.findFragmentByTag(targetName)
+            val currentFragment = getCurrentFragment()
+
+            startTransaction(TransitionTypes.ENTER).apply transaction@{
+                if (currentFragment != null)
+                    detach(currentFragment)
+                if (targetFragment != null) {
+                    attach(targetFragment)
+                }
+
+                runOnCommit {
+                    backStack.removeAt(position)
+                    backStack.add(targetName)
+                }
+                commitAndExecute(this@transaction)
+            }
+        }
+    }
+
     private fun getCurrentFragment(): Fragment? {
         val currentTag = backStack.getCurrent() ?: return null
         return fragmentManager.findFragmentByTag(currentTag)
@@ -203,6 +289,8 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     }
 
     private fun newChain(root: Boolean, vararg screens: FragmentScreen) {
+        val addedScreens = mutableMapOf<String, Boolean>()
+        val errors = mutableListOf<String>()
         runOnUiThread {
             startTransaction(null).apply transaction@{
                 if (root) {
@@ -214,19 +302,37 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
                     val fragToDetach = getCurrentFragment()
                     detach(fragToDetach!!)
                 }
+
+                var prevFragment: Fragment? = null
                 screens.forEachIndexed { index, fragmentScreen ->
-                    val isLast = index == screens.size - 1
-                    val backStackName = UUID.randomUUID().toString()
+                    val backStackName = fragmentScreen.getId()
+
+                    if (addedScreens.containsKey(backStackName)) {
+                        errors.add("$backStackName is dublicated in the provided chain")
+
+                        return@forEachIndexed
+                    }
+
                     val fragmentToAdd = fragmentScreen.getFragment()
+
                     add(fragmentContainerId, fragmentToAdd, backStackName)
-                    if (!isLast)
-                        detach(fragmentToAdd)
+                    addedScreens[backStackName] = true
+                    prevFragment?.let { frag -> detach(frag) }
+                    prevFragment = fragmentToAdd
+
                     runOnCommit {
                         backStack.add(backStackName)
                     }
                 }
                 commitAndExecute(this@transaction)
             }
+        }
+
+        if (errors.size > 0) {
+            Log.e(
+                logTag,
+                String.format("New chaing command executed partially. Errors: \n%s", errors.joinToString("\n"))
+            )
         }
     }
 
@@ -281,6 +387,11 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
             )
     }
 
+    enum class OnExistStrategy(val type: Int) {
+        BACK_TO_EXISTING(1),
+        MOVE_EXISTING_TO_TOP(2),
+    }
+
     enum class TransitionTypes(val type: Int) {
         NONE(1),
         ENTER(2),
@@ -296,6 +407,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
     }
 
     abstract class FragmentScreen {
+        abstract fun getId(): String
         abstract fun getFragment(): Fragment
     }
 }

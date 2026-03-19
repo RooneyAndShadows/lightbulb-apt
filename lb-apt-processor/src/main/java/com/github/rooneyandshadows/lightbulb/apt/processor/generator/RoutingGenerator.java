@@ -2,6 +2,7 @@ package com.github.rooneyandshadows.lightbulb.apt.processor.generator;
 
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.FragmentMetadata.ScreenParameterMetadata;
+import com.github.rooneyandshadows.lightbulb.apt.processor.annotation_metadata.base.FieldMetadata;
 import com.github.rooneyandshadows.lightbulb.apt.processor.generator.base.CodeGenerator;
 import com.github.rooneyandshadows.lightbulb.apt.processor.AnnotationResultsRegistry;
 import com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils;
@@ -14,8 +15,10 @@ import javax.lang.model.util.Elements;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static com.github.rooneyandshadows.lightbulb.apt.commons.GeneratedClassNames.*;
+import static com.github.rooneyandshadows.lightbulb.apt.processor.utils.ClassNameUtils.*;
 import static java.util.stream.Collectors.groupingBy;
 
 @SuppressWarnings("DuplicatedCode")
@@ -134,6 +137,8 @@ public class RoutingGenerator extends CodeGenerator {
 
         routeClassBuilder.addField(screenClass, "screen", Modifier.PRIVATE, Modifier.FINAL)
                 .addMethod(optionalConstructor.build())
+                .addMethod(generateRouteGoToWithStrategyMethodForScreen(routerClassName.simpleName()))
+                .addMethod(generateRouteGoToWithDefaultStrategyMethodForScreen(routerClassName.simpleName()))
                 .addMethod(generateRouteForwardMethodForScreen(routerClassName.simpleName()))
                 .addMethod(generateRouteReplaceMethodForScreen(routerClassName.simpleName()))
                 .addMethod(generateRouteBackNTimesAndReplaceMethodForScreen(routerClassName.simpleName()))
@@ -176,6 +181,29 @@ public class RoutingGenerator extends CodeGenerator {
                     .classBuilder(screenName)
                     .superclass(fragmentScreenClass)
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL, Modifier.STATIC);
+
+            MethodSpec.Builder getIdMethod = MethodSpec
+                    .methodBuilder("getId")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(STRING);
+
+            String screenIdVarName = "screenIdentifier";
+            String screenId = String.format("%s_%s", screenGroupName.toLowerCase(), screenName.toLowerCase());
+            getIdMethod.addStatement("$T $L = $S", STRING, screenIdVarName, screenId);
+
+            if (fragmentInfo.hasParameters()) {
+                String paramsJoined = fragmentInfo.getScreenParameters().stream().map(FieldMetadata::getName)
+                        .collect(Collectors.joining(", "));
+
+                String argsHashVarName = "argsHash";
+                getIdMethod.addStatement("$T $L = $T.hash($L)", INTEGER, argsHashVarName, OBJECTS, paramsJoined);
+                getIdMethod.addStatement("return $T.format(\"%s_%s\",$L,$L)", STRING, screenIdVarName, argsHashVarName);
+            } else {
+                getIdMethod.addStatement("return $L", screenIdVarName);
+            }
+
+            screenClass.addMethod(getIdMethod.build());
 
             MethodSpec.Builder getFragmentMethod = MethodSpec
                     .methodBuilder("getFragment")
@@ -257,6 +285,23 @@ public class RoutingGenerator extends CodeGenerator {
                 .addModifiers(Modifier.PUBLIC)
                 .returns(void.class)
                 .addStatement("$L.forward(screen)", routerClassName.concat(".this"))
+                .build();
+    }
+
+    private MethodSpec generateRouteGoToWithStrategyMethodForScreen(String routerClassName) {
+        return MethodSpec.methodBuilder("goTo")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(void.class)
+                .addParameter(BASE_ROUTER_ON_EXIST_STRATEGY, "onExistStrategy")
+                .addStatement("$L.goTo(screen,onExistStrategy)", routerClassName.concat(".this"))
+                .build();
+    }
+
+    private MethodSpec generateRouteGoToWithDefaultStrategyMethodForScreen(String routerClassName) {
+        return MethodSpec.methodBuilder("goTo")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(void.class)
+                .addStatement("$L.goTo(screen)", routerClassName.concat(".this"))
                 .build();
     }
 
