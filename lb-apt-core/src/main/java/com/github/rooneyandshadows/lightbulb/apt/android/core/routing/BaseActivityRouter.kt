@@ -11,6 +11,8 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.github.rooneyandshadows.lightbulb.apt.android.core.utils.BundleUtils
 import com.github.rooneyandshadows.lightbulb.apt.core.R
+import kotlin.math.max
+import kotlin.math.min
 
 
 @Suppress("CanBePrimaryConstructorProperty", "unused", "MemberVisibilityCanBePrivate")
@@ -164,7 +166,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
         runOnUiThread {
             startTransaction(TransitionTypes.EXIT).apply transaction@{
                 val initialSize = backStack.getEntriesCount()
-                while (backStack.getEntriesCount() > initialSize - n) {
+                while (backStack.getEntriesCount() > max(1, initialSize - n)) {
                     val fragToRemove = popCurrentFragment()
                     remove(fragToRemove!!)
                 }
@@ -204,7 +206,7 @@ open class BaseActivityRouter(contextActivity: AppCompatActivity, fragmentContai
             val transitionType = if (animate) TransitionTypes.ENTER else TransitionTypes.NONE
             startTransaction(transitionType).apply transaction@{
                 val initialSize = backStack.getEntriesCount()
-                while (backStack.getEntriesCount() > initialSize - n) {
+                while (backStack.getEntriesCount() > max(1, initialSize - n)) {
                     val fragToRemove = popCurrentFragment()
                     remove(fragToRemove!!)
                 }
