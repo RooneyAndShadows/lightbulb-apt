@@ -44,8 +44,8 @@ class TransformationPlugin : Plugin<Project> {
 
     private fun configureTransformationTask(project: Project, extension: TransformExtension) {
         val ext = project.androidComponents()
-        ext.onVariants(VariantSelectorImpl().withName("debug")) { variant ->
-            configureAPT(project,variant)
+        ext.onVariants { variant ->
+            configureAPT(project, variant)
             val capitalizedVariantName = variant.name.capitalized()
             val taskName = "transform${capitalizedVariantName}"
             val dumpTaskName = "transform${capitalizedVariantName}Dump"
